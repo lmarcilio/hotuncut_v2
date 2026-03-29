@@ -40,7 +40,13 @@ import {
   LayoutDashboard,
   Upload,
   Loader2,
-  Image
+  Image,
+  Eye,
+  Info,
+  AlertTriangle,
+  Activity,
+  ExternalLink,
+  Database
 } from 'lucide-react';
 
 // --- Components ---
@@ -182,7 +188,7 @@ const MemberArea = ({
         <header className="relative h-64 bg-zinc-900 overflow-hidden border-b border-zinc-800">
           <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent z-10" />
           <img 
-            src="https://picsum.photos/seed/vibrant/1920/1080?blur=4" 
+            src={branding?.landing_images?.hero || "https://picsum.photos/seed/vibrant/1920/1080?blur=4"} 
             alt="Banner" 
             className="w-full h-full object-cover opacity-40"
             referrerPolicy="no-referrer"
@@ -624,6 +630,24 @@ const Hero = ({ onBuy, branding }: { onBuy: () => void, branding: any }) => {
               </button>
             </div>
           </motion.div>
+          
+          {branding?.landing_images?.hero && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="mt-16 relative max-w-5xl mx-auto"
+            >
+              <div className="aspect-video rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl shadow-orange-500/10">
+                <img 
+                  src={branding.landing_images.hero} 
+                  alt="Hero Preview" 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>
@@ -680,12 +704,12 @@ const Features = () => {
   );
 };
 
-const Gallery = () => {
+const Gallery = ({ branding }: { branding: any }) => {
   const images = [
-    { url: "https://picsum.photos/seed/ai1/800/800", prompt: "Cyberpunk city at night, neon lights, cinematic lighting" },
-    { url: "https://picsum.photos/seed/ai2/800/800", prompt: "Hyper-realistic portrait of a futuristic robot, gold accents" },
-    { url: "https://picsum.photos/seed/ai3/800/800", prompt: "Surreal landscape with floating islands and purple sky" },
-    { url: "https://picsum.photos/seed/ai4/800/800", prompt: "Macro photography of a crystal butterfly, iridescent wings" },
+    { url: branding?.landing_images?.gallery1 || "https://picsum.photos/seed/ai1/800/800", prompt: "Cyberpunk city at night, neon lights, cinematic lighting" },
+    { url: branding?.landing_images?.gallery2 || "https://picsum.photos/seed/ai2/800/800", prompt: "Hyper-realistic portrait of a futuristic robot, gold accents" },
+    { url: branding?.landing_images?.gallery3 || "https://picsum.photos/seed/ai3/800/800", prompt: "Surreal landscape with floating islands and purple sky" },
+    { url: branding?.landing_images?.gallery4 || "https://picsum.photos/seed/ai4/800/800", prompt: "Macro photography of a crystal butterfly, iridescent wings" },
   ];
 
   return (
@@ -832,7 +856,7 @@ const Testimonials = () => {
   );
 };
 
-const WhyHotUncut = () => {
+const WhyHotUncut = ({ branding }: { branding: any }) => {
   const [activeTab, setActiveTab] = useState(0);
 
   const benefits = [
@@ -841,21 +865,21 @@ const WhyHotUncut = () => {
       subtitle: "Engenharia de Precisão",
       description: "Nossa interface exclusiva onde você encontra prompts prontos para copiar e colar. Filtre por estilo, iluminação e nível de realismo.",
       icon: <Sparkles className="w-6 h-6" />,
-      image: "https://picsum.photos/seed/studio/600/400"
+      image: branding?.landing_images?.benefit1 || "https://picsum.photos/seed/studio/600/400"
     },
     {
       title: "Video Lab",
       subtitle: "Movimento Sem Limites",
       description: "Aprenda a transformar imagens estáticas em vídeos fluidos. Simulamos o fluxo de trabalho das melhores ferramentas de animação por IA.",
       icon: <Video className="w-6 h-6" />,
-      image: "https://picsum.photos/seed/videolab/600/400"
+      image: branding?.landing_images?.benefit2 || "https://picsum.photos/seed/videolab/600/400"
     },
     {
       title: "Bypass Academy",
       subtitle: "Liberdade Criativa",
       description: "O único lugar que ensina a lógica de 'jailbreak' de prompts para ignorar censuras comerciais e liberar todo o potencial da IA.",
       icon: <Zap className="w-6 h-6" />,
-      image: "https://picsum.photos/seed/bypass/600/400"
+      image: branding?.landing_images?.benefit3 || "https://picsum.photos/seed/bypass/600/400"
     }
   ];
 
@@ -1201,8 +1225,22 @@ const LoginModal = ({ onClose }: { onClose: () => void }) => {
         if (error) throw error;
         alert('Verifique seu e-mail para confirmar o cadastro!');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+        
+        if (signInData.user) {
+          // Verifica se o usuário está bloqueado antes de permitir o acesso
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('blocked')
+            .eq('id', signInData.user.id)
+            .maybeSingle();
+            
+          if (profile?.blocked) {
+            await supabase.auth.signOut();
+            throw new Error('Sua conta está bloqueada. Entre em contato com o suporte.');
+          }
+        }
       }
       onClose();
     } catch (err: any) {
@@ -1338,8 +1376,26 @@ const AdminLogin = ({ onLogin, onClose }: { onLogin: () => void, onClose: () => 
   );
 };
 
-const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClose: () => void, onSimulateMember: (email: string) => void, onBrandingUpdate: () => void }) => {
-  const [activeTab, setActiveTab] = useState<'members' | 'categories' | 'prompts' | 'lessons' | 'tools' | 'branding'>('members');
+const AdminDashboard = ({ 
+  onClose, 
+  onSimulateMember, 
+  onBrandingUpdate,
+  settings,
+  setSettings,
+  savePaymentUrl,
+  nexanoUrl,
+  setNexanoUrl
+}: { 
+  onClose: () => void, 
+  onSimulateMember: (email: string) => void, 
+  onBrandingUpdate: () => void,
+  settings: any,
+  setSettings: React.Dispatch<React.SetStateAction<any>>,
+  savePaymentUrl: (url: string) => Promise<void>,
+  nexanoUrl: string,
+  setNexanoUrl: (url: string) => void
+}) => {
+  const [activeTab, setActiveTab] = useState<'members' | 'categories' | 'prompts' | 'lessons' | 'tools' | 'branding' | 'webhooks'>('members');
   const [profiles, setProfiles] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -1347,6 +1403,14 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
   const [modules, setModules] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
+  const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
+  const [webhookStatus, setWebhookStatus] = useState<{message: string, type: 'success' | 'error' | 'info'} | null>(null);
+  const [expectedToken, setExpectedToken] = useState<string>('dsuxblan');
+  const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [simulatedEmail, setSimulatedEmail] = useState('teste@exemplo.com');
+  const [lastWebhookUpdate, setLastWebhookUpdate] = useState<string>(new Date().toLocaleTimeString());
+  const [serverConfig, setServerConfig] = useState<{supabaseUrl: boolean, supabaseServiceKey: boolean, nexanoToken: boolean, usingAnonAsFallback: boolean} | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   // Form states
@@ -1374,7 +1438,17 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
 
   const [branding, setBranding] = useState({
     logo_url: '',
-    logo_width: 150
+    logo_width: 150,
+    landing_images: {
+      hero: 'https://picsum.photos/seed/vibrant/1920/1080?blur=4',
+      gallery1: 'https://picsum.photos/seed/ai1/800/800',
+      gallery2: 'https://picsum.photos/seed/ai2/800/800',
+      gallery3: 'https://picsum.photos/seed/ai3/800/800',
+      gallery4: 'https://picsum.photos/seed/ai4/800/800',
+      benefit1: 'https://picsum.photos/seed/studio/600/400',
+      benefit2: 'https://picsum.photos/seed/videolab/600/400',
+      benefit3: 'https://picsum.photos/seed/bypass/600/400'
+    }
   });
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -1384,36 +1458,173 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
     setPreviewError(false);
   }, [branding.logo_url]);
 
-  const [settings, setSettings] = useState({
-    supabase_url: import.meta.env.VITE_SUPABASE_URL || '',
-    supabase_anon_key: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-    nexano_webhook: '/api/webhook/nexano',
-    nexano_payment_url: localStorage.getItem('nexano_payment_url') || 'https://pay.nexano.com.br/checkout/seu-produto'
-  });
+  const fetchWebhookEvents = async (silent = false) => {
+    if (!supabase) {
+      if (!silent) setWebhookStatus({ message: 'Supabase não configurado no cliente.', type: 'error' });
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('webhook_events')
+        .select('*')
+        .order('processed_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      setWebhookEvents(data || []);
+      setLastWebhookUpdate(new Date().toLocaleTimeString());
+      if (!silent && data && data.length > 0) {
+        setWebhookStatus({ message: `${data.length} logs carregados.`, type: 'success' });
+      } else if (!silent) {
+        setWebhookStatus({ message: 'Nenhum log encontrado.', type: 'info' });
+      }
+    } catch (error: any) {
+      if (!silent) {
+        console.error('Erro ao buscar webhooks:', error.message);
+        setWebhookStatus({ message: 'Erro ao buscar logs: ' + error.message, type: 'error' });
+      }
+    }
+  };
 
-  const savePaymentUrl = (url: string) => {
-    localStorage.setItem('nexano_payment_url', url);
-    setSettings(prev => ({ ...prev, nexano_payment_url: url }));
+  const clearWebhookLogs = async () => {
+    if (!supabase) return;
+    
+    try {
+      setWebhookStatus({ message: 'Limpando logs...', type: 'info' });
+      const { error } = await supabase
+        .from('webhook_events')
+        .delete()
+        .neq('id', '0'); // Deleta tudo
+      
+      if (error) throw error;
+      setWebhookEvents([]);
+      setWebhookStatus({ message: 'Logs limpos com sucesso!', type: 'success' });
+      setShowConfirmClear(false);
+    } catch (error: any) {
+      setWebhookStatus({ message: 'Erro ao limpar logs: ' + error.message, type: 'error' });
+    }
+  };
+
+  const testDbConnection = async () => {
+    setWebhookStatus({ message: 'Testando conexão...', type: 'info' });
+    try {
+      const response = await fetch('/api/config-check');
+      const data = await response.json();
+      setServerConfig(data);
+      if (data.supabaseUrl && data.supabaseServiceKey) {
+        setWebhookStatus({ message: 'Conexão do servidor com Supabase OK!', type: 'success' });
+      } else {
+        setWebhookStatus({ message: 'Servidor com configuração incompleta.', type: 'error' });
+      }
+    } catch (error: any) {
+      setWebhookStatus({ message: 'Erro ao testar servidor: ' + error.message, type: 'error' });
+    }
+  };
+
+  const simulateWebhook = async (status: string) => {
+    setWebhookStatus({ message: 'Enviando simulação...', type: 'info' });
+    try {
+      const eventId = `sim_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Se for aprovado, vamos usar o payload exato que o usuário mandou para testar
+      const payload = status === 'approved' ? {
+        event: "TRANSACTION_PAID",
+        token: expectedToken,
+        client: {
+          id: "kskjd812s",
+          cpf: "123.123.123-12",
+          cnpj: null,
+          name: "John Doe",
+          email: simulatedEmail || "johndoe@gmail.com",
+          phone: "(11) 98218-9217"
+        }
+      } : {
+        id: eventId,
+        type: 'purchase.declined',
+        status: status,
+        customer: {
+          email: simulatedEmail,
+          name: "Usuário de Teste",
+          cpf: "123.456.789-00"
+        },
+        client: {
+          email: simulatedEmail,
+          name: "Usuário de Teste",
+          cpf: "123.456.789-00"
+        },
+        data: {
+          email: simulatedEmail
+        }
+      };
+
+      const response = await fetch('/api/webhook/nexano', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-nexano-token': expectedToken
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setWebhookStatus({ 
+          message: `Simulação enviada! Status: ${result.status}. Evento: ${result.eventId || eventId}`, 
+          type: 'success' 
+        });
+        fetchWebhookEvents();
+        fetchProfiles(); // Atualiza lista de membros para ver o bloqueio
+      } else {
+        setWebhookStatus({ message: `Erro na simulação: ${result.error || response.statusText}`, type: 'error' });
+      }
+    } catch (error: any) {
+      setWebhookStatus({ message: 'Erro ao simular: ' + error.message, type: 'error' });
+    }
+  };
+
+  const fetchServerConfig = async () => {
+    try {
+      const response = await fetch('/api/config-check');
+      const data = await response.json();
+      setServerConfig(data);
+    } catch (e) {
+      console.error("Erro ao buscar config do servidor");
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'webhooks') {
+      fetchWebhookEvents(true);
+      fetchServerConfig();
+    }
+  }, [activeTab]);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      await Promise.allSettled([
+        fetchProfiles(),
+        fetchCategories(),
+        fetchSubcategories(),
+        fetchPrompts(),
+        fetchModules(),
+        fetchLessons(),
+        fetchTools(),
+        fetchBranding(),
+        fetchWebhookEvents(true),
+        fetchServerConfig()
+      ]);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchAllData();
   }, []);
-
-  const fetchAllData = async () => {
-    setLoading(true);
-    await Promise.all([
-      fetchProfiles(),
-      fetchCategories(),
-      fetchSubcategories(),
-      fetchPrompts(),
-      fetchModules(),
-      fetchLessons(),
-      fetchTools(),
-      fetchBranding()
-    ]);
-    setLoading(false);
-  };
 
   const fetchBranding = async () => {
     if (!supabase) return;
@@ -1427,8 +1638,22 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
       if (data && !error) {
         setBranding({
           logo_url: data.logo_url || '',
-          logo_width: data.logo_width || 150
+          logo_width: data.logo_width || 150,
+          landing_images: data.landing_images || {
+            hero: 'https://picsum.photos/seed/vibrant/1920/1080?blur=4',
+            gallery1: 'https://picsum.photos/seed/ai1/800/800',
+            gallery2: 'https://picsum.photos/seed/ai2/800/800',
+            gallery3: 'https://picsum.photos/seed/ai3/800/800',
+            gallery4: 'https://picsum.photos/seed/ai4/800/800',
+            benefit1: 'https://picsum.photos/seed/studio/600/400',
+            benefit2: 'https://picsum.photos/seed/videolab/600/400',
+            benefit3: 'https://picsum.photos/seed/bypass/600/400'
+          }
         });
+        if (data.nexano_payment_url) {
+          setSettings(prev => ({ ...prev, nexano_payment_url: data.nexano_payment_url }));
+          setNexanoUrl(data.nexano_payment_url);
+        }
       }
     } catch (err) {
       console.error('Erro ao buscar branding:', err);
@@ -1439,91 +1664,58 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview imediato local (base64)
-    const previewUrl = URL.createObjectURL(file);
-    setBranding(prev => ({ ...prev, logo_url: previewUrl }));
-
-    if (!supabase) {
-      alert('Supabase não configurado. A logo será exibida apenas nesta sessão.');
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      alert('A imagem é muito grande. Por favor, escolha uma imagem com menos de 2MB.');
       return;
     }
 
-    setUploadingLogo(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `logo-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
-      const bucketName = 'BRANDING'; // Alterado para maiúsculas conforme print
-      
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file);
-
-      if (uploadError) {
-        console.error('Erro no upload:', uploadError);
-        const errMsg = (uploadError as any).message || '';
-        if (errMsg.includes('not found')) {
-          throw new Error('O "Bucket" de armazenamento chamado "BRANDING" não foi encontrado. Verifique se o nome está exatamente igual no Supabase (maiúsculas/minúsculas).');
-        }
-        if (errMsg.includes('policy') || errMsg.includes('row-level security')) {
-          throw new Error('Erro de permissão (RLS): O Supabase bloqueou o upload. Execute o comando SQL de DROP/CREATE POLICY novamente.');
-        }
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
-      // Atualiza com a URL real do Supabase
-      setBranding(prev => ({ ...prev, logo_url: publicUrl }));
-      
-      // Limpa o objeto URL com um pequeno atraso para garantir que a nova imagem carregou
-      setTimeout(() => {
-        URL.revokeObjectURL(previewUrl);
-      }, 2000);
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
-      // Se falhar o upload, mantém o preview local mas avisa o usuário
-      if (error.message?.includes('row-level security') || error.message?.includes('policy')) {
-        alert('Erro de Permissão (RLS): O upload falhou. \n\nExecute este comando no SQL Editor do Supabase:\n\nDROP POLICY IF EXISTS "Permitir upload anon" ON storage.objects;\nDROP POLICY IF EXISTS "Permitir update anon" ON storage.objects;\nDROP POLICY IF EXISTS "Permitir select anon" ON storage.objects;\nCREATE POLICY "Permitir upload anon" ON storage.objects FOR INSERT WITH CHECK (bucket_id = \'branding\');\nCREATE POLICY "Permitir update anon" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = \'branding\');\nCREATE POLICY "Permitir select anon" ON storage.objects FOR SELECT USING (bucket_id = \'branding\');');
-      } else {
-        alert('Erro ao processar upload: ' + error.message);
-      }
-    } finally {
-      setUploadingLogo(false);
-    }
+    // Convert to Base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setBranding(prev => ({ ...prev, logo_url: base64String }));
+    };
+    reader.readAsDataURL(file);
   };
+
+  const [brandingError, setBrandingError] = useState<string | null>(null);
+  const [brandingSuccess, setBrandingSuccess] = useState<string | null>(null);
 
   const saveBranding = async () => {
     if (!supabase) return;
-    
-    // Se a logo for um blob local (preview), avisa que não foi salva no storage
-    if (branding.logo_url?.startsWith('blob:')) {
-      alert('A imagem ainda está em processo de upload ou o upload falhou. Por favor, aguarde ou tente subir a imagem novamente antes de salvar.');
-      return;
-    }
+    setBrandingError(null);
+    setBrandingSuccess(null);
 
-    const { error } = await supabase
-      .from('settings')
-      .upsert({
-        id: 'global',
-        logo_url: branding.logo_url,
-        logo_width: branding.logo_width,
-        updated_at: new Date().toISOString()
-      });
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          id: 'global',
+          logo_url: branding.logo_url,
+          logo_width: branding.logo_width,
+          nexano_payment_url: settings.nexano_payment_url,
+          landing_images: branding.landing_images,
+          updated_at: new Date().toISOString()
+        });
 
-    if (error) {
-      console.error('Erro ao salvar branding:', error);
-      if (error.message.includes('policy') || error.message.includes('row-level security')) {
-        alert('Erro de permissão (RLS): A tabela "settings" não permite atualizações. \n\nExecute no SQL Editor do Supabase:\n\nCREATE TABLE IF NOT EXISTS settings (id text primary key, logo_url text, logo_width integer, nexano_payment_url text, updated_at timestamp with time zone);\nALTER TABLE settings ENABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "Permitir tudo para anon" ON settings;\nCREATE POLICY "Permitir tudo para anon" ON settings FOR ALL USING (true) WITH CHECK (true);');
+      if (error) {
+        console.error('Erro ao salvar branding:', error);
+        if (error.message.includes('column "landing_images" of relation "settings" does not exist')) {
+          setBrandingError('Erro: A coluna "landing_images" não existe na tabela "settings". Execute no SQL Editor do Supabase:\n\nALTER TABLE settings ADD COLUMN IF NOT EXISTS landing_images JSONB DEFAULT \'{}\'::jsonb;');
+        } else if (error.message.includes('policy') || error.message.includes('row-level security')) {
+          setBrandingError('Erro de permissão (RLS): A tabela "settings" não permite atualizações. Execute no SQL Editor do Supabase:\n\nCREATE TABLE IF NOT EXISTS settings (id text primary key, logo_url text, logo_width integer, nexano_payment_url text, landing_images jsonb, updated_at timestamp with time zone);\nALTER TABLE settings ENABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "Permitir tudo para anon" ON settings;\nCREATE POLICY "Permitir tudo para anon" ON settings FOR ALL USING (true) WITH CHECK (true);');
+        } else {
+          setBrandingError('Erro ao salvar branding: ' + error.message);
+        }
       } else {
-        alert('Erro ao salvar branding: ' + error.message);
+        setBrandingSuccess('Configurações de branding salvas com sucesso!');
+        await fetchBranding(); // Re-busca localmente para garantir sincronia
+        onBrandingUpdate(); // Notifica o componente pai
+        setTimeout(() => setBrandingSuccess(null), 3000);
       }
-    } else {
-      alert('Configurações de branding salvas com sucesso!');
-      await fetchBranding(); // Re-busca localmente para garantir sincronia
-      onBrandingUpdate(); // Notifica o componente pai
+    } catch (err: any) {
+      console.error('Erro inesperado ao salvar branding:', err);
+      setBrandingError('Erro inesperado ao salvar: ' + (err.message || String(err)));
     }
   };
 
@@ -1532,7 +1724,12 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false });
-    if (data && !error) setProfiles(data);
+    if (error) {
+      console.error('Erro ao buscar perfis:', error);
+    }
+    if (data) {
+      setProfiles(data);
+    }
   };
 
   const fetchCategories = async () => {
@@ -1580,6 +1777,25 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
       console.error('Erro ao atualizar status premium:', error);
       alert('Erro ao atualizar status premium: ' + error.message);
     } else {
+      fetchProfiles();
+    }
+  };
+
+  const toggleBlocked = async (id: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ blocked: !currentStatus })
+      .eq('id', id);
+    if (error) {
+      console.error('Erro ao atualizar status de bloqueio:', error);
+      alert('Erro ao atualizar status de bloqueio: ' + error.message);
+    } else {
+      // Se estiver bloqueando, tentar deslogar o usuário (se for o admin logado, cuidado)
+      if (!currentStatus) {
+        // O admin pode deslogar outros usuários via service role no backend se necessário,
+        // mas aqui estamos apenas atualizando o banco. O app vai deslogar o usuário
+        // na próxima verificação de sessão.
+      }
       fetchProfiles();
     }
   };
@@ -1716,18 +1932,36 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
   };
 
   const addLesson = async () => {
-    if (!newLesson.title || !newLesson.moduleId) return;
+    if (!newLesson.title || !newLesson.moduleId) {
+      alert("Preencha o título e selecione um módulo.");
+      return;
+    }
     const moduleLessons = lessons.filter(l => l.module_id === newLesson.moduleId);
-    const { error } = await supabase.from('lessons').insert([{ 
-      title: newLesson.title,
-      module_id: newLesson.moduleId,
-      video_url: newLesson.videoUrl,
-      description: newLesson.description,
-      order_index: moduleLessons.length
-    }]);
-    if (!error) {
-      setNewLesson({ ...newLesson, title: '', videoUrl: '', description: '' });
-      fetchLessons();
+    try {
+      const { error } = await supabase.from('lessons').insert([{ 
+        title: newLesson.title,
+        module_id: newLesson.moduleId,
+        video_url: newLesson.videoUrl,
+        description: newLesson.description,
+        order_index: moduleLessons.length
+      }]);
+      if (!error) {
+        setNewLesson({ ...newLesson, title: '', videoUrl: '', description: '' });
+        fetchLessons();
+        alert("Aula salva com sucesso!");
+      } else {
+        console.error("Erro ao salvar aula:", error);
+        if (error.message.includes('relation "lessons" does not exist')) {
+          alert('Erro: A tabela "lessons" não existe. \n\nExecute no SQL Editor do Supabase:\n\nCREATE TABLE IF NOT EXISTS modules (id uuid default uuid_generate_v4() primary key, title text not null, order_index integer default 0, created_at timestamp with time zone default timezone(\'utc\'::text, now()) not null);\n\nCREATE TABLE IF NOT EXISTS lessons (id uuid default uuid_generate_v4() primary key, module_id uuid references modules(id) on delete cascade, title text not null, video_url text, description text, order_index integer default 0, created_at timestamp with time zone default timezone(\'utc\'::text, now()) not null);\n\nALTER TABLE modules ENABLE ROW LEVEL SECURITY;\nALTER TABLE lessons ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Permitir leitura para todos" ON modules FOR SELECT USING (true);\nCREATE POLICY "Permitir leitura para todos" ON lessons FOR SELECT USING (true);\nCREATE POLICY "Permitir tudo para anon" ON modules FOR ALL USING (true) WITH CHECK (true);\nCREATE POLICY "Permitir tudo para anon" ON lessons FOR ALL USING (true) WITH CHECK (true);');
+        } else if (error.message.includes('column "video_url" of relation "lessons" does not exist') || error.message.includes('column "description" of relation "lessons" does not exist')) {
+          alert('Erro: Colunas faltando na tabela "lessons". \n\nExecute no SQL Editor do Supabase:\n\nALTER TABLE lessons ADD COLUMN IF NOT EXISTS video_url text;\nALTER TABLE lessons ADD COLUMN IF NOT EXISTS description text;');
+        } else {
+          alert("Erro ao salvar aula: " + error.message);
+        }
+      }
+    } catch (err: any) {
+      console.error("Erro inesperado ao salvar aula:", err);
+      alert("Erro inesperado: " + (err.message || String(err)));
     }
   };
 
@@ -1797,6 +2031,91 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
 
   return (
     <div className="fixed inset-0 z-[100] bg-black overflow-y-auto">
+      <AnimatePresence>
+        {selectedEvent && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-zinc-900 w-full max-w-2xl rounded-[2.5rem] border border-zinc-800 overflow-hidden shadow-2xl"
+            >
+              <div className="p-8 border-b border-zinc-800 flex justify-between items-center bg-black/20">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Detalhes do Evento</h3>
+                  <p className="text-xs text-gray-500 font-mono mt-1">{selectedEvent.id}</p>
+                </div>
+                <button onClick={() => setSelectedEvent(null)} className="p-3 bg-zinc-800 text-white rounded-2xl hover:bg-zinc-700 transition-all">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-black/40 p-4 rounded-2xl border border-zinc-800/50">
+                      <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Tipo de Evento</p>
+                      <p className="text-white font-bold">{selectedEvent.type}</p>
+                    </div>
+                    <div className="bg-black/40 p-4 rounded-2xl border border-zinc-800/50">
+                      <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Processado em</p>
+                      <p className="text-white font-bold">{new Date(selectedEvent.processed_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase font-black mb-2">Payload Completo (JSON)</p>
+                    <pre className="bg-black p-6 rounded-2xl border border-zinc-800 text-blue-400 text-xs overflow-x-auto font-mono leading-relaxed">
+                      {JSON.stringify(selectedEvent.payload, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+              <div className="p-8 bg-black/20 border-t border-zinc-800">
+                <button 
+                  onClick={() => setSelectedEvent(null)}
+                  className="w-full py-4 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all"
+                >
+                  Fechar Detalhes
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirmação de Limpeza */}
+      <AnimatePresence>
+        {showConfirmClear && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-zinc-900 w-full max-w-md rounded-[2.5rem] border border-zinc-800 p-8 text-center shadow-2xl"
+            >
+              <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <Trash2 className="w-10 h-10 text-red-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Limpar todos os logs?</h3>
+              <p className="text-gray-500 mb-8">Esta ação não pode ser desfeita. Todos os registros de webhooks serão removidos permanentemente.</p>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowConfirmClear(false)}
+                  className="flex-1 py-4 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={clearWebhookLogs}
+                  className="flex-1 py-4 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition-all"
+                >
+                  Sim, Limpar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-12">
           <div>
@@ -1840,6 +2159,12 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'branding' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Branding
+              </button>
+              <button 
+                onClick={() => setActiveTab('webhooks')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'webhooks' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+              >
+                Webhooks
               </button>
             </div>
             <button 
@@ -2003,9 +2328,91 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
                       </div>
                     </div>
 
+                    <div className="pt-6 border-t border-zinc-800">
+                      <h3 className="text-lg font-bold text-white mb-4">Imagens da Landing Page</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Banner Principal (Hero)</label>
+                          <input 
+                            type="text" 
+                            value={branding.landing_images.hero}
+                            onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, hero: e.target.value } }))}
+                            className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 1</label>
+                            <input 
+                              type="text" 
+                              value={branding.landing_images.gallery1}
+                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery1: e.target.value } }))}
+                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 2</label>
+                            <input 
+                              type="text" 
+                              value={branding.landing_images.gallery2}
+                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery2: e.target.value } }))}
+                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 3</label>
+                            <input 
+                              type="text" 
+                              value={branding.landing_images.gallery3}
+                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery3: e.target.value } }))}
+                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 4</label>
+                            <input 
+                              type="text" 
+                              value={branding.landing_images.gallery4}
+                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery4: e.target.value } }))}
+                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Benefício 1 (Prompt Studio)</label>
+                            <input 
+                              type="text" 
+                              value={branding.landing_images.benefit1}
+                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, benefit1: e.target.value } }))}
+                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Benefício 2 (Video Lab)</label>
+                            <input 
+                              type="text" 
+                              value={branding.landing_images.benefit2}
+                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, benefit2: e.target.value } }))}
+                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Benefício 3 (Bypass Academy)</label>
+                            <input 
+                              type="text" 
+                              value={branding.landing_images.benefit3}
+                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, benefit3: e.target.value } }))}
+                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <button 
                       onClick={saveBranding}
-                      className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2 mt-6"
                     >
                       <Save className="w-5 h-5" /> Salvar Configurações
                     </button>
@@ -2019,6 +2426,255 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
                     <p className="text-sm text-gray-500">
                       Use uma logo com fundo transparente (PNG ou SVG) para melhor integração com o tema escuro. Ajuste o slider para encontrar o equilíbrio visual perfeito.
                     </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'webhooks' && (
+              <div className="space-y-6">
+                {/* Status do Servidor */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                        <Database className="w-5 h-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold text-sm">Status da API</h4>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold">Conexão Backend</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400">Supabase URL</span>
+                        {serverConfig?.supabaseUrl ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-500" />}
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400">Service Role Key</span>
+                        {serverConfig?.supabaseServiceKey ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-500" />}
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400">Nexano Token</span>
+                        {serverConfig?.nexanoToken ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <X className="w-4 h-4 text-red-500" />}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={testDbConnection}
+                      className="w-full mt-4 py-2 bg-zinc-800 text-white text-[10px] font-bold rounded-lg hover:bg-zinc-700 transition-all uppercase"
+                    >
+                      Testar Conexão
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        setWebhookStatus({ message: 'Enviando log de teste...', type: 'info' });
+                        try {
+                          const response = await fetch('/api/webhook-test');
+                          const data = await response.json();
+                          if (data.status === 'success') {
+                            setWebhookStatus({ message: 'Log de teste criado com sucesso!', type: 'success' });
+                            fetchWebhookEvents();
+                          } else {
+                            setWebhookStatus({ message: 'Erro: ' + data.message, type: 'error' });
+                          }
+                        } catch (e: any) {
+                          setWebhookStatus({ message: 'Erro ao testar: ' + e.message, type: 'error' });
+                        }
+                      }}
+                      className="w-full mt-2 py-2 bg-zinc-800/50 text-gray-400 text-[10px] font-bold rounded-lg hover:bg-zinc-700 transition-all uppercase"
+                    >
+                      Criar Log de Teste
+                    </button>
+                  </div>
+
+                  <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                        <Activity className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold text-sm">Endpoint URL</h4>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold">Para o Gateway</p>
+                      </div>
+                    </div>
+                    <div className="bg-black p-3 rounded-xl border border-zinc-800 mb-2">
+                      <code className="text-[10px] text-blue-400 break-all">
+                        {window.location.origin.includes('ais-dev-') 
+                          ? 'https://smee.io/nexano-webhook-lucas-dev'
+                          : window.location.origin + '/api/webhook/nexano'}
+                      </code>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const url = window.location.origin.includes('ais-dev-') 
+                          ? 'https://smee.io/nexano-webhook-lucas-dev'
+                          : window.location.origin + '/api/webhook/nexano';
+                        navigator.clipboard.writeText(url);
+                        setWebhookStatus({ message: 'URL copiada!', type: 'success' });
+                      }}
+                      className="w-full py-2 bg-zinc-800 text-white text-[10px] font-bold rounded-lg hover:bg-zinc-700 transition-all uppercase flex items-center justify-center gap-2"
+                    >
+                      <Copy className="w-3 h-3" /> Copiar URL
+                    </button>
+                    <div className="mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <p className="text-[9px] text-blue-400 leading-relaxed">
+                        {window.location.origin.includes('ais-dev-') 
+                          ? <><strong className="text-white">Túnel Ativo:</strong> Como você está no ambiente de desenvolvimento, geramos uma URL pública do <strong>Smee.io</strong>. Ela fura o bloqueio do Google e entrega os webhooks da Nexano diretamente aqui em tempo real!</>
+                          : <><strong className="text-white">Produção:</strong> Esta é a URL oficial do seu servidor para receber webhooks.</>
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                        <Key className="w-5 h-5 text-purple-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold text-sm">Token de Segurança</h4>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold">Header: x-nexano-token</p>
+                      </div>
+                    </div>
+                    <div className="bg-black p-3 rounded-xl border border-zinc-800 mb-2">
+                      <code className="text-[10px] text-purple-400 break-all">{expectedToken}</code>
+                    </div>
+                    <p className="text-[8px] text-gray-500">Este token deve ser configurado no gateway Nexano.</p>
+                    <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                      <p className="text-[10px] text-orange-500 font-bold mb-1 uppercase tracking-tighter">Atenção</p>
+                      <p className="text-[9px] text-gray-400 leading-relaxed">
+                        Para que o bloqueio automático funcione, você DEVE configurar o Secret <strong>NEXANO_WEBHOOK_TOKEN</strong> no AI Studio com o mesmo valor usado na Nexano.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Simulador */}
+                <div className="bg-zinc-900 p-8 rounded-[2.5rem] border border-zinc-800">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center">
+                      <Zap className="w-6 h-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Simulador de Eventos</h3>
+                      <p className="text-sm text-gray-500">Teste a lógica de bloqueio sem precisar de uma venda real.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">E-mail do Usuário para Teste</label>
+                      <input 
+                        type="email"
+                        value={simulatedEmail}
+                        onChange={(e) => setSimulatedEmail(e.target.value)}
+                        className="w-full bg-black border border-zinc-800 rounded-2xl px-6 py-4 text-white outline-none focus:border-orange-500"
+                        placeholder="email@exemplo.com"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-2 italic">* O usuário deve existir na lista de membros para o bloqueio funcionar.</p>
+                    </div>
+                    <div className="flex flex-col justify-end gap-3">
+                      <button 
+                        onClick={() => simulateWebhook('declined')}
+                        className="w-full py-4 bg-red-500/10 text-red-500 font-bold rounded-2xl hover:bg-red-500/20 transition-all border border-red-500/20 flex items-center justify-center gap-2"
+                      >
+                        <AlertTriangle className="w-5 h-5" /> Simular Compra Recusada (Bloquear)
+                      </button>
+                      <button 
+                        onClick={() => simulateWebhook('approved')}
+                        className="w-full py-4 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 className="w-5 h-5" /> Simular Compra Aprovada (Apenas Log)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Logs de Eventos */}
+                <div className="bg-zinc-900 rounded-[2.5rem] border border-zinc-800 overflow-hidden">
+                  <div className="p-8 border-b border-zinc-800 flex justify-between items-center bg-black/20">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-xl font-bold text-white">Logs de Recebimento</h3>
+                      <span className="px-3 py-1 bg-zinc-800 text-gray-500 text-[10px] font-bold rounded-full uppercase tracking-widest">
+                        Última atualização: {lastWebhookUpdate}
+                      </span>
+                    </div>
+                    <div className="flex gap-4">
+                      <button 
+                        onClick={() => fetchWebhookEvents()}
+                        className="text-orange-500 hover:text-orange-400 text-sm font-bold uppercase tracking-tighter flex items-center gap-2"
+                      >
+                        <Activity className="w-4 h-4" /> Atualizar Logs
+                      </button>
+                      <button 
+                        onClick={() => setShowConfirmClear(true)}
+                        className="text-gray-500 hover:text-red-500 text-sm font-bold uppercase tracking-tighter flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" /> Limpar Tudo
+                      </button>
+                    </div>
+                  </div>
+
+                  {webhookStatus && (
+                    <div className={`p-4 text-center text-xs font-bold uppercase tracking-widest ${
+                      webhookStatus.type === 'success' ? 'bg-green-500/10 text-green-500' : 
+                      webhookStatus.type === 'error' ? 'bg-red-500/10 text-red-500' : 
+                      'bg-blue-500/10 text-blue-500'
+                    }`}>
+                      {webhookStatus.message}
+                    </div>
+                  )}
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-black/50 text-gray-500 text-[10px] uppercase font-black tracking-widest">
+                          <th className="px-8 py-5">Data/Hora</th>
+                          <th className="px-8 py-5">ID do Evento</th>
+                          <th className="px-8 py-5">Tipo</th>
+                          <th className="px-8 py-5">Usuário</th>
+                          <th className="px-8 py-5">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800">
+                        {webhookEvents.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-8 py-12 text-center text-gray-500 italic">
+                              Nenhum evento recebido ainda.
+                            </td>
+                          </tr>
+                        ) : webhookEvents.map((event) => (
+                          <tr key={event.id} className="hover:bg-black/20 transition-all group">
+                            <td className="px-8 py-5 text-gray-400 text-xs font-mono">
+                              {new Date(event.processed_at).toLocaleString()}
+                            </td>
+                            <td className="px-8 py-5 text-white text-xs font-mono">
+                              {event.id}
+                            </td>
+                            <td className="px-8 py-5">
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
+                                event.type.includes('declined') || event.type.includes('refused') || event.type.includes('recusada')
+                                  ? 'bg-red-500/10 text-red-500' 
+                                  : 'bg-green-500/10 text-green-500'
+                              }`}>
+                                {event.type}
+                              </span>
+                            </td>
+                            <td className="px-8 py-5 text-gray-300 text-xs">
+                              {event.payload?.customer?.email || event.payload?.email || event.payload?.data?.email || 'N/A'}
+                            </td>
+                            <td className="px-8 py-5">
+                              <button 
+                                onClick={() => setSelectedEvent(event)}
+                                className="text-orange-500 hover:text-orange-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+                              >
+                                <Eye className="w-4 h-4" /> Detalhes
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -2041,12 +2697,13 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
                       <tr className="bg-black/50 text-gray-500 text-[10px] uppercase">
                         <th className="px-6 py-4">E-mail</th>
                         <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Acesso</th>
                         <th className="px-6 py-4">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800">
                       {loading ? (
-                        <tr><td colSpan={3} className="px-6 py-8 text-center text-gray-500">Carregando...</td></tr>
+                        <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-500">Carregando...</td></tr>
                       ) : profiles.map((profile) => (
                         <tr key={profile.id} className="hover:bg-black/20">
                           <td className="px-6 py-4 text-white text-sm">{profile.email}</td>
@@ -2056,9 +2713,17 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
                             </span>
                           </td>
                           <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${profile.blocked ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                              {profile.blocked ? 'BLOQUEADO' : 'ATIVO'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
                             <div className="flex items-center gap-4">
                               <button onClick={() => togglePremium(profile.id, profile.is_premium)} className="text-[10px] font-bold uppercase text-orange-500 hover:underline">
                                 {profile.is_premium ? "Remover" : "Liberar"}
+                              </button>
+                              <button onClick={() => toggleBlocked(profile.id, profile.blocked)} className={`text-[10px] font-bold uppercase hover:underline ${profile.blocked ? 'text-green-500' : 'text-red-500'}`}>
+                                {profile.blocked ? "Desbloquear" : "Bloquear"}
                               </button>
                               <button onClick={() => onSimulateMember(profile.email)} className="text-[10px] font-bold uppercase text-gray-500 hover:text-white transition-all">
                                 Simular Login
@@ -2392,6 +3057,122 @@ const AdminDashboard = ({ onClose, onSimulateMember, onBrandingUpdate }: { onClo
           </div>
         </div>
       </div>
+
+      {/* Modal de Detalhes do Webhook */}
+      <AnimatePresence>
+        {selectedEvent && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            onClick={() => setSelectedEvent(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-8 border-b border-zinc-800 flex justify-between items-center bg-black/20">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                    selectedEvent.type.includes('declined') || selectedEvent.type.includes('refused') || selectedEvent.type.includes('recusada')
+                      ? 'bg-red-500/10 text-red-500' 
+                      : 'bg-green-500/10 text-green-500'
+                  }`}>
+                    <Activity className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Detalhes do Evento</h3>
+                    <p className="text-xs text-gray-500 font-mono">{selectedEvent.id}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedEvent(null)}
+                  className="w-10 h-10 bg-zinc-800 text-gray-400 rounded-full flex items-center justify-center hover:bg-zinc-700 hover:text-white transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-black/40 p-4 rounded-2xl border border-zinc-800">
+                    <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Tipo de Evento</p>
+                    <p className="text-white font-bold">{selectedEvent.type}</p>
+                  </div>
+                  <div className="bg-black/40 p-4 rounded-2xl border border-zinc-800">
+                    <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Data de Recebimento</p>
+                    <p className="text-white font-bold">{new Date(selectedEvent.processed_at).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="bg-black/40 p-6 rounded-2xl border border-zinc-800">
+                  <p className="text-[10px] text-gray-500 uppercase font-black mb-4">Payload Completo (JSON)</p>
+                  <pre className="text-[10px] text-blue-400 font-mono bg-black p-4 rounded-xl overflow-x-auto border border-zinc-800/50">
+                    {JSON.stringify(selectedEvent.payload, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="p-8 bg-black/20 border-t border-zinc-800 flex justify-end">
+                <button 
+                  onClick={() => setSelectedEvent(null)}
+                  className="px-8 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all uppercase text-xs tracking-widest"
+                >
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Confirmação para Limpar Logs */}
+      <AnimatePresence>
+        {showConfirmClear && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-[2.5rem] p-8 text-center shadow-2xl"
+            >
+              <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Trash2 className="w-10 h-10 text-red-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Limpar todos os logs?</h3>
+              <p className="text-gray-500 mb-8">
+                Esta ação é irreversível e apagará todo o histórico de recebimento de webhooks do banco de dados.
+              </p>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowConfirmClear(false)}
+                  className="flex-1 py-4 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={() => {
+                    clearWebhookLogs();
+                    setShowConfirmClear(false);
+                  }}
+                  className="flex-1 py-4 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                >
+                  Sim, Limpar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -2423,10 +3204,10 @@ const LandingPage = ({
       <main>
         <Hero onBuy={onBuy} branding={branding} />
         <Features />
-        <Gallery />
+        <Gallery branding={branding} />
         <Pricing onBuy={onBuy} />
         <Testimonials />
-        <WhyHotUncut />
+        <WhyHotUncut branding={branding} />
         <FinalCTA onBuy={onBuy} />
         <TrustSeals />
         <FAQ />
@@ -2436,22 +3217,28 @@ const LandingPage = ({
   );
 };
 
-const WaitingForPayment = ({ onLogout, branding }: { onLogout: () => void, branding: any }) => (
+const WaitingForPayment = ({ onLogout, onRefresh, branding }: { onLogout: () => void, onRefresh: () => void, branding: any }) => (
   <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
     <div className="max-w-md w-full bg-zinc-900 border border-orange-500/30 p-12 rounded-[3rem] text-center">
       <div className="flex justify-center mb-8">
         <Logo branding={branding} />
       </div>
-      <Lock className="w-12 h-12 text-orange-500 mx-auto mb-6 opacity-50" />
-      <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">Aguardando Pagamento</h2>
+      <div className="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+        <Clock className="w-8 h-8 text-orange-500 animate-pulse" />
+      </div>
+      <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">Aguardando Aprovação</h2>
       <p className="text-gray-400 mb-8 leading-relaxed">
-        Sua conta foi criada, mas o acesso premium ainda não foi liberado. 
-        Se você já pagou via Nexano, aguarde alguns minutos para a ativação automática.
+        Sua conta foi criada com sucesso! <br />
+        Estamos aguardando a confirmação do pagamento pela <strong>Nexano</strong>. 
+        Isso geralmente leva menos de 2 minutos.
       </p>
       <div className="space-y-4">
-        <a href="#pricing" className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl inline-block hover:bg-orange-600 transition-all">
-          Ver Planos
-        </a>
+        <button 
+          onClick={onRefresh}
+          className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(249,115,22,0.2)]"
+        >
+          <Loader2 className="w-5 h-5 animate-spin" /> Verificar Status Agora
+        </button>
         <button 
           onClick={onLogout}
           className="w-full py-4 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all border border-zinc-700"
@@ -2459,6 +3246,9 @@ const WaitingForPayment = ({ onLogout, branding }: { onLogout: () => void, brand
           Sair da Conta
         </button>
       </div>
+      <p className="mt-8 text-[10px] text-gray-600 uppercase font-bold tracking-widest">
+        Dica: Se você é o administrador testando, use o Painel Admin para simular a aprovação.
+      </p>
     </div>
   </div>
 );
@@ -2466,6 +3256,7 @@ const WaitingForPayment = ({ onLogout, branding }: { onLogout: () => void, brand
 export default function App() {
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const [profile, setProfile] = useState<{ nickname: string | null, avatar_url: string | null }>({ nickname: null, avatar_url: null });
   const [prompts, setPrompts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -2477,18 +3268,50 @@ export default function App() {
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [memberTab, setMemberTab] = useState<'prompts' | 'lessons' | 'tools' | 'settings'>('prompts');
 
+  const [settings, setSettings] = useState({
+    supabase_url: import.meta.env.VITE_SUPABASE_URL || '',
+    supabase_anon_key: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    nexano_payment_url: localStorage.getItem('nexano_payment_url') || 'https://pay.nexano.com.br/checkout/seu-produto'
+  });
+
+  // --- CONFIGURAÇÃO NEXANO ---
+  const [nexanoUrl, setNexanoUrl] = useState(localStorage.getItem('nexano_payment_url') || "https://pay.nexano.com.br/checkout/seu-produto");
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setNexanoUrl(localStorage.getItem('nexano_payment_url') || "https://pay.nexano.com.br/checkout/seu-produto");
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const savePaymentUrl = async (url: string) => {
+    localStorage.setItem('nexano_payment_url', url);
+    setSettings(prev => ({ ...prev, nexano_payment_url: url }));
+    setNexanoUrl(url);
+    
+    if (supabase) {
+      await supabase.from('settings').upsert({
+        id: 'global',
+        nexano_payment_url: url,
+        updated_at: new Date().toISOString()
+      });
+    }
+  };
+
   const [brandingSettings, setBrandingSettings] = useState({
     logo_url: null as string | null,
-    logo_width: 150
+    logo_width: 150,
+    landing_images: null as any
   });
 
   useEffect(() => {
-    if (isPremium) {
+    if (user) {
       fetchPremiumContent();
       fetchCourseContent();
       fetchToolsContent();
     }
-  }, [isPremium]);
+  }, [user]);
 
   useEffect(() => {
     fetchBrandingSettings();
@@ -2505,53 +3328,66 @@ export default function App() {
     if (data && !error) {
       setBrandingSettings({
         logo_url: data.logo_url,
-        logo_width: data.logo_width
+        logo_width: data.logo_width,
+        landing_images: data.landing_images
       });
     }
   };
 
   const fetchPremiumContent = async () => {
-    const [promptsRes, categoriesRes] = await Promise.all([
-      supabase.from('prompts').select('*, categories(name), subcategories(name)').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name')
-    ]);
+    if (!supabase) return;
+    try {
+      const [promptsRes, categoriesRes] = await Promise.all([
+        supabase.from('prompts').select('*, categories(name), subcategories(name)').order('created_at', { ascending: false }),
+        supabase.from('categories').select('*').order('name')
+      ]);
 
-    if (promptsRes.data) setPrompts(promptsRes.data);
-    if (categoriesRes.data) setCategories(categoriesRes.data);
+      if (promptsRes.error) console.error('Erro RLS/Supabase ao buscar prompts:', promptsRes.error);
+      if (categoriesRes.error) console.error('Erro RLS/Supabase ao buscar categorias:', categoriesRes.error);
+
+      if (promptsRes.data) setPrompts(promptsRes.data);
+      if (categoriesRes.data) setCategories(categoriesRes.data);
+    } catch (err) {
+      console.error('Erro ao buscar prompts:', err);
+    }
   };
 
   const fetchCourseContent = async () => {
-    const [modulesRes, lessonsRes] = await Promise.all([
-      supabase.from('modules').select('*').order('order_index'),
-      supabase.from('lessons').select('*').order('order_index')
-    ]);
+    if (!supabase) return;
+    try {
+      const [modulesRes, lessonsRes] = await Promise.all([
+        supabase.from('modules').select('*').order('order_index'),
+        supabase.from('lessons').select('*').order('order_index')
+      ]);
 
-    if (modulesRes.data) setModules(modulesRes.data);
-    if (lessonsRes.data) setLessons(lessonsRes.data);
+      if (modulesRes.error) console.error('Erro RLS/Supabase ao buscar módulos:', modulesRes.error);
+      if (lessonsRes.error) console.error('Erro RLS/Supabase ao buscar aulas:', lessonsRes.error);
+
+      if (modulesRes.data) setModules(modulesRes.data);
+      if (lessonsRes.data) setLessons(lessonsRes.data);
+    } catch (err) {
+      console.error('Erro ao buscar aulas:', err);
+    }
   };
 
   const fetchToolsContent = async () => {
-    const { data, error } = await supabase
-      .from('tools')
-      .select('*')
-      .order('order_index');
-    if (data && !error) setTools(data);
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .order('order_index');
+      
+      if (error) console.error('Erro RLS/Supabase ao buscar ferramentas:', error);
+      if (data) setTools(data);
+    } catch (err) {
+      console.error('Erro ao buscar ferramentas:', err);
+    }
   };
   const [loading, setLoading] = useState(true);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
-  // --- CONFIGURAÇÃO NEXANO ---
-  const [nexanoUrl, setNexanoUrl] = useState(localStorage.getItem('nexano_payment_url') || "https://checkout.nexano.com.br/checkout/cmn3uf0tr0d6z1yrx96zexfop?offer=1VADSS5");
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setNexanoUrl(localStorage.getItem('nexano_payment_url') || "https://checkout.nexano.com.br/checkout/cmn3uf0tr0d6z1yrx96zexfop?offer=1VADSS5");
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
@@ -2570,7 +3406,10 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) checkPremiumStatus(session.user.id);
-      else setIsPremium(false);
+      else {
+        setIsPremium(false);
+        setIsBlocked(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -2578,15 +3417,27 @@ export default function App() {
 
   const checkPremiumStatus = async (userId: string) => {
     if (!supabase) return;
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('is_premium, nickname, avatar_url')
-      .eq('id', userId)
-      .single();
-    
-    if (data && !error) {
-      setIsPremium(data.is_premium);
-      setProfile({ nickname: data.nickname, avatar_url: data.avatar_url });
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_premium, blocked, nickname, avatar_url')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (data && !error) {
+        if (data.blocked) {
+          console.log('[Auth] Usuário bloqueado detectado. Deslogando...');
+          setIsBlocked(true);
+          setIsPremium(false);
+          await supabase.auth.signOut();
+          return;
+        }
+        setIsPremium(data.is_premium);
+        setIsBlocked(false);
+        setProfile({ nickname: data.nickname, avatar_url: data.avatar_url });
+      }
+    } catch (err) {
+      console.error('[Auth] Erro ao verificar status do perfil:', err);
     }
   };
 
@@ -2665,13 +3516,25 @@ export default function App() {
     <div className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-black">
       {isAdminLoggedIn && (
         <AdminDashboard 
-          onClose={() => setIsAdminLoggedIn(false)} 
+          onClose={() => {
+            setIsAdminLoggedIn(false);
+            if (user) {
+              fetchPremiumContent();
+              fetchCourseContent();
+              fetchToolsContent();
+            }
+          }} 
           onSimulateMember={(email) => {
             setUser({ email });
             setIsPremium(true);
             setIsAdminLoggedIn(false);
           }}
           onBrandingUpdate={fetchBrandingSettings}
+          settings={settings}
+          setSettings={setSettings}
+          savePaymentUrl={savePaymentUrl}
+          nexanoUrl={nexanoUrl}
+          setNexanoUrl={setNexanoUrl}
         />
       )}
       {isAdminLoginOpen && (
@@ -2686,7 +3549,24 @@ export default function App() {
 
       {isLoginModalOpen && <LoginModal onClose={() => setIsLoginModalOpen(false)} />}
 
-      {isPremium ? (
+      {isBlocked ? (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-zinc-900 border border-red-500/30 p-8 rounded-3xl text-center">
+            <Lock className="w-16 h-16 text-red-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold mb-4">Acesso Bloqueado</h2>
+            <p className="text-gray-400 mb-8">
+              Identificamos um problema com seu pagamento ou sua conta foi suspensa. 
+              Por favor, entre em contato com o suporte para regularizar sua situação.
+            </p>
+            <button 
+              onClick={handleLogout}
+              className="w-full bg-zinc-800 text-white py-4 rounded-2xl font-bold hover:bg-zinc-700 transition-all"
+            >
+              Sair da Conta
+            </button>
+          </div>
+        </div>
+      ) : user ? (
         <MemberArea 
           user={user}
           profile={profile}
@@ -2709,8 +3589,6 @@ export default function App() {
           onUpdateProfile={updateProfile}
           onChangePassword={changePassword}
         />
-      ) : user ? (
-        <WaitingForPayment onLogout={handleLogout} branding={brandingSettings} />
       ) : (
         <LandingPage 
           user={user}

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     nickname TEXT,
     avatar_url TEXT,
     is_premium BOOLEAN DEFAULT false,
+    blocked BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -126,15 +127,26 @@ CREATE TABLE IF NOT EXISTS settings (
     id TEXT PRIMARY KEY DEFAULT 'global',
     logo_url TEXT,
     logo_width INTEGER DEFAULT 150,
+    nexano_payment_url TEXT DEFAULT 'https://pay.nexano.com.br/checkout/seu-produto',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- Create webhook_events table for idempotency
+CREATE TABLE IF NOT EXISTS webhook_events (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    payload JSONB,
+    processed_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE webhook_events ENABLE ROW LEVEL SECURITY;
 
 -- Create ultra-permissive policies for development
 CREATE POLICY "Allow all on settings" ON settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on webhook_events" ON webhook_events FOR ALL USING (true) WITH CHECK (true);
 
 -- Insert default settings if not exists
 INSERT INTO settings (id, logo_url, logo_width)
