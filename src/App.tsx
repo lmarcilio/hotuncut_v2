@@ -129,6 +129,8 @@ const MemberArea = ({
   const [newNickname, setNewNickname] = useState(profile.nickname || '');
   const [newAvatar, setNewAvatar] = useState(profile.avatar_url || '');
   const [newPassword, setNewPassword] = useState('');
+  const [isAdultMode, setIsAdultMode] = useState(false);
+  const [showAdultModal, setShowAdultModal] = useState(false);
 
   const menuItems = [
     { id: 'prompts', label: 'Prompts', icon: <Sparkles className="w-5 h-5" /> },
@@ -139,6 +141,47 @@ const MemberArea = ({
 
   return (
     <div className="min-h-screen bg-black flex">
+      {/* Adult Content Modal */}
+      <AnimatePresence>
+        {showAdultModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="max-w-md w-full bg-zinc-900 border border-red-500/30 p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(239,68,68,0.15)] text-center"
+            >
+              <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="w-10 h-10 text-red-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-4">Aviso de Conteúdo</h2>
+              <p className="text-gray-400 mb-8">
+                Esta seção contém material destinado apenas para maiores de 18 anos. 
+                Você confirma que tem 18 anos ou mais e deseja prosseguir?
+              </p>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setShowAdultModal(false)}
+                  className="flex-1 py-4 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all"
+                >
+                  Não, Voltar
+                </button>
+                <button 
+                  onClick={() => {
+                    setIsAdultMode(true);
+                    setSelectedCategory('all');
+                    setShowAdultModal(false);
+                  }}
+                  className="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all"
+                >
+                  Sim, Sou Maior
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <aside className="w-64 bg-zinc-950 border-r border-zinc-900 flex flex-col fixed h-full z-40">
         <div className="p-8">
@@ -220,7 +263,12 @@ const MemberArea = ({
                 >
                   Todos
                 </button>
-                {categories.map(cat => (
+                {categories
+                  .filter(cat => {
+                    // Only show categories that have prompts matching the current adult mode
+                    return prompts.some(p => p.category_id === cat.id && !!p.is_special_18 === isAdultMode);
+                  })
+                  .map(cat => (
                   <button 
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
@@ -235,10 +283,31 @@ const MemberArea = ({
                 >
                   <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> Favoritos
                 </button>
+                
+                {/* Adult Mode Toggle */}
+                {!isAdultMode ? (
+                  <button 
+                    onClick={() => setShowAdultModal(true)}
+                    className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 ml-auto"
+                  >
+                    <AlertCircle className="w-4 h-4" /> Conteúdo +18
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setIsAdultMode(false);
+                      setSelectedCategory('all');
+                    }}
+                    className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700 ml-auto"
+                  >
+                    Voltar para Conteúdo Normal
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {prompts
+                  .filter(p => !!p.is_special_18 === isAdultMode)
                   .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
                   .filter(p => !showFavoritesOnly || p.is_favorite)
                   .map(prompt => (
@@ -250,11 +319,22 @@ const MemberArea = ({
                     className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${prompt.is_special_18 ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
                   >
                     {prompt.is_special_18 && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1 animate-pulse">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1 animate-pulse z-10">
                         <AlertCircle className="w-3 h-3" /> CONTEÚDO +18
                       </div>
                     )}
                     
+                    {prompt.image_url && (
+                      <div className="w-full h-48 mb-6 rounded-3xl overflow-hidden border border-zinc-800 relative group">
+                        <img 
+                          src={prompt.image_url} 
+                          alt={prompt.subcategories?.name || "Prompt image"} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </div>
+                    )}
+
                     <div className="flex justify-between items-start mb-6">
                       <div className="space-y-1">
                         <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{prompt.categories?.name}</span>
@@ -1421,8 +1501,10 @@ const AdminDashboard = ({
     subcategoryId: '', 
     content: '', 
     isFavorite: false, 
-    isSpecial18: false 
+    isSpecial18: false,
+    imageUrl: ''
   });
+  const [uploadingPromptImage, setUploadingPromptImage] = useState(false);
   const [newModule, setNewModule] = useState('');
   const [newLesson, setNewLesson] = useState({
     moduleId: '',
@@ -1662,20 +1744,47 @@ const AdminDashboard = ({
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !supabase) return;
 
     if (file.size > 2 * 1024 * 1024) { // 2MB limit
       alert('A imagem é muito grande. Por favor, escolha uma imagem com menos de 2MB.');
       return;
     }
 
-    // Convert to Base64
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setBranding(prev => ({ ...prev, logo_url: base64String }));
-    };
-    reader.readAsDataURL(file);
+    setUploadingLogo(true);
+    setBrandingError(null);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('BRANDING')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Erro ao fazer upload da logo:', uploadError);
+        if (uploadError.message.includes('Bucket not found')) {
+          setBrandingError('O bucket "BRANDING" não existe. Execute este código no SQL Editor do Supabase para criá-lo:\n\ninsert into storage.buckets (id, name, public) values (\'BRANDING\', \'BRANDING\', true);\ncreate policy "Public Access" on storage.objects for select using ( bucket_id = \'BRANDING\' );\ncreate policy "Auth Insert" on storage.objects for insert with check ( bucket_id = \'BRANDING\' );\ncreate policy "Auth Update" on storage.objects for update with check ( bucket_id = \'BRANDING\' );');
+        } else {
+          setBrandingError(`Erro ao fazer upload da logo para o bucket BRANDING: ${uploadError.message}. Certifique-se de que o bucket existe e é público.`);
+        }
+        setUploadingLogo(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('BRANDING')
+        .getPublicUrl(filePath);
+
+      setBranding(prev => ({ ...prev, logo_url: publicUrl }));
+    } catch (err: any) {
+      console.error('Erro inesperado no upload:', err);
+      setBrandingError(`Erro inesperado no upload: ${err.message || String(err)}`);
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
   const [brandingError, setBrandingError] = useState<string | null>(null);
@@ -1700,7 +1809,7 @@ const AdminDashboard = ({
 
       if (error) {
         console.error('Erro ao salvar branding:', error);
-        if (error.message.includes('column "landing_images" of relation "settings" does not exist')) {
+        if (error.message.includes('landing_images') && (error.message.includes('does not exist') || error.message.includes('schema cache'))) {
           setBrandingError('Erro: A coluna "landing_images" não existe na tabela "settings". Execute no SQL Editor do Supabase:\n\nALTER TABLE settings ADD COLUMN IF NOT EXISTS landing_images JSONB DEFAULT \'{}\'::jsonb;');
         } else if (error.message.includes('policy') || error.message.includes('row-level security')) {
           setBrandingError('Erro de permissão (RLS): A tabela "settings" não permite atualizações. Execute no SQL Editor do Supabase:\n\nCREATE TABLE IF NOT EXISTS settings (id text primary key, logo_url text, logo_width integer, nexano_payment_url text, landing_images jsonb, updated_at timestamp with time zone);\nALTER TABLE settings ENABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "Permitir tudo para anon" ON settings;\nCREATE POLICY "Permitir tudo para anon" ON settings FOR ALL USING (true) WITH CHECK (true);');
@@ -1858,6 +1967,50 @@ const AdminDashboard = ({
   };
 
   // Prompt Actions
+  const handlePromptImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      alert('A imagem é muito grande. Por favor, escolha uma imagem com menos de 2MB.');
+      return;
+    }
+
+    setUploadingPromptImage(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `prompt-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('PROMPTS_IMAGES')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Erro ao fazer upload da imagem do prompt:', uploadError);
+        if (uploadError.message.includes('Bucket not found')) {
+          alert('O bucket "PROMPTS_IMAGES" não existe. Execute este código no SQL Editor do Supabase para criá-lo:\n\ninsert into storage.buckets (id, name, public) values (\'PROMPTS_IMAGES\', \'PROMPTS_IMAGES\', true) ON CONFLICT (id) DO NOTHING;\ncreate policy "Public Access PROMPTS_IMAGES" on storage.objects for select using ( bucket_id = \'PROMPTS_IMAGES\' );\ncreate policy "Auth Insert PROMPTS_IMAGES" on storage.objects for insert with check ( bucket_id = \'PROMPTS_IMAGES\' );\ncreate policy "Auth Update PROMPTS_IMAGES" on storage.objects for update with check ( bucket_id = \'PROMPTS_IMAGES\' );');
+        } else {
+          alert(`Erro ao fazer upload da imagem: ${uploadError.message}`);
+        }
+        setUploadingPromptImage(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('PROMPTS_IMAGES')
+        .getPublicUrl(filePath);
+
+      setNewPrompt(prev => ({ ...prev, imageUrl: publicUrl }));
+    } catch (err: any) {
+      console.error('Erro inesperado no upload:', err);
+      alert(`Erro inesperado no upload: ${err.message || String(err)}`);
+    } finally {
+      setUploadingPromptImage(false);
+    }
+  };
+
   const addPrompt = async () => {
     if (!newPrompt.content || !newPrompt.categoryId || !newPrompt.subcategoryId) return;
     const { error } = await supabase.from('prompts').insert([{ 
@@ -1865,13 +2018,18 @@ const AdminDashboard = ({
       category_id: newPrompt.categoryId,
       subcategory_id: newPrompt.subcategoryId,
       is_favorite: newPrompt.isFavorite,
-      is_special_18: newPrompt.isSpecial18
+      is_special_18: newPrompt.isSpecial18,
+      image_url: newPrompt.imageUrl || null
     }]);
     if (error) {
       console.error('Erro ao adicionar prompt:', error);
-      alert('Erro ao adicionar prompt: ' + error.message);
+      if (error.message.includes('image_url')) {
+        alert('Erro: A coluna "image_url" não existe na tabela "prompts". Execute no SQL Editor do Supabase:\n\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS image_url TEXT;');
+      } else {
+        alert('Erro ao adicionar prompt: ' + error.message);
+      }
     } else {
-      setNewPrompt({ ...newPrompt, content: '', isFavorite: false, isSpecial18: false });
+      setNewPrompt({ ...newPrompt, content: '', isFavorite: false, isSpecial18: false, imageUrl: '' });
       fetchPrompts();
     }
   };
@@ -2410,6 +2568,17 @@ const AdminDashboard = ({
                       </div>
                     </div>
 
+                    {brandingError && (
+                      <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-sm whitespace-pre-wrap">
+                        {brandingError}
+                      </div>
+                    )}
+                    {brandingSuccess && (
+                      <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-500 text-sm">
+                        {brandingSuccess}
+                      </div>
+                    )}
+
                     <button 
                       onClick={saveBranding}
                       className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2 mt-6"
@@ -2835,6 +3004,29 @@ const AdminDashboard = ({
                     onChange={(e) => setNewPrompt({...newPrompt, content: e.target.value})}
                     className="w-full h-32 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 resize-none"
                   />
+                  
+                  {/* Prompt Image Upload */}
+                  <div className="mb-4">
+                    <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Imagem do Prompt (Opcional)</label>
+                    <div className="flex items-center gap-4">
+                      {newPrompt.imageUrl && (
+                        <img src={newPrompt.imageUrl} alt="Preview" className="w-16 h-16 object-cover rounded-xl border border-zinc-800" />
+                      )}
+                      <label className="flex-1 cursor-pointer">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handlePromptImageUpload}
+                          className="hidden"
+                        />
+                        <div className="w-full bg-black border border-zinc-800 border-dashed rounded-xl px-4 py-3 text-gray-400 hover:text-white hover:border-orange-500 transition-all flex items-center justify-center gap-2 text-sm">
+                          {uploadingPromptImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                          {uploadingPromptImage ? 'Enviando...' : 'Escolher Imagem (Máx 2MB)'}
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex gap-6">
                       <label className="flex items-center gap-2 cursor-pointer group">
@@ -2892,6 +3084,11 @@ const AdminDashboard = ({
                             </button>
                           </div>
                         </div>
+                        {p.image_url && (
+                          <div className="mb-4 w-32 h-32 rounded-xl overflow-hidden border border-zinc-800">
+                            <img src={p.image_url} alt="Prompt" className="w-full h-full object-cover" />
+                          </div>
+                        )}
                         <p className="text-gray-300 text-sm font-mono bg-black/40 p-4 rounded-xl border border-zinc-800/50">{p.content}</p>
                       </div>
                     ))}
