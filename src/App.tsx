@@ -46,7 +46,8 @@ import {
   AlertTriangle,
   Activity,
   ExternalLink,
-  Database
+  Database,
+  FileText
 } from 'lucide-react';
 
 // --- Components ---
@@ -132,6 +133,32 @@ const MemberArea = ({
   const [isAdultMode, setIsAdultMode] = useState(false);
   const [showAdultModal, setShowAdultModal] = useState(false);
 
+  const [viewedUpdates, setViewedUpdates] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem(`viewed_updates_${user.id}`);
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'lessons') {
+      const hasUnviewedUpdates = lessons.some(l => l.updated_at && (!viewedUpdates[l.id] || new Date(l.updated_at) > new Date(viewedUpdates[l.id])));
+      if (hasUnviewedUpdates) {
+        setShowUpdateToast(true);
+        const timer = setTimeout(() => setShowUpdateToast(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [lessons, activeTab]);
+
+  const handleLessonSelect = (lesson: any) => {
+    setSelectedLesson(lesson);
+    if (lesson.updated_at) {
+      const newViewed = { ...viewedUpdates, [lesson.id]: lesson.updated_at };
+      setViewedUpdates(newViewed);
+      localStorage.setItem(`viewed_updates_${user.id}`, JSON.stringify(newViewed));
+    }
+  };
+
   const menuItems = [
     { id: 'prompts', label: 'Prompts', icon: <Sparkles className="w-5 h-5" /> },
     { id: 'lessons', label: 'Aulas', icon: <BookOpen className="w-5 h-5" /> },
@@ -141,6 +168,21 @@ const MemberArea = ({
 
   return (
     <div className="min-h-screen bg-black flex">
+      {/* Update Toast */}
+      <AnimatePresence>
+        {showUpdateToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] bg-orange-500 text-black px-6 py-3 rounded-full font-bold shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center gap-2"
+          >
+            <Sparkles className="w-5 h-5" />
+            Novas aulas atualizadas!
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Adult Content Modal */}
       <AnimatePresence>
         {showAdultModal && (
@@ -398,24 +440,40 @@ const MemberArea = ({
                     {lessons
                       .filter(l => l.module_id === module.id)
                       .sort((a, b) => a.order_index - b.order_index)
-                      .map((lesson, lIdx) => (
-                      <button 
-                        key={lesson.id} 
-                        onClick={() => setSelectedLesson(lesson)}
-                        className="w-full group flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-zinc-800/50 hover:border-orange-500/50 transition-all text-left"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-orange-500/20 flex items-center justify-center transition-all">
-                            <Play className="w-3 h-3 text-gray-500 group-hover:text-orange-500 fill-current" />
+                      .map((lesson, lIdx) => {
+                        const isUpdated = lesson.updated_at && (!viewedUpdates[lesson.id] || new Date(lesson.updated_at) > new Date(viewedUpdates[lesson.id]));
+                        return (
+                        <button 
+                          key={lesson.id} 
+                          onClick={() => handleLessonSelect(lesson)}
+                          className="w-full group flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-zinc-800/50 hover:border-orange-500/50 transition-all text-left relative overflow-hidden"
+                        >
+                          {isUpdated && (
+                            <div className="absolute top-0 right-0 bg-orange-500 text-black text-[8px] font-black uppercase px-2 py-1 rounded-bl-lg z-10">
+                              Atualizado
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-orange-500/20 flex items-center justify-center transition-all">
+                              {lesson.video_url ? (
+                                <Play className="w-3 h-3 text-gray-500 group-hover:text-orange-500 fill-current" />
+                              ) : lesson.pdf_url ? (
+                                <FileText className="w-3 h-3 text-gray-500 group-hover:text-orange-500" />
+                              ) : (
+                                <BookOpen className="w-3 h-3 text-gray-500 group-hover:text-orange-500" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-300 group-hover:text-white transition-all flex items-center gap-2">
+                                {lesson.title}
+                                {isUpdated && <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>}
+                              </p>
+                              {lesson.description && <p className="text-[10px] text-gray-600 line-clamp-1">{lesson.description}</p>}
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-300 group-hover:text-white transition-all">{lesson.title}</p>
-                            {lesson.description && <p className="text-[10px] text-gray-600 line-clamp-1">{lesson.description}</p>}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-orange-500 transition-all" />
-                      </button>
-                    ))}
+                          <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-orange-500 transition-all" />
+                        </button>
+                      )})}
                   </div>
                 </div>
               ))}
@@ -547,10 +605,10 @@ const MemberArea = ({
         </div>
       </main>
 
-      {/* Video Player Modal */}
+      {/* Video/PDF Player Modal */}
       {selectedLesson && (
         <div className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4 md:p-12">
-          <div className="max-w-5xl w-full bg-zinc-900 rounded-[3rem] border border-zinc-800 overflow-hidden relative">
+          <div className="max-w-5xl w-full bg-zinc-900 rounded-[3rem] border border-zinc-800 overflow-hidden relative max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setSelectedLesson(null)}
               className="absolute top-6 right-6 z-10 p-3 bg-black/50 text-white rounded-full hover:bg-orange-500 transition-all"
@@ -558,23 +616,51 @@ const MemberArea = ({
               <X className="w-6 h-6" />
             </button>
             
-            <div className="aspect-video bg-black">
-              {selectedLesson.video_url ? (
+            {selectedLesson.video_url ? (
+              <div className="aspect-video bg-black shrink-0">
                 <iframe 
                   src={selectedLesson.video_url.replace('watch?v=', 'embed/').replace('vimeo.com/', 'player.vimeo.com/video/')}
                   className="w-full h-full"
                   allowFullScreen
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-500">
-                  Vídeo não disponível
-                </div>
-              )}
-            </div>
+              </div>
+            ) : selectedLesson.pdf_url ? (
+              <div className="aspect-video bg-zinc-800 flex flex-col items-center justify-center text-center p-8 shrink-0">
+                <FileText className="w-20 h-20 text-orange-500 mb-4" />
+                <h4 className="text-2xl font-bold text-white mb-2">Material em PDF</h4>
+                <p className="text-gray-400 mb-6">Esta aula é composta por um material em PDF.</p>
+                <a 
+                  href={selectedLesson.pdf_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-8 py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center gap-2"
+                >
+                  <FileText className="w-5 h-5" /> Abrir PDF
+                </a>
+              </div>
+            ) : (
+              <div className="aspect-video bg-black flex items-center justify-center text-gray-500 shrink-0">
+                Conteúdo não disponível
+              </div>
+            )}
             
-            <div className="p-8 md:p-12">
-              <h3 className="text-3xl font-black text-white mb-4 uppercase">{selectedLesson.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{selectedLesson.description || 'Sem descrição disponível para esta aula.'}</p>
+            <div className="p-8 md:p-12 overflow-y-auto">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
+                <div>
+                  <h3 className="text-3xl font-black text-white mb-2 uppercase">{selectedLesson.title}</h3>
+                  <p className="text-gray-400 leading-relaxed">{selectedLesson.description || 'Sem descrição disponível para esta aula.'}</p>
+                </div>
+                {selectedLesson.pdf_url && selectedLesson.video_url && (
+                  <a 
+                    href={selectedLesson.pdf_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="shrink-0 px-6 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-2 border border-zinc-700"
+                  >
+                    <FileText className="w-5 h-5 text-orange-500" /> Baixar Material
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1510,8 +1596,11 @@ const AdminDashboard = ({
     moduleId: '',
     title: '',
     videoUrl: '',
-    description: ''
+    description: '',
+    pdfUrl: ''
   });
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [uploadingLessonPdf, setUploadingLessonPdf] = useState(false);
   const [newTool, setNewTool] = useState({
     name: '',
     url: '',
@@ -2089,6 +2178,50 @@ const AdminDashboard = ({
     if (data && !error) setLessons(data);
   };
 
+  const handleLessonPdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit for PDFs
+      alert('O arquivo é muito grande. Por favor, escolha um arquivo com menos de 10MB.');
+      return;
+    }
+
+    setUploadingLessonPdf(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `lesson-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('LESSON_FILES')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Erro ao fazer upload do PDF da aula:', uploadError);
+        if (uploadError.message.includes('Bucket not found')) {
+          alert('O bucket "LESSON_FILES" não existe. Execute este código no SQL Editor do Supabase para criá-lo:\n\ninsert into storage.buckets (id, name, public) values (\'LESSON_FILES\', \'LESSON_FILES\', true) ON CONFLICT (id) DO NOTHING;\ncreate policy "Public Access LESSON_FILES" on storage.objects for select using ( bucket_id = \'LESSON_FILES\' );\ncreate policy "Auth Insert LESSON_FILES" on storage.objects for insert with check ( bucket_id = \'LESSON_FILES\' );\ncreate policy "Auth Update LESSON_FILES" on storage.objects for update with check ( bucket_id = \'LESSON_FILES\' );');
+        } else {
+          alert(`Erro ao fazer upload do arquivo: ${uploadError.message}`);
+        }
+        setUploadingLessonPdf(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('LESSON_FILES')
+        .getPublicUrl(filePath);
+
+      setNewLesson(prev => ({ ...prev, pdfUrl: publicUrl }));
+    } catch (err: any) {
+      console.error('Erro inesperado no upload:', err);
+      alert(`Erro inesperado no upload: ${err.message || String(err)}`);
+    } finally {
+      setUploadingLessonPdf(false);
+    }
+  };
+
   const addLesson = async () => {
     if (!newLesson.title || !newLesson.moduleId) {
       alert("Preencha o título e selecione um módulo.");
@@ -2096,21 +2229,42 @@ const AdminDashboard = ({
     }
     const moduleLessons = lessons.filter(l => l.module_id === newLesson.moduleId);
     try {
-      const { error } = await supabase.from('lessons').insert([{ 
-        title: newLesson.title,
-        module_id: newLesson.moduleId,
-        video_url: newLesson.videoUrl,
-        description: newLesson.description,
-        order_index: moduleLessons.length
-      }]);
+      let error;
+      if (editingLessonId) {
+        const { error: updateError } = await supabase.from('lessons').update({
+          title: newLesson.title,
+          module_id: newLesson.moduleId,
+          video_url: newLesson.videoUrl,
+          description: newLesson.description,
+          pdf_url: newLesson.pdfUrl || null,
+          updated_at: new Date().toISOString()
+        }).eq('id', editingLessonId);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase.from('lessons').insert([{ 
+          title: newLesson.title,
+          module_id: newLesson.moduleId,
+          video_url: newLesson.videoUrl,
+          description: newLesson.description,
+          pdf_url: newLesson.pdfUrl || null,
+          order_index: moduleLessons.length
+        }]);
+        error = insertError;
+      }
+
       if (!error) {
-        setNewLesson({ ...newLesson, title: '', videoUrl: '', description: '' });
+        setNewLesson({ ...newLesson, title: '', videoUrl: '', description: '', pdfUrl: '' });
+        setEditingLessonId(null);
         fetchLessons();
-        alert("Aula salva com sucesso!");
+        alert(editingLessonId ? "Aula atualizada com sucesso!" : "Aula salva com sucesso!");
       } else {
         console.error("Erro ao salvar aula:", error);
         if (error.message.includes('relation "lessons" does not exist')) {
           alert('Erro: A tabela "lessons" não existe. \n\nExecute no SQL Editor do Supabase:\n\nCREATE TABLE IF NOT EXISTS modules (id uuid default uuid_generate_v4() primary key, title text not null, order_index integer default 0, created_at timestamp with time zone default timezone(\'utc\'::text, now()) not null);\n\nCREATE TABLE IF NOT EXISTS lessons (id uuid default uuid_generate_v4() primary key, module_id uuid references modules(id) on delete cascade, title text not null, video_url text, description text, order_index integer default 0, created_at timestamp with time zone default timezone(\'utc\'::text, now()) not null);\n\nALTER TABLE modules ENABLE ROW LEVEL SECURITY;\nALTER TABLE lessons ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Permitir leitura para todos" ON modules FOR SELECT USING (true);\nCREATE POLICY "Permitir leitura para todos" ON lessons FOR SELECT USING (true);\nCREATE POLICY "Permitir tudo para anon" ON modules FOR ALL USING (true) WITH CHECK (true);\nCREATE POLICY "Permitir tudo para anon" ON lessons FOR ALL USING (true) WITH CHECK (true);');
+        } else if (error.message.includes('pdf_url')) {
+          alert('Erro: A coluna "pdf_url" não existe na tabela "lessons". \n\nExecute no SQL Editor do Supabase:\n\nALTER TABLE lessons ADD COLUMN IF NOT EXISTS pdf_url TEXT;');
+        } else if (error.message.includes('column "updated_at" of relation "lessons" does not exist')) {
+          alert('Erro: A coluna "updated_at" não existe na tabela "lessons". \n\nExecute no SQL Editor do Supabase:\n\nALTER TABLE lessons ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone default timezone(\'utc\'::text, now()) not null;');
         } else if (error.message.includes('column "video_url" of relation "lessons" does not exist') || error.message.includes('column "description" of relation "lessons" does not exist')) {
           alert('Erro: Colunas faltando na tabela "lessons". \n\nExecute no SQL Editor do Supabase:\n\nALTER TABLE lessons ADD COLUMN IF NOT EXISTS video_url text;\nALTER TABLE lessons ADD COLUMN IF NOT EXISTS description text;');
         } else {
@@ -2121,6 +2275,20 @@ const AdminDashboard = ({
       console.error("Erro inesperado ao salvar aula:", err);
       alert("Erro inesperado: " + (err.message || String(err)));
     }
+  };
+
+  const handleEditLesson = (lesson: any) => {
+    setNewLesson({
+      moduleId: lesson.module_id,
+      title: lesson.title,
+      videoUrl: lesson.video_url || '',
+      description: lesson.description || '',
+      pdfUrl: lesson.pdf_url || ''
+    });
+    setEditingLessonId(lesson.id);
+    
+    // Scroll to top of the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const deleteLesson = async (id: string) => {
@@ -3132,7 +3300,22 @@ const AdminDashboard = ({
 
                 {/* Lessons Management */}
                 <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
-                  <h3 className="text-xl font-bold text-white mb-6">Cadastrar Aula</h3>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-white">
+                      {editingLessonId ? 'Editar Aula' : 'Cadastrar Aula'}
+                    </h3>
+                    {editingLessonId && (
+                      <button 
+                        onClick={() => {
+                          setEditingLessonId(null);
+                          setNewLesson({ moduleId: '', title: '', videoUrl: '', description: '', pdfUrl: '' });
+                        }}
+                        className="text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        Cancelar Edição
+                      </button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <select 
                       value={newLesson.moduleId}
@@ -3152,11 +3335,36 @@ const AdminDashboard = ({
                   </div>
                   <input 
                     type="text" 
-                    placeholder="URL do Vídeo (YouTube/Vimeo)" 
+                    placeholder="URL do Vídeo (YouTube/Vimeo) (Opcional)" 
                     value={newLesson.videoUrl}
                     onChange={(e) => setNewLesson({...newLesson, videoUrl: e.target.value})}
                     className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 mb-4"
                   />
+                  
+                  {/* Lesson PDF Upload */}
+                  <div className="mb-4">
+                    <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Arquivo PDF / Slide (Opcional)</label>
+                    <div className="flex items-center gap-4">
+                      {newLesson.pdfUrl && (
+                        <div className="w-16 h-16 bg-red-500/10 rounded-xl border border-red-500/20 flex items-center justify-center">
+                          <FileText className="w-8 h-8 text-red-500" />
+                        </div>
+                      )}
+                      <label className="flex-1 cursor-pointer">
+                        <input 
+                          type="file" 
+                          accept=".pdf,application/pdf"
+                          onChange={handleLessonPdfUpload}
+                          className="hidden"
+                        />
+                        <div className="w-full bg-black border border-zinc-800 border-dashed rounded-xl px-4 py-3 text-gray-400 hover:text-white hover:border-orange-500 transition-all flex items-center justify-center gap-2 text-sm">
+                          {uploadingLessonPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                          {uploadingLessonPdf ? 'Enviando...' : 'Escolher PDF (Máx 10MB)'}
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
                   <textarea 
                     placeholder="Descrição da aula..." 
                     value={newLesson.description}
@@ -3164,7 +3372,8 @@ const AdminDashboard = ({
                     className="w-full h-24 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 resize-none"
                   />
                   <button onClick={addLesson} className="w-full py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
-                    <Plus className="w-5 h-5" /> Salvar Aula
+                    {editingLessonId ? <Save className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                    {editingLessonId ? 'Salvar Alterações' : 'Salvar Aula'}
                   </button>
 
                   <div className="mt-12 space-y-8">
@@ -3176,9 +3385,19 @@ const AdminDashboard = ({
                             <div key={lesson.id} className="bg-black/40 p-4 rounded-xl border border-zinc-800 flex justify-between items-center group">
                               <div className="flex items-center gap-4">
                                 <span className="text-gray-700 font-mono text-[10px]">{lIdx + 1}</span>
-                                <span className="text-gray-300 text-sm">{lesson.title}</span>
+                                <div className="flex items-center gap-2">
+                                  {lesson.video_url ? (
+                                    <Play className="w-3 h-3 text-gray-500 fill-current" />
+                                  ) : lesson.pdf_url ? (
+                                    <FileText className="w-3 h-3 text-gray-500" />
+                                  ) : (
+                                    <BookOpen className="w-3 h-3 text-gray-500" />
+                                  )}
+                                  <span className="text-gray-300 text-sm">{lesson.title}</span>
+                                </div>
                               </div>
                               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                <button onClick={() => handleEditLesson(lesson)} className="p-1 text-gray-500 hover:text-blue-500"><Edit2 className="w-3 h-3" /></button>
                                 <button onClick={() => moveLesson(lesson.id, 'up')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronUp className="w-3 h-3" /></button>
                                 <button onClick={() => moveLesson(lesson.id, 'down')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronDown className="w-3 h-3" /></button>
                                 <button onClick={() => deleteLesson(lesson.id)} className="p-1 text-gray-500 hover:text-red-500 ml-2"><Trash2 className="w-3 h-3" /></button>
