@@ -872,10 +872,10 @@ const Features = () => {
 
 const Gallery = ({ branding }: { branding: any }) => {
   const images = [
-    { url: branding?.landing_images?.gallery1 || "https://picsum.photos/seed/ai1/800/800", prompt: "Cyberpunk city at night, neon lights, cinematic lighting" },
-    { url: branding?.landing_images?.gallery2 || "https://picsum.photos/seed/ai2/800/800", prompt: "Hyper-realistic portrait of a futuristic robot, gold accents" },
-    { url: branding?.landing_images?.gallery3 || "https://picsum.photos/seed/ai3/800/800", prompt: "Surreal landscape with floating islands and purple sky" },
-    { url: branding?.landing_images?.gallery4 || "https://picsum.photos/seed/ai4/800/800", prompt: "Macro photography of a crystal butterfly, iridescent wings" },
+    { url: branding?.landing_images?.gallery1 || "https://picsum.photos/seed/ai1/800/800", prompt: branding?.landing_images?.gallery1_text || "Cyberpunk city at night, neon lights, cinematic lighting" },
+    { url: branding?.landing_images?.gallery2 || "https://picsum.photos/seed/ai2/800/800", prompt: branding?.landing_images?.gallery2_text || "Hyper-realistic portrait of a futuristic robot, gold accents" },
+    { url: branding?.landing_images?.gallery3 || "https://picsum.photos/seed/ai3/800/800", prompt: branding?.landing_images?.gallery3_text || "Surreal landscape with floating islands and purple sky" },
+    { url: branding?.landing_images?.gallery4 || "https://picsum.photos/seed/ai4/800/800", prompt: branding?.landing_images?.gallery4_text || "Macro photography of a crystal butterfly, iridescent wings" },
   ];
 
   return (
@@ -1623,7 +1623,60 @@ const AdminDashboard = ({
   });
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingLandingImage, setUploadingLandingImage] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState(false);
+
+  const handleLandingImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('A imagem é muito grande. Por favor, escolha uma imagem com menos de 5MB.');
+      return;
+    }
+
+    setUploadingLandingImage(key);
+    setBrandingError(null);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `landing-${key}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('BRANDING')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error(`Erro ao fazer upload da imagem ${key}:`, uploadError);
+        if (uploadError.message.includes('Bucket not found')) {
+          setBrandingError(`Erro ao fazer upload para o bucket BRANDING: ${uploadError.message}. Certifique-se de que o bucket existe e é público.`);
+        } else {
+          setBrandingError(`Erro no upload: ${uploadError.message}`);
+        }
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('BRANDING')
+        .getPublicUrl(filePath);
+
+      setBranding(prev => ({ 
+        ...prev, 
+        landing_images: { 
+          ...prev.landing_images, 
+          [key]: publicUrl 
+        } 
+      }));
+      setBrandingSuccess(`Imagem atualizada com sucesso!`);
+      setTimeout(() => setBrandingSuccess(null), 3000);
+    } catch (err: any) {
+      console.error('Erro inesperado no upload:', err);
+      setBrandingError(`Erro inesperado no upload: ${err.message || String(err)}`);
+    } finally {
+      setUploadingLandingImage(null);
+    }
+  };
 
   useEffect(() => {
     setPreviewError(false);
@@ -2656,83 +2709,100 @@ const AdminDashboard = ({
 
                     <div className="pt-6 border-t border-zinc-800">
                       <h3 className="text-lg font-bold text-white mb-4">Imagens da Landing Page</h3>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Banner Principal (Hero)</label>
-                          <input 
-                            type="text" 
-                            value={branding.landing_images.hero}
-                            onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, hero: e.target.value } }))}
-                            className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 1</label>
-                            <input 
-                              type="text" 
-                              value={branding.landing_images.gallery1}
-                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery1: e.target.value } }))}
-                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 2</label>
-                            <input 
-                              type="text" 
-                              value={branding.landing_images.gallery2}
-                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery2: e.target.value } }))}
-                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 3</label>
-                            <input 
-                              type="text" 
-                              value={branding.landing_images.gallery3}
-                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery3: e.target.value } }))}
-                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Galeria 4</label>
-                            <input 
-                              type="text" 
-                              value={branding.landing_images.gallery4}
-                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery4: e.target.value } }))}
-                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Benefício 1 (Prompt Studio)</label>
-                            <input 
-                              type="text" 
-                              value={branding.landing_images.benefit1}
-                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, benefit1: e.target.value } }))}
-                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Benefício 2 (Video Lab)</label>
-                            <input 
-                              type="text" 
-                              value={branding.landing_images.benefit2}
-                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, benefit2: e.target.value } }))}
-                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Benefício 3 (Bypass Academy)</label>
-                            <input 
-                              type="text" 
-                              value={branding.landing_images.benefit3}
-                              onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, benefit3: e.target.value } }))}
-                              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                            />
-                          </div>
-                        </div>
+                      <div className="space-y-6">
+                        {(() => {
+                          const renderImageUpload = (key: string, label: string, recommendedSize: string) => (
+                            <div className="space-y-2">
+                              <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest block">
+                                {label} <span className="text-orange-500 lowercase">({recommendedSize})</span>
+                              </label>
+                              <div className="flex gap-2">
+                                <input 
+                                  type="text" 
+                                  value={branding.landing_images[key] || ''}
+                                  onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, [key]: e.target.value } }))}
+                                  className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                                  placeholder="URL da imagem"
+                                />
+                                <input 
+                                  type="file" 
+                                  accept="image/*"
+                                  onChange={(e) => handleLandingImageUpload(e, key)}
+                                  className="hidden" 
+                                  id={`upload-${key}`}
+                                />
+                                <label 
+                                  htmlFor={`upload-${key}`}
+                                  className="px-4 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center justify-center cursor-pointer border border-zinc-700 shrink-0"
+                                  title="Fazer Upload do PC"
+                                >
+                                  {uploadingLandingImage === key ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                                </label>
+                              </div>
+                            </div>
+                          );
+
+                          return (
+                            <>
+                              {renderImageUpload('hero', 'Banner Principal (Hero)', '1920x1080')}
+                              
+                              <div className="pt-4 border-t border-zinc-800/50">
+                                <h4 className="text-sm font-bold text-white mb-4">Galeria de Resultados</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                    {renderImageUpload('gallery1', 'Galeria 1', '800x800')}
+                                    <input 
+                                      type="text" 
+                                      value={branding.landing_images.gallery1_text || ''}
+                                      onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery1_text: e.target.value } }))}
+                                      className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 text-xs mt-2"
+                                      placeholder="Texto do Prompt 1"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                    {renderImageUpload('gallery2', 'Galeria 2', '800x800')}
+                                    <input 
+                                      type="text" 
+                                      value={branding.landing_images.gallery2_text || ''}
+                                      onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery2_text: e.target.value } }))}
+                                      className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 text-xs mt-2"
+                                      placeholder="Texto do Prompt 2"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                    {renderImageUpload('gallery3', 'Galeria 3', '800x800')}
+                                    <input 
+                                      type="text" 
+                                      value={branding.landing_images.gallery3_text || ''}
+                                      onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery3_text: e.target.value } }))}
+                                      className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 text-xs mt-2"
+                                      placeholder="Texto do Prompt 3"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                    {renderImageUpload('gallery4', 'Galeria 4', '800x800')}
+                                    <input 
+                                      type="text" 
+                                      value={branding.landing_images.gallery4_text || ''}
+                                      onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, gallery4_text: e.target.value } }))}
+                                      className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 text-xs mt-2"
+                                      placeholder="Texto do Prompt 4"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="pt-4 border-t border-zinc-800/50">
+                                <h4 className="text-sm font-bold text-white mb-4">Benefícios</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                  {renderImageUpload('benefit1', 'Benefício 1 (Prompt Studio)', '600x400')}
+                                  {renderImageUpload('benefit2', 'Benefício 2 (Video Lab)', '600x400')}
+                                  {renderImageUpload('benefit3', 'Benefício 3 (Bypass Academy)', '600x400')}
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
 
