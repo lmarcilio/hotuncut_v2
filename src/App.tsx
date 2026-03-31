@@ -48,7 +48,8 @@ import {
   Activity,
   ExternalLink,
   Database,
-  FileText
+  FileText,
+  Home
 } from 'lucide-react';
 
 // --- Components ---
@@ -170,6 +171,7 @@ const MemberArea = ({
   };
 
   const menuItems = [
+    { id: 'home', label: 'Início', icon: <Home className="w-5 h-5" /> },
     { id: 'prompts', label: 'Prompts', icon: <Sparkles className="w-5 h-5" /> },
     { id: 'lessons', label: 'Aulas', icon: <BookOpen className="w-5 h-5" /> },
     { id: 'tools', label: 'Ferramentas', icon: <LinkIcon className="w-5 h-5" /> },
@@ -351,12 +353,14 @@ const MemberArea = ({
           />
           <div className="absolute bottom-0 left-0 p-12 z-20">
             <h1 className="text-4xl font-black text-white mb-2 uppercase tracking-tight">
+              {activeTab === 'home' && 'Bem-vindo ao HotUncut'}
               {activeTab === 'prompts' && 'Biblioteca de Prompts'}
               {activeTab === 'lessons' && 'Treinamento Exclusivo'}
               {activeTab === 'tools' && 'Ferramentas de Elite'}
               {activeTab === 'settings' && 'Minha Conta'}
             </h1>
             <p className="text-gray-400 font-medium">
+              {activeTab === 'home' && 'Novidades e anúncios importantes.'}
               {activeTab === 'prompts' && 'Os melhores comandos para gerar conteúdo sem limites.'}
               {activeTab === 'lessons' && 'Aprenda o passo a passo da engenharia de prompts.'}
               {activeTab === 'tools' && 'Acesse as plataformas mais poderosas do mercado.'}
@@ -366,6 +370,35 @@ const MemberArea = ({
         </header>
 
         <div className="p-12">
+          {activeTab === 'home' && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-zinc-900 rounded-[3rem] border border-orange-500/30 overflow-hidden shadow-[0_0_50px_rgba(249,115,22,0.1)]">
+                {branding?.landing_images?.home_announcement_image && (
+                  <div className="w-full h-64 md:h-96 relative">
+                    <img 
+                      src={branding.landing_images.home_announcement_image} 
+                      alt="Anúncio" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+                  </div>
+                )}
+                <div className="p-8 md:p-12 relative z-10 -mt-20">
+                  <div className="bg-orange-500 text-black text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full inline-flex items-center gap-2 mb-6">
+                    <Sparkles className="w-4 h-4" /> Novidade
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">
+                    {branding?.landing_images?.home_announcement_title || 'Em breve teremos uma ferramenta de rateio das IAs.'}
+                  </h2>
+                  <p className="text-gray-400 text-lg leading-relaxed whitespace-pre-wrap">
+                    {branding?.landing_images?.home_announcement_text || 'Fique ligado! Estamos preparando algo incrível para você.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'prompts' && (
             <div className="space-y-12">
               {/* Filters */}
@@ -1702,6 +1735,7 @@ const AdminDashboard = ({
   const [newCategory, setNewCategory] = useState('');
   const [newSubcategory, setNewSubcategory] = useState({ categoryId: '', name: '' });
   const [newPrompt, setNewPrompt] = useState({ 
+    id: '',
     categoryId: '', 
     subcategoryId: '', 
     title: '',
@@ -2277,7 +2311,8 @@ const AdminDashboard = ({
 
   const addPrompt = async () => {
     if (!newPrompt.content || !newPrompt.categoryId || !newPrompt.subcategoryId || !newPrompt.title) return;
-    const { error } = await supabase.from('prompts').insert([{ 
+    
+    const promptData = {
       title: newPrompt.title,
       description: newPrompt.description,
       content: newPrompt.content,
@@ -2286,18 +2321,35 @@ const AdminDashboard = ({
       is_favorite: newPrompt.isFavorite,
       is_special_18: newPrompt.isSpecial18,
       image_url: newPrompt.imageUrl || null
-    }]);
-    if (error) {
-      console.error('Erro ao adicionar prompt:', error);
-      if (error.message.includes('image_url') || error.message.includes('title')) {
-        alert('Erro: Colunas faltando na tabela "prompts". Execute no SQL Editor do Supabase:\n\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS image_url TEXT;\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS title TEXT;\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS description TEXT;');
+    };
+
+    if (newPrompt.id) {
+      const { error } = await supabase.from('prompts').update(promptData).eq('id', newPrompt.id);
+      if (error) {
+        console.error('Erro ao atualizar prompt:', error);
+        alert('Erro ao atualizar prompt: ' + error.message);
       } else {
-        alert('Erro ao adicionar prompt: ' + error.message);
+        setNewPrompt({ id: '', categoryId: newPrompt.categoryId, subcategoryId: newPrompt.subcategoryId, title: '', description: '', content: '', isFavorite: false, isSpecial18: false, imageUrl: '' });
+        fetchPrompts();
       }
     } else {
-      setNewPrompt({ ...newPrompt, title: '', description: '', content: '', isFavorite: false, isSpecial18: false, imageUrl: '' });
-      fetchPrompts();
+      const { error } = await supabase.from('prompts').insert([promptData]);
+      if (error) {
+        console.error('Erro ao adicionar prompt:', error);
+        if (error.message.includes('image_url') || error.message.includes('title')) {
+          alert('Erro: Colunas faltando na tabela "prompts". Execute no SQL Editor do Supabase:\n\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS image_url TEXT;\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS title TEXT;\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS description TEXT;');
+        } else {
+          alert('Erro ao adicionar prompt: ' + error.message);
+        }
+      } else {
+        setNewPrompt({ id: '', categoryId: newPrompt.categoryId, subcategoryId: newPrompt.subcategoryId, title: '', description: '', content: '', isFavorite: false, isSpecial18: false, imageUrl: '' });
+        fetchPrompts();
+      }
     }
+  };
+
+  const cancelEditPrompt = () => {
+    setNewPrompt({ id: '', categoryId: newPrompt.categoryId, subcategoryId: newPrompt.subcategoryId, title: '', description: '', content: '', isFavorite: false, isSpecial18: false, imageUrl: '' });
   };
 
   const deletePrompt = async (id: string) => {
@@ -2891,6 +2943,26 @@ const AdminDashboard = ({
 
                           return (
                             <>
+                              <div className="pt-4 border-t border-zinc-800/50 mb-6">
+                                <h4 className="text-sm font-bold text-white mb-4">Anúncio da Página Inicial (Membros)</h4>
+                                <div className="space-y-4 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                  {renderImageUpload('home_announcement_image', 'Imagem do Anúncio', '1920x1080')}
+                                  <input 
+                                    type="text" 
+                                    value={branding.landing_images.home_announcement_title || ''}
+                                    onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, home_announcement_title: e.target.value } }))}
+                                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                                    placeholder="Título do Anúncio (ex: Em breve teremos uma ferramenta...)"
+                                  />
+                                  <textarea 
+                                    value={branding.landing_images.home_announcement_text || ''}
+                                    onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, home_announcement_text: e.target.value } }))}
+                                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm min-h-[100px]"
+                                    placeholder="Descrição do anúncio..."
+                                  />
+                                </div>
+                              </div>
+
                               {renderImageUpload('hero', 'Banner Principal (Hero)', '1920x1080')}
                               
                               <div className="pt-4 border-t border-zinc-800/50">
@@ -3455,9 +3527,17 @@ const AdminDashboard = ({
                         <span className="text-sm text-gray-400 group-hover:text-white">Destaque +18</span>
                       </label>
                     </div>
-                    <button onClick={addPrompt} className="px-8 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
-                      <Plus className="w-5 h-5" /> Salvar Prompt
-                    </button>
+                    <div className="flex gap-4">
+                      {newPrompt.id && (
+                        <button onClick={cancelEditPrompt} className="px-8 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all">
+                          Cancelar
+                        </button>
+                      )}
+                      <button onClick={addPrompt} className="px-8 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
+                        {newPrompt.id ? <Edit2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />} 
+                        {newPrompt.id ? 'Atualizar Prompt' : 'Salvar Prompt'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -3479,6 +3559,25 @@ const AdminDashboard = ({
                           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                             <button onClick={() => toggleFavorite(p.id, p.is_favorite)} className={`p-2 rounded-lg hover:bg-zinc-800 ${p.is_favorite ? 'text-orange-500' : 'text-gray-500'}`}>
                               <Star className={`w-4 h-4 ${p.is_favorite ? 'fill-current' : ''}`} />
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setNewPrompt({
+                                  id: p.id,
+                                  categoryId: p.category_id,
+                                  subcategoryId: p.subcategory_id,
+                                  title: p.title || '',
+                                  description: p.description || '',
+                                  content: p.content,
+                                  isFavorite: p.is_favorite || false,
+                                  isSpecial18: p.is_special_18 || false,
+                                  imageUrl: p.image_url || ''
+                                });
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }} 
+                              className="p-2 rounded-lg hover:bg-zinc-800 text-gray-500 hover:text-blue-500"
+                            >
+                              <Edit2 className="w-4 h-4" />
                             </button>
                             <button onClick={() => deletePrompt(p.id)} className="p-2 rounded-lg hover:bg-zinc-800 text-gray-500 hover:text-red-500">
                               <Trash2 className="w-4 h-4" />
@@ -3968,7 +4067,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
-  const [memberTab, setMemberTab] = useState<'prompts' | 'lessons' | 'tools' | 'settings'>('prompts');
+  const [memberTab, setMemberTab] = useState<'home' | 'prompts' | 'lessons' | 'tools' | 'settings'>('home');
 
   const [settings, setSettings] = useState({
     supabase_url: import.meta.env.VITE_SUPABASE_URL || '',
