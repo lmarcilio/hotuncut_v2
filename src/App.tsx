@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   ArrowRight,
+  ArrowLeft,
   Sparkles,
   Lock,
   LogOut,
@@ -93,6 +94,7 @@ const MemberArea = ({
   setActiveTab,
   prompts,
   categories,
+  subcategories,
   selectedCategory,
   setSelectedCategory,
   showFavoritesOnly,
@@ -113,6 +115,7 @@ const MemberArea = ({
   setActiveTab: (tab: any) => void,
   prompts: any[],
   categories: any[],
+  subcategories: any[],
   selectedCategory: string,
   setSelectedCategory: (cat: string) => void,
   showFavoritesOnly: boolean,
@@ -138,6 +141,13 @@ const MemberArea = ({
     return saved ? JSON.parse(saved) : {};
   });
   const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
+
+  // Reset subcategory when category changes
+  useEffect(() => {
+    setSelectedSubcategory('all');
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (activeTab === 'lessons') {
@@ -180,6 +190,67 @@ const MemberArea = ({
             <Sparkles className="w-5 h-5" />
             Novas aulas atualizadas!
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedPrompt && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="max-w-2xl w-full bg-zinc-900 border border-zinc-800 p-8 rounded-[2.5rem] shadow-2xl relative max-h-[90vh] overflow-y-auto"
+            >
+              <button 
+                onClick={() => setSelectedPrompt(null)}
+                className="absolute top-6 right-6 p-2 bg-zinc-800 text-gray-400 rounded-full hover:text-white hover:bg-zinc-700 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="mb-6 pr-12">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{selectedPrompt.categories?.name}</span>
+                  <span className="text-gray-600">&bull;</span>
+                  <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{selectedPrompt.subcategories?.name}</span>
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">{selectedPrompt.title || selectedPrompt.subcategories?.name}</h2>
+                {selectedPrompt.description && (
+                  <p className="text-gray-400 text-sm">{selectedPrompt.description}</p>
+                )}
+              </div>
+
+              {selectedPrompt.image_url && (
+                <div className="w-full h-64 mb-8 rounded-3xl overflow-hidden border border-zinc-800 relative">
+                  <img 
+                    src={selectedPrompt.image_url} 
+                    alt={selectedPrompt.title || "Prompt image"} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="relative group mb-8">
+                <div className="absolute -top-3 left-4 px-2 bg-zinc-900 text-xs font-bold text-gray-500 uppercase tracking-widest">Prompt Completo</div>
+                <code className="text-sm text-gray-300 block bg-black p-6 rounded-3xl border border-zinc-800 font-mono leading-relaxed min-h-[150px] whitespace-pre-wrap">
+                  {selectedPrompt.content}
+                </code>
+              </div>
+
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedPrompt.content);
+                    alert('Prompt copiado!');
+                  }}
+                  className="flex-1 py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+                >
+                  <Copy className="w-5 h-5" /> Copiar Prompt
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -298,52 +369,78 @@ const MemberArea = ({
           {activeTab === 'prompts' && (
             <div className="space-y-12">
               {/* Filters */}
-              <div className="flex flex-wrap items-center gap-4">
-                <button 
-                  onClick={() => setSelectedCategory('all')}
-                  className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === 'all' ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
-                >
-                  Todos
-                </button>
-                {categories
-                  .filter(cat => {
-                    // Only show categories that have prompts matching the current adult mode
-                    return prompts.some(p => p.category_id === cat.id && !!p.is_special_18 === isAdultMode);
-                  })
-                  .map(cat => (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                   <button 
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === cat.id ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
+                    onClick={() => setSelectedCategory('all')}
+                    className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === 'all' ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
                   >
-                    {cat.name}
+                    Todos
                   </button>
-                ))}
-                <button 
-                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${showFavoritesOnly ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
-                >
-                  <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> Favoritos
-                </button>
-                
-                {/* Adult Mode Toggle */}
-                {!isAdultMode ? (
+                  {categories
+                    .filter(cat => {
+                      // Only show categories that have prompts matching the current adult mode
+                      return prompts.some(p => p.category_id === cat.id && !!p.is_special_18 === isAdultMode);
+                    })
+                    .map(cat => (
+                    <button 
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === cat.id ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
                   <button 
-                    onClick={() => setShowAdultModal(true)}
-                    className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 ml-auto"
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${showFavoritesOnly ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
                   >
-                    <AlertCircle className="w-4 h-4" /> Conteúdo +18
+                    <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> Favoritos
                   </button>
-                ) : (
-                  <button 
-                    onClick={() => {
-                      setIsAdultMode(false);
-                      setSelectedCategory('all');
-                    }}
-                    className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700 ml-auto"
-                  >
-                    Voltar para Conteúdo Normal
-                  </button>
+                  
+                  {/* Adult Mode Toggle */}
+                  {!isAdultMode ? (
+                    <button 
+                      onClick={() => setShowAdultModal(true)}
+                      className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 ml-auto"
+                    >
+                      <AlertCircle className="w-4 h-4" /> Conteúdo +18
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        setIsAdultMode(false);
+                        setSelectedCategory('all');
+                      }}
+                      className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700 ml-auto"
+                    >
+                      Voltar para Conteúdo Normal
+                    </button>
+                  )}
+                </div>
+
+                {/* Subcategories Filter Row */}
+                {selectedCategory !== 'all' && (
+                  <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-zinc-800">
+                    <button 
+                      onClick={() => setSelectedSubcategory('all')}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === 'all' ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
+                    >
+                      Todas as Subcategorias
+                    </button>
+                    {subcategories
+                      .filter(sub => sub.category_id === selectedCategory)
+                      .filter(sub => prompts.some(p => p.subcategory_id === sub.id && !!p.is_special_18 === isAdultMode))
+                      .map(sub => (
+                      <button 
+                        key={sub.id}
+                        onClick={() => setSelectedSubcategory(sub.id)}
+                        className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === sub.id ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
+                      >
+                        {sub.name}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -351,6 +448,7 @@ const MemberArea = ({
                 {prompts
                   .filter(p => !!p.is_special_18 === isAdultMode)
                   .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
+                  .filter(p => selectedSubcategory === 'all' || p.subcategory_id === selectedSubcategory)
                   .filter(p => !showFavoritesOnly || p.is_favorite)
                   .map(prompt => (
                   <motion.div 
@@ -377,10 +475,10 @@ const MemberArea = ({
                       </div>
                     )}
 
-                    <div className="flex justify-between items-start mb-6">
+                    <div className="flex justify-between items-start mb-4">
                       <div className="space-y-1">
-                        <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{prompt.categories?.name}</span>
-                        <h4 className="text-white font-bold text-xl">{prompt.subcategories?.name}</h4>
+                        <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{prompt.categories?.name} &bull; {prompt.subcategories?.name}</span>
+                        <h4 className="text-white font-bold text-xl">{prompt.title || prompt.subcategories?.name}</h4>
                       </div>
                       <button 
                         onClick={() => toggleFavorite(prompt.id, prompt.is_favorite)}
@@ -390,29 +488,34 @@ const MemberArea = ({
                       </button>
                     </div>
 
-                    <div className="relative group">
-                      <code className="text-sm text-gray-300 block bg-black/50 p-6 rounded-3xl border border-zinc-800 mb-6 font-mono leading-relaxed min-h-[120px]">
-                        {prompt.content}
-                      </code>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(prompt.content);
-                          alert('Prompt copiado!');
-                        }}
-                        className="absolute top-4 right-4 p-2 bg-zinc-800 text-gray-400 rounded-lg hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                        title="Copiar Prompt"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {prompt.description && (
+                      <p className="text-gray-400 text-sm mb-6 line-clamp-3">
+                        {prompt.description}
+                      </p>
+                    )}
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Clock className="w-3 h-3" /> {new Date(prompt.created_at).toLocaleDateString()}
-                      </div>
-                      <button className="text-sm text-orange-500 font-bold hover:underline flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4" /> Ver Exemplo
+                    <div className="flex flex-col gap-4">
+                      <button 
+                        onClick={() => setSelectedPrompt(prompt)}
+                        className="w-full py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center justify-center gap-2"
+                      >
+                        Prompt Completo
                       </button>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Clock className="w-3 h-3" /> {new Date(prompt.created_at).toLocaleDateString()}
+                        </div>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(prompt.content);
+                            alert('Prompt copiado!');
+                          }}
+                          className="text-sm text-orange-500 font-bold hover:underline flex items-center gap-2"
+                        >
+                          <Copy className="w-4 h-4" /> Copiar
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -421,94 +524,171 @@ const MemberArea = ({
           )}
 
           {activeTab === 'lessons' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              {modules.map((module, mIdx) => (
-                <div key={module.id} className="bg-zinc-900/50 rounded-[3rem] border border-zinc-800 p-8">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-orange-500 text-black rounded-2xl flex items-center justify-center font-black text-xl">
-                      {mIdx + 1}
+            selectedLesson ? (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <button 
+                  onClick={() => setSelectedLesson(null)}
+                  className="px-6 py-3 bg-zinc-900 text-white font-bold rounded-2xl hover:bg-zinc-800 transition-all flex items-center gap-2 border border-zinc-800 w-fit"
+                >
+                  <ArrowLeft className="w-5 h-5" /> Voltar para Aulas
+                </button>
+                
+                <div className="bg-zinc-900 rounded-[3rem] border border-zinc-800 overflow-hidden">
+                  {selectedLesson.video_url ? (
+                    <div className="aspect-video bg-black shrink-0">
+                      <iframe 
+                        src={selectedLesson.video_url.replace('watch?v=', 'embed/').replace('vimeo.com/', 'player.vimeo.com/video/')}
+                        className="w-full h-full"
+                        allowFullScreen
+                      />
                     </div>
-                    <div>
-                      <h4 className="text-xl font-bold text-white uppercase tracking-tight">{module.title}</h4>
-                      <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">
-                        {lessons.filter(l => l.module_id === module.id).length} AULAS
-                      </p>
+                  ) : selectedLesson.pdf_url ? (
+                    <div className="aspect-video bg-zinc-800 flex flex-col items-center justify-center text-center p-8 shrink-0">
+                      <FileText className="w-20 h-20 text-orange-500 mb-4" />
+                      <h4 className="text-2xl font-bold text-white mb-2">Material em PDF</h4>
+                      <p className="text-gray-400 mb-6">Esta aula é composta por um material em PDF.</p>
+                      <a 
+                        href={selectedLesson.pdf_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-8 py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center gap-2"
+                      >
+                        <FileText className="w-5 h-5" /> Abrir PDF
+                      </a>
                     </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {lessons
-                      .filter(l => l.module_id === module.id)
-                      .sort((a, b) => a.order_index - b.order_index)
-                      .map((lesson, lIdx) => {
-                        const isUpdated = lesson.updated_at && (!viewedUpdates[lesson.id] || new Date(lesson.updated_at) > new Date(viewedUpdates[lesson.id]));
-                        return (
-                        <button 
-                          key={lesson.id} 
-                          onClick={() => handleLessonSelect(lesson)}
-                          className="w-full group flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-zinc-800/50 hover:border-orange-500/50 transition-all text-left relative overflow-hidden"
+                  ) : (
+                    <div className="aspect-video bg-black flex items-center justify-center text-gray-500 shrink-0">
+                      Conteúdo não disponível
+                    </div>
+                  )}
+                  
+                  <div className="p-8 md:p-12">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
+                      <div>
+                        <h3 className="text-3xl font-black text-white mb-2 uppercase">{selectedLesson.title}</h3>
+                        <p className="text-gray-400 leading-relaxed whitespace-pre-wrap">{selectedLesson.description || 'Sem descrição disponível para esta aula.'}</p>
+                      </div>
+                      {selectedLesson.pdf_url && selectedLesson.video_url && (
+                        <a 
+                          href={selectedLesson.pdf_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="shrink-0 px-6 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-2 border border-zinc-700"
                         >
-                          {isUpdated && (
-                            <div className="absolute top-0 right-0 bg-orange-500 text-black text-[8px] font-black uppercase px-2 py-1 rounded-bl-lg z-10">
-                              Atualizado
-                            </div>
-                          )}
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-orange-500/20 flex items-center justify-center transition-all">
-                              {lesson.video_url ? (
-                                <Play className="w-3 h-3 text-gray-500 group-hover:text-orange-500 fill-current" />
-                              ) : lesson.pdf_url ? (
-                                <FileText className="w-3 h-3 text-gray-500 group-hover:text-orange-500" />
-                              ) : (
-                                <BookOpen className="w-3 h-3 text-gray-500 group-hover:text-orange-500" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-gray-300 group-hover:text-white transition-all flex items-center gap-2">
-                                {lesson.title}
-                                {isUpdated && <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>}
-                              </p>
-                              {lesson.description && <p className="text-[10px] text-gray-600 line-clamp-1">{lesson.description}</p>}
-                            </div>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-orange-500 transition-all" />
-                        </button>
-                      )})}
+                          <FileText className="w-5 h-5 text-orange-500" /> Baixar Material
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {modules.map((module, mIdx) => (
+                  <div key={module.id} className="bg-zinc-900/50 rounded-[3rem] border border-zinc-800 p-8">
+                    <div className="flex items-start gap-4 mb-8">
+                      <div className="w-12 h-12 bg-orange-500 text-black rounded-2xl flex items-center justify-center font-black text-xl shrink-0">
+                        {mIdx + 1}
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold text-white uppercase tracking-tight">{module.title}</h4>
+                        <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-2">
+                          {lessons.filter(l => l.module_id === module.id).length} AULAS
+                        </p>
+                        {module.description && (
+                          <p className="text-sm text-gray-400 leading-relaxed">
+                            {module.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {lessons
+                        .filter(l => l.module_id === module.id)
+                        .sort((a, b) => a.order_index - b.order_index)
+                        .map((lesson, lIdx) => {
+                          const isUpdated = lesson.updated_at && (!viewedUpdates[lesson.id] || new Date(lesson.updated_at) > new Date(viewedUpdates[lesson.id]));
+                          return (
+                          <button 
+                            key={lesson.id} 
+                            onClick={() => handleLessonSelect(lesson)}
+                            className="w-full group flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-zinc-800/50 hover:border-orange-500/50 transition-all text-left relative overflow-hidden"
+                          >
+                            {isUpdated && (
+                              <div className="absolute top-0 right-0 bg-orange-500 text-black text-[8px] font-black uppercase px-2 py-1 rounded-bl-lg z-10">
+                                Atualizado
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4">
+                              <div className="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-orange-500/20 flex items-center justify-center transition-all">
+                                {lesson.video_url ? (
+                                  <Play className="w-3 h-3 text-gray-500 group-hover:text-orange-500 fill-current" />
+                                ) : lesson.pdf_url ? (
+                                  <FileText className="w-3 h-3 text-gray-500 group-hover:text-orange-500" />
+                                ) : (
+                                  <BookOpen className="w-3 h-3 text-gray-500 group-hover:text-orange-500" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-300 group-hover:text-white transition-all flex items-center gap-2">
+                                  {lesson.title}
+                                  {isUpdated && <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>}
+                                </p>
+                                {lesson.description && <p className="text-[10px] text-gray-600 line-clamp-1">{lesson.description}</p>}
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-orange-500 transition-all" />
+                          </button>
+                        )})}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
 
           {activeTab === 'tools' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {tools.map((tool) => (
-                <a 
-                  key={tool.id}
-                  href={tool.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative bg-zinc-900/50 rounded-[2.5rem] border border-zinc-800 p-6 hover:border-orange-500/50 transition-all hover:scale-[1.02]"
-                >
-                  {tool.image_url ? (
-                    <div className="aspect-video mb-6 overflow-hidden rounded-2xl bg-black">
-                      <img 
-                        src={tool.image_url} 
-                        alt={tool.name} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video mb-6 rounded-2xl bg-zinc-800 flex items-center justify-center">
-                      <LinkIcon className="w-8 h-8 text-gray-600 group-hover:text-orange-500 transition-all" />
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-xl font-bold text-white group-hover:text-orange-500 transition-all">{tool.name}</h4>
-                    <ArrowRight className="w-5 h-5 text-gray-700 group-hover:text-orange-500 transition-all" />
+            <div className="space-y-12">
+              {Array.from(new Set(tools.map(t => t.category || 'Geral'))).map(category => (
+                <div key={category} className="space-y-6">
+                  <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-500 flex items-center justify-center">
+                      <LinkIcon className="w-4 h-4" />
+                    </span>
+                    {category}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {tools.filter(t => (t.category || 'Geral') === category).map((tool) => (
+                      <a 
+                        key={tool.id}
+                        href={tool.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group relative bg-zinc-900/50 rounded-[2.5rem] border border-zinc-800 p-6 hover:border-orange-500/50 transition-all hover:scale-[1.02]"
+                      >
+                        {tool.image_url ? (
+                          <div className="aspect-video mb-6 overflow-hidden rounded-2xl bg-black">
+                            <img 
+                              src={tool.image_url} 
+                              alt={tool.name} 
+                              className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ) : (
+                          <div className="aspect-video mb-6 rounded-2xl bg-zinc-800 flex items-center justify-center">
+                            <LinkIcon className="w-8 h-8 text-gray-600 group-hover:text-orange-500 transition-all" />
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-xl font-bold text-white group-hover:text-orange-500 transition-all">{tool.name}</h4>
+                          <ArrowRight className="w-5 h-5 text-gray-700 group-hover:text-orange-500 transition-all" />
+                        </div>
+                      </a>
+                    ))}
                   </div>
-                </a>
+                </div>
               ))}
             </div>
           )}
@@ -604,67 +784,6 @@ const MemberArea = ({
           )}
         </div>
       </main>
-
-      {/* Video/PDF Player Modal */}
-      {selectedLesson && (
-        <div className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4 md:p-12">
-          <div className="max-w-5xl w-full bg-zinc-900 rounded-[3rem] border border-zinc-800 overflow-hidden relative max-h-[90vh] flex flex-col">
-            <button 
-              onClick={() => setSelectedLesson(null)}
-              className="absolute top-6 right-6 z-10 p-3 bg-black/50 text-white rounded-full hover:bg-orange-500 transition-all"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            {selectedLesson.video_url ? (
-              <div className="aspect-video bg-black shrink-0">
-                <iframe 
-                  src={selectedLesson.video_url.replace('watch?v=', 'embed/').replace('vimeo.com/', 'player.vimeo.com/video/')}
-                  className="w-full h-full"
-                  allowFullScreen
-                />
-              </div>
-            ) : selectedLesson.pdf_url ? (
-              <div className="aspect-video bg-zinc-800 flex flex-col items-center justify-center text-center p-8 shrink-0">
-                <FileText className="w-20 h-20 text-orange-500 mb-4" />
-                <h4 className="text-2xl font-bold text-white mb-2">Material em PDF</h4>
-                <p className="text-gray-400 mb-6">Esta aula é composta por um material em PDF.</p>
-                <a 
-                  href={selectedLesson.pdf_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="px-8 py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center gap-2"
-                >
-                  <FileText className="w-5 h-5" /> Abrir PDF
-                </a>
-              </div>
-            ) : (
-              <div className="aspect-video bg-black flex items-center justify-center text-gray-500 shrink-0">
-                Conteúdo não disponível
-              </div>
-            )}
-            
-            <div className="p-8 md:p-12 overflow-y-auto">
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
-                <div>
-                  <h3 className="text-3xl font-black text-white mb-2 uppercase">{selectedLesson.title}</h3>
-                  <p className="text-gray-400 leading-relaxed">{selectedLesson.description || 'Sem descrição disponível para esta aula.'}</p>
-                </div>
-                {selectedLesson.pdf_url && selectedLesson.video_url && (
-                  <a 
-                    href={selectedLesson.pdf_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="shrink-0 px-6 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-2 border border-zinc-700"
-                  >
-                    <FileText className="w-5 h-5 text-orange-500" /> Baixar Material
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -1585,13 +1704,15 @@ const AdminDashboard = ({
   const [newPrompt, setNewPrompt] = useState({ 
     categoryId: '', 
     subcategoryId: '', 
+    title: '',
+    description: '',
     content: '', 
     isFavorite: false, 
     isSpecial18: false,
     imageUrl: ''
   });
   const [uploadingPromptImage, setUploadingPromptImage] = useState(false);
-  const [newModule, setNewModule] = useState('');
+  const [newModule, setNewModule] = useState({ title: '', description: '' });
   const [newLesson, setNewLesson] = useState({
     moduleId: '',
     title: '',
@@ -1604,7 +1725,8 @@ const AdminDashboard = ({
   const [newTool, setNewTool] = useState({
     name: '',
     url: '',
-    imageUrl: ''
+    imageUrl: '',
+    category: 'Imagem'
   });
 
   const [branding, setBranding] = useState({
@@ -2154,8 +2276,10 @@ const AdminDashboard = ({
   };
 
   const addPrompt = async () => {
-    if (!newPrompt.content || !newPrompt.categoryId || !newPrompt.subcategoryId) return;
+    if (!newPrompt.content || !newPrompt.categoryId || !newPrompt.subcategoryId || !newPrompt.title) return;
     const { error } = await supabase.from('prompts').insert([{ 
+      title: newPrompt.title,
+      description: newPrompt.description,
       content: newPrompt.content,
       category_id: newPrompt.categoryId,
       subcategory_id: newPrompt.subcategoryId,
@@ -2165,13 +2289,13 @@ const AdminDashboard = ({
     }]);
     if (error) {
       console.error('Erro ao adicionar prompt:', error);
-      if (error.message.includes('image_url')) {
-        alert('Erro: A coluna "image_url" não existe na tabela "prompts". Execute no SQL Editor do Supabase:\n\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS image_url TEXT;');
+      if (error.message.includes('image_url') || error.message.includes('title')) {
+        alert('Erro: Colunas faltando na tabela "prompts". Execute no SQL Editor do Supabase:\n\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS image_url TEXT;\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS title TEXT;\nALTER TABLE prompts ADD COLUMN IF NOT EXISTS description TEXT;');
       } else {
         alert('Erro ao adicionar prompt: ' + error.message);
       }
     } else {
-      setNewPrompt({ ...newPrompt, content: '', isFavorite: false, isSpecial18: false, imageUrl: '' });
+      setNewPrompt({ ...newPrompt, title: '', description: '', content: '', isFavorite: false, isSpecial18: false, imageUrl: '' });
       fetchPrompts();
     }
   };
@@ -2193,14 +2317,30 @@ const AdminDashboard = ({
   };
 
   const addModule = async () => {
-    if (!newModule) return;
+    if (!newModule.title) return;
     const { error } = await supabase.from('modules').insert([{ 
-      title: newModule, 
+      title: newModule.title, 
+      description: newModule.description,
       order_index: modules.length 
     }]);
-    if (!error) {
-      setNewModule('');
+    if (error) {
+      if (error.message.includes('description')) {
+        alert('Erro: Coluna "description" faltando na tabela "modules". Execute no SQL Editor do Supabase:\n\nALTER TABLE modules ADD COLUMN IF NOT EXISTS description TEXT;');
+      } else {
+        alert('Erro ao adicionar módulo: ' + error.message);
+      }
+    } else {
+      setNewModule({ title: '', description: '' });
       fetchModules();
+    }
+  };
+
+  const updateModule = async (id: string, updates: any) => {
+    const { error } = await supabase.from('modules').update(updates).eq('id', id);
+    if (!error) {
+      fetchModules();
+    } else {
+      alert('Erro ao atualizar módulo: ' + error.message);
     }
   };
 
@@ -2379,10 +2519,17 @@ const AdminDashboard = ({
       name: newTool.name,
       url: newTool.url,
       image_url: newTool.imageUrl,
+      category: newTool.category,
       order_index: tools.length
     }]);
-    if (!error) {
-      setNewTool({ name: '', url: '', imageUrl: '' });
+    if (error) {
+      if (error.message.includes('category')) {
+        alert('Erro: Coluna "category" faltando na tabela "tools". Execute no SQL Editor do Supabase:\n\nALTER TABLE tools ADD COLUMN IF NOT EXISTS category TEXT DEFAULT \'Imagem\';');
+      } else {
+        alert('Erro ao adicionar ferramenta: ' + error.message);
+      }
+    } else {
+      setNewTool({ name: '', url: '', imageUrl: '', category: 'Imagem' });
       fetchTools();
     }
   };
@@ -2713,7 +2860,7 @@ const AdminDashboard = ({
                         {(() => {
                           const renderImageUpload = (key: string, label: string, recommendedSize: string) => (
                             <div className="space-y-2">
-                              <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest block">
+                              <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest block truncate">
                                 {label} <span className="text-orange-500 lowercase">({recommendedSize})</span>
                               </label>
                               <div className="flex gap-2">
@@ -2721,7 +2868,7 @@ const AdminDashboard = ({
                                   type="text" 
                                   value={branding.landing_images[key] || ''}
                                   onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, [key]: e.target.value } }))}
-                                  className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                                  className="flex-1 min-w-0 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
                                   placeholder="URL da imagem"
                                 />
                                 <input 
@@ -2794,7 +2941,7 @@ const AdminDashboard = ({
 
                               <div className="pt-4 border-t border-zinc-800/50">
                                 <h4 className="text-sm font-bold text-white mb-4">Benefícios</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                   {renderImageUpload('benefit1', 'Benefício 1 (Prompt Studio)', '600x400')}
                                   {renderImageUpload('benefit2', 'Benefício 2 (Video Lab)', '600x400')}
                                   {renderImageUpload('benefit3', 'Benefício 3 (Bypass Academy)', '600x400')}
@@ -3236,8 +3383,24 @@ const AdminDashboard = ({
                       ))}
                     </select>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input 
+                      type="text" 
+                      placeholder="Título do Prompt" 
+                      value={newPrompt.title}
+                      onChange={(e) => setNewPrompt({...newPrompt, title: e.target.value})}
+                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Descrição Curta" 
+                      value={newPrompt.description}
+                      onChange={(e) => setNewPrompt({...newPrompt, description: e.target.value})}
+                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    />
+                  </div>
                   <textarea 
-                    placeholder="Insira o prompt aqui..." 
+                    placeholder="Insira o prompt completo aqui..." 
                     value={newPrompt.content}
                     onChange={(e) => setNewPrompt({...newPrompt, content: e.target.value})}
                     className="w-full h-32 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 resize-none"
@@ -3322,6 +3485,8 @@ const AdminDashboard = ({
                             </button>
                           </div>
                         </div>
+                        {p.title && <h4 className="text-white font-bold text-lg mb-1">{p.title}</h4>}
+                        {p.description && <p className="text-gray-400 text-sm mb-4">{p.description}</p>}
                         {p.image_url && (
                           <div className="mb-4 w-32 h-32 rounded-xl overflow-hidden border border-zinc-800">
                             <img src={p.image_url} alt="Prompt" className="w-full h-full object-cover" />
@@ -3339,30 +3504,69 @@ const AdminDashboard = ({
                 {/* Modules Management */}
                 <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
                   <h3 className="text-xl font-bold text-white mb-6">Módulos do Curso</h3>
-                  <div className="flex gap-4 mb-6">
-                    <input 
-                      type="text" 
-                      placeholder="Título do Novo Módulo" 
-                      value={newModule}
-                      onChange={(e) => setNewModule(e.target.value)}
-                      className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                  <div className="flex flex-col gap-4 mb-6">
+                    <div className="flex gap-4">
+                      <input 
+                        type="text" 
+                        placeholder="Título do Novo Módulo" 
+                        value={newModule.title}
+                        onChange={(e) => setNewModule({...newModule, title: e.target.value})}
+                        className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                      />
+                      <button onClick={addModule} className="px-6 py-2 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
+                        <Plus className="w-4 h-4" /> Criar Módulo
+                      </button>
+                    </div>
+                    <textarea 
+                      placeholder="Descrição do Módulo (Opcional)" 
+                      value={newModule.description}
+                      onChange={(e) => setNewModule({...newModule, description: e.target.value})}
+                      className="w-full h-20 bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 resize-none"
                     />
-                    <button onClick={addModule} className="px-6 py-2 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
-                      <Plus className="w-4 h-4" /> Criar Módulo
-                    </button>
                   </div>
                   <div className="space-y-3">
                     {modules.map((mod, idx) => (
-                      <div key={mod.id} className="bg-black p-4 rounded-2xl border border-zinc-800 flex justify-between items-center group">
-                        <div className="flex items-center gap-4">
-                          <span className="text-gray-600 font-mono text-xs">{String(idx + 1).padStart(2, '0')}</span>
-                          <span className="text-white font-medium">{mod.title}</span>
+                      <div key={mod.id} className="bg-black p-4 rounded-2xl border border-zinc-800 flex flex-col gap-3 group">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-4 flex-1">
+                            <span className="text-gray-600 font-mono text-xs">{String(idx + 1).padStart(2, '0')}</span>
+                            <div className="relative flex-1 flex items-center">
+                              <input 
+                                type="text"
+                                value={mod.title}
+                                onChange={(e) => {
+                                  const newModules = [...modules];
+                                  newModules[idx].title = e.target.value;
+                                  setModules(newModules);
+                                }}
+                                onBlur={(e) => updateModule(mod.id, { title: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                                className="bg-zinc-900/50 text-white font-medium outline-none border border-zinc-800 focus:border-orange-500 rounded-lg px-3 py-1.5 flex-1 w-full transition-all"
+                                title="Clique para editar o título"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all ml-4">
+                            <button onClick={() => moveModule(mod.id, 'up')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronUp className="w-4 h-4" /></button>
+                            <button onClick={() => moveModule(mod.id, 'down')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronDown className="w-4 h-4" /></button>
+                            <button onClick={() => deleteModule(mod.id)} className="p-1 text-gray-500 hover:text-red-500 ml-2"><Trash2 className="w-4 h-4" /></button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button onClick={() => moveModule(mod.id, 'up')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronUp className="w-4 h-4" /></button>
-                          <button onClick={() => moveModule(mod.id, 'down')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronDown className="w-4 h-4" /></button>
-                          <button onClick={() => deleteModule(mod.id)} className="p-1 text-gray-500 hover:text-red-500 ml-2"><Trash2 className="w-4 h-4" /></button>
-                        </div>
+                        <textarea 
+                          value={mod.description || ''}
+                          onChange={(e) => {
+                            const newModules = [...modules];
+                            newModules[idx].description = e.target.value;
+                            setModules(newModules);
+                          }}
+                          onBlur={(e) => updateModule(mod.id, { description: e.target.value })}
+                          placeholder="Descrição do módulo (clique para editar)..."
+                          className="w-full h-16 bg-zinc-900/50 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-gray-400 outline-none focus:border-orange-500 resize-none transition-all"
+                        />
                       </div>
                     ))}
                   </div>
@@ -3485,7 +3689,7 @@ const AdminDashboard = ({
               <div className="space-y-8">
                 <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
                   <h3 className="text-xl font-bold text-white mb-6">Cadastrar Ferramenta</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <input 
                       type="text" 
                       placeholder="Nome da Ferramenta" 
@@ -3500,6 +3704,16 @@ const AdminDashboard = ({
                       onChange={(e) => setNewTool({...newTool, url: e.target.value})}
                       className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
                     />
+                    <select 
+                      value={newTool.category}
+                      onChange={(e) => setNewTool({...newTool, category: e.target.value})}
+                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    >
+                      <option value="Imagem">Imagem</option>
+                      <option value="Vídeos">Vídeos</option>
+                      <option value="Ebook">Ebook</option>
+                      <option value="Geral">Geral</option>
+                    </select>
                   </div>
                   <input 
                     type="text" 
@@ -3525,6 +3739,7 @@ const AdminDashboard = ({
                         )}
                         <div className="flex justify-between items-start">
                           <div>
+                            <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest block mb-1">{tool.category || 'Geral'}</span>
                             <h4 className="text-white font-bold">{tool.name}</h4>
                             <p className="text-[10px] text-gray-500 truncate max-w-[150px]">{tool.url}</p>
                           </div>
@@ -3746,6 +3961,7 @@ export default function App() {
   const [profile, setProfile] = useState<{ nickname: string | null, avatar_url: string | null }>({ nickname: null, avatar_url: null });
   const [prompts, setPrompts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
   const [modules, setModules] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
@@ -3823,16 +4039,19 @@ export default function App() {
   const fetchPremiumContent = async () => {
     if (!supabase) return;
     try {
-      const [promptsRes, categoriesRes] = await Promise.all([
+      const [promptsRes, categoriesRes, subcategoriesRes] = await Promise.all([
         supabase.from('prompts').select('*, categories(name), subcategories(name)').order('created_at', { ascending: false }),
-        supabase.from('categories').select('*').order('name')
+        supabase.from('categories').select('*').order('name'),
+        supabase.from('subcategories').select('*').order('name')
       ]);
 
       if (promptsRes.error) console.error('Erro RLS/Supabase ao buscar prompts:', promptsRes.error);
       if (categoriesRes.error) console.error('Erro RLS/Supabase ao buscar categorias:', categoriesRes.error);
+      if (subcategoriesRes.error) console.error('Erro RLS/Supabase ao buscar subcategorias:', subcategoriesRes.error);
 
       if (promptsRes.data) setPrompts(promptsRes.data);
       if (categoriesRes.data) setCategories(categoriesRes.data);
+      if (subcategoriesRes.data) setSubcategories(subcategoriesRes.data);
     } catch (err) {
       console.error('Erro ao buscar prompts:', err);
     }
@@ -4062,6 +4281,7 @@ export default function App() {
           setActiveTab={setMemberTab}
           prompts={prompts}
           categories={categories}
+          subcategories={subcategories}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           showFavoritesOnly={showFavoritesOnly}
