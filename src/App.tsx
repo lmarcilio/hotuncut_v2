@@ -187,7 +187,7 @@ const MemberArea = ({
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] bg-orange-500 text-black px-6 py-3 rounded-full font-bold shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center gap-2"
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] bg-orange-500 text-black px-6 py-3 rounded-full font-bold shadow-[0_0_30px_rgba(255,79,0,0.5)] flex items-center gap-2"
           >
             <Sparkles className="w-5 h-5" />
             Novas aulas atualizadas!
@@ -297,8 +297,8 @@ const MemberArea = ({
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
-      <aside className="w-64 bg-zinc-950 border-r border-zinc-900 flex flex-col fixed h-full z-40">
+      {/* Sidebar (Desktop) */}
+      <aside className="hidden md:flex w-64 bg-zinc-950 border-r border-zinc-900 flex-col fixed h-full z-40">
         <div className="p-8">
           <Logo branding={branding} />
         </div>
@@ -341,7 +341,7 @@ const MemberArea = ({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64">
+      <main className="flex-1 md:ml-64 pb-24 md:pb-0">
         {/* Banner / Header */}
         <header className="relative h-64 bg-zinc-900 overflow-hidden border-b border-zinc-800">
           <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent z-10" />
@@ -372,7 +372,7 @@ const MemberArea = ({
         <div className="p-12">
           {activeTab === 'home' && (
             <div className="max-w-4xl mx-auto">
-              <div className="bg-zinc-900 rounded-[3rem] border border-orange-500/30 overflow-hidden shadow-[0_0_50px_rgba(249,115,22,0.1)]">
+              <div className="bg-zinc-900 rounded-[3rem] border border-orange-500/30 overflow-hidden shadow-[0_0_50px_rgba(255,79,0,0.2)]">
                 {branding?.landing_images?.home_announcement_image && (
                   <div className="w-full h-64 md:h-96 relative">
                     <img 
@@ -817,6 +817,22 @@ const MemberArea = ({
           )}
         </div>
       </main>
+
+      {/* Bottom Navigation (Mobile) */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-zinc-950 border-t border-zinc-900 z-50 px-2 py-2 pb-safe overflow-x-auto hide-scrollbar">
+        <div className="flex items-center justify-start min-w-max gap-4 px-2">
+          {menuItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+              {item.icon}
+              <span className="text-[10px] font-bold">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 };
@@ -1068,7 +1084,7 @@ const Pricing = ({ onBuy }: { onBuy: () => void }) => {
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-orange-600/10 blur-[100px] rounded-full pointer-events-none" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-3xl mx-auto bg-zinc-900 border-2 border-orange-500 rounded-3xl p-8 md:p-12 text-center shadow-[0_0_50px_rgba(249,115,22,0.1)]">
+        <div className="max-w-3xl mx-auto bg-zinc-900 border-2 border-orange-500 rounded-3xl p-8 md:p-12 text-center shadow-[0_0_50px_rgba(255,79,0,0.2)]">
           <span className="px-4 py-1 bg-orange-500 text-black text-sm font-bold rounded-full uppercase mb-6 inline-block">
             Oferta Especial de Lançamento
           </span>
@@ -1218,7 +1234,7 @@ const WhyHotUncut = ({ branding }: { branding: any }) => {
                 onClick={() => setActiveTab(index)}
                 className={`p-6 rounded-2xl cursor-pointer transition-all border ${
                   activeTab === index 
-                    ? "bg-orange-500/10 border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.1)]" 
+                    ? "bg-orange-500/10 border-orange-500 shadow-[0_0_30px_rgba(255,79,0,0.2)]" 
                     : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700"
                 }`}
               >
@@ -1362,7 +1378,7 @@ const FinalCTA = ({ onBuy }: { onBuy: () => void }) => {
               
               <button 
                 onClick={onBuy}
-                className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-black text-2xl font-black rounded-2xl transition-all shadow-[0_10px_40px_rgba(249,115,22,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-black text-2xl font-black rounded-2xl transition-all shadow-[0_10px_40px_rgba(255,79,0,0.5)] hover:scale-[1.02] active:scale-[0.98]"
               >
                 QUERO MEU ACESSO AGORA
               </button>
@@ -1394,7 +1410,7 @@ const TrustSeals = () => {
           >
             <div className="w-24 h-24 mb-4 relative">
               <div className="absolute inset-0 bg-orange-500 rounded-full animate-ping opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="relative w-full h-full bg-zinc-900 border-4 border-orange-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.2)]">
+              <div className="relative w-full h-full bg-zinc-900 border-4 border-orange-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(255,79,0,0.4)]">
                 <Sparkles className="w-10 h-10 text-orange-500" />
               </div>
             </div>
@@ -1412,7 +1428,7 @@ const TrustSeals = () => {
           >
             <div className="w-24 h-24 mb-4 relative">
               <div className="absolute inset-0 bg-orange-500 rounded-full animate-pulse opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="relative w-full h-full bg-zinc-900 border-4 border-orange-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.2)]">
+              <div className="relative w-full h-full bg-zinc-900 border-4 border-orange-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(255,79,0,0.4)]">
                 <div className="text-center">
                   <span className="block text-2xl font-black text-white leading-none">7</span>
                   <span className="block text-[10px] font-bold text-orange-500 uppercase leading-none">Dias</span>
@@ -2694,69 +2710,77 @@ const AdminDashboard = ({
         )}
       </AnimatePresence>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex justify-between items-center mb-12">
-          <div>
-            <h1 className="text-4xl font-black text-white">PAINEL <span className="text-orange-500">ADMIN</span></h1>
-            <p className="text-gray-500">Gerencie membros, categorias e prompts do sistema.</p>
+      <div className="max-w-7xl mx-auto px-4 py-12 pb-24 md:pb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <div className="flex justify-between items-center w-full md:w-auto">
+            <div>
+              <h1 className="text-4xl font-black text-white">PAINEL <span className="text-orange-500">ADMIN</span></h1>
+              <p className="text-gray-500">Gerencie membros, categorias e prompts do sistema.</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="md:hidden flex-shrink-0 p-3 bg-zinc-900 text-white rounded-xl border border-zinc-800 hover:bg-zinc-800 transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
           </div>
-          <div className="flex gap-4">
-            <div className="flex bg-zinc-900 rounded-xl p-1 border border-zinc-800">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <div className="hidden md:flex bg-zinc-900 rounded-xl p-1 border border-zinc-800 overflow-x-auto hide-scrollbar w-full sm:w-auto">
               <button 
                 onClick={() => setActiveTab('members')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'members' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'members' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Membros
               </button>
               <button 
                 onClick={() => setActiveTab('categories')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'categories' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'categories' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Categorias
               </button>
               <button 
                 onClick={() => setActiveTab('prompts')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'prompts' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'prompts' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Prompts
               </button>
               <button 
                 onClick={() => setActiveTab('lessons')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'lessons' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'lessons' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Aulas
               </button>
               <button 
                 onClick={() => setActiveTab('tools')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'tools' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'tools' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Ferramentas
               </button>
               <button 
                 onClick={() => setActiveTab('branding')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'branding' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'branding' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Branding
               </button>
               <button 
                 onClick={() => setActiveTab('webhooks')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'webhooks' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'webhooks' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Webhooks
               </button>
             </div>
             <button 
               onClick={onClose}
-              className="px-6 py-2 bg-zinc-900 text-white rounded-xl border border-zinc-800 hover:bg-zinc-800 transition-all"
+              className="hidden md:block flex-shrink-0 px-6 py-2 bg-zinc-900 text-white rounded-xl border border-zinc-800 hover:bg-zinc-800 transition-all w-full sm:w-auto"
             >
               Sair
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Config */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="w-full lg:w-64 flex-shrink-0 space-y-6">
             <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
               <h3 className="text-gray-500 text-[10px] font-bold uppercase mb-4 tracking-widest">Estatísticas</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -2796,7 +2820,7 @@ const AdminDashboard = ({
           </div>
 
           {/* Main Content Area */}
-          <div className="lg:col-span-3">
+          <div className="flex-1 min-w-0">
             {activeTab === 'branding' && (
               <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
                 <h3 className="text-xl font-bold text-white mb-8">Configurações de Branding</h3>
@@ -3344,7 +3368,7 @@ const AdminDashboard = ({
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-4">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                               <button onClick={() => togglePremium(profile.id, profile.is_premium)} className="text-[10px] font-bold uppercase text-orange-500 hover:underline">
                                 {profile.is_premium ? "Remover" : "Liberar"}
                               </button>
@@ -3973,6 +3997,61 @@ const AdminDashboard = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Bottom Navigation (Mobile) */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-zinc-950 border-t border-zinc-900 z-50 px-2 py-2 pb-safe overflow-x-auto hide-scrollbar">
+        <div className="flex items-center justify-start min-w-max gap-4 px-2">
+          <button
+            onClick={() => setActiveTab('members')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'members' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Membros</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('categories')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'categories' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <FolderTree className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Categorias</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('prompts')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'prompts' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <Sparkles className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Prompts</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('lessons')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'lessons' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Aulas</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('tools')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'tools' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <LinkIcon className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Ferramentas</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('branding')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'branding' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <Image className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Branding</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('webhooks')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'webhooks' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <Activity className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Webhooks</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };
@@ -4035,7 +4114,7 @@ const WaitingForPayment = ({ onLogout, onRefresh, branding }: { onLogout: () => 
       <div className="space-y-4">
         <button 
           onClick={onRefresh}
-          className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(249,115,22,0.2)]"
+          className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-[0_0_20px_rgba(255,79,0,0.4)]"
         >
           <Loader2 className="w-5 h-5 animate-spin" /> Verificar Status Agora
         </button>
@@ -4200,17 +4279,36 @@ export default function App() {
     }
 
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+        if (error.message.includes('Refresh Token Not Found')) {
+          // Clear invalid session
+          supabase.auth.signOut().catch(console.error);
+        }
+      }
       setUser(session?.user ?? null);
       if (session?.user) checkPremiumStatus(session.user.id);
       setLoading(false);
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsPremium(false);
+        setIsBlocked(false);
+        return;
+      }
+
       setUser(session?.user ?? null);
-      if (session?.user) checkPremiumStatus(session.user.id);
-      else {
+      if (session?.user) {
+        checkPremiumStatus(session.user.id);
+      } else {
         setIsPremium(false);
         setIsBlocked(false);
       }

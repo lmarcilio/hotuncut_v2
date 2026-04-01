@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+@theme {
+  --color-orange-50: #fff0e5;
+  --color-orange-100: #ffd8b8;
+  --color-orange-200: #ffb980;
+  --color-orange-300: #ff9540;
+  --color-orange-400: #ff7300;
+  --color-orange-500: #ff4f00; /* Extremely vibrant neon orange */
+  --color-orange-600: #e63e00;
+  --color-orange-700: #b33000;
+  --color-orange-800: #802200;
+  --color-orange-900: #4d1400;
+  --color-orange-950: #260a00;
+  
+  --shadow-neon: 0 0 20px rgba(255, 79, 0, 0.4), 0 0 40px rgba(255, 79, 0, 0.2);
+}
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
