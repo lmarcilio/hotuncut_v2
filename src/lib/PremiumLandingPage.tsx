@@ -529,6 +529,7 @@ const PremiumLandingPage = ({
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
+            <p className="text-sm font-bold text-orange-400 uppercase tracking-widest mb-4">PARCEIRO HOTUNCUT</p>
             <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
               Rateio das <span className="text-orange-400">IAs</span>
             </h2>
@@ -620,7 +621,7 @@ const PremiumLandingPage = ({
 
                 <button 
                   onClick={() => {
-                    const url = branding?.landing_images?.[plan.urlKey];
+                    const url = branding?.[plan.urlKey];
                     if (url) window.open(url, '_blank');
                   }}
                   className={`w-full py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
