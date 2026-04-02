@@ -345,15 +345,15 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                         {expandedSubcategories.has(subcategory.id) && (
                           <div className="ml-6 space-y-1">
                             {getPromptsForSubcategory(subcategory.id).map(prompt => (
-                              <div
-                                key={prompt.id}
-                                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all group text-xs ${
-                                  selectedPrompt?.id === prompt.id
-                                    ? 'bg-green-500/20 border border-green-500'
-                                    : 'hover:bg-zinc-800'
-                                }`}
-                                onClick={() => setSelectedPrompt(prompt)}
-                              >
+                               <div
+                                 key={prompt.id}
+                                 className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all group text-xs ${
+                                   selectedPrompt?.id === prompt.id
+                                     ? 'bg-green-500/20 border border-green-500'
+                                     : 'hover:bg-zinc-800'
+                                 }`}
+                                 onClick={() => handleEditPrompt(prompt)}
+                               >
                                 <div className="w-3 h-3" />
                                 <span className="flex-1 text-gray-300 truncate">{prompt.title}</span>
                                 <button
@@ -411,7 +411,7 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                           ? 'bg-red-500/20 border border-red-500'
                           : 'hover:bg-zinc-800 bg-red-500/5 border border-red-500/20'
                       }`}
-                      onClick={() => setSelectedPrompt(prompt)}
+                      onClick={() => handleEditPrompt(prompt)}
                     >
                       <div className="w-3 h-3 text-red-500">⚠️</div>
                       <span className="flex-1 text-gray-300 truncate">{prompt.title}</span>
@@ -481,6 +481,111 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                     ))}
                 </select>
               </div>
+
+              {/* Category Management */}
+              <div className="bg-black/40 border border-zinc-700 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-300">Gerenciar Categorias</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Nova categoria..."
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="flex-1 bg-black border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-orange-500"
+                    />
+                    <button
+                      onClick={handleAddCategory}
+                      className="px-3 py-2 bg-orange-500 text-black font-bold rounded-lg hover:bg-orange-600 transition-all text-xs"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map(cat => (
+                      <div
+                        key={cat.id}
+                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                          promptForm.categoryId === cat.id
+                            ? 'bg-orange-500/30 border border-orange-500 text-orange-300'
+                            : 'bg-zinc-800 border border-zinc-700 text-gray-400 hover:border-orange-500'
+                        }`}
+                        onClick={() => setPromptForm({ ...promptForm, categoryId: cat.id, subcategoryId: '' })}
+                      >
+                        {cat.name}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCategory(cat.id);
+                          }}
+                          className="opacity-0 hover:opacity-100 transition-opacity text-gray-500 hover:text-red-500"
+                        >
+                          <X className="w-2 h-2" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Subcategory Management */}
+              {promptForm.categoryId && (
+                <div className="bg-black/40 border border-zinc-700 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-300">Subcategorias de "{categories.find(c => c.id === promptForm.categoryId)?.name}"</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Nova subcategoria..."
+                        value={newSubcategoryName}
+                        onChange={(e) => setNewSubcategoryName(e.target.value)}
+                        className="flex-1 bg-black border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-orange-500"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (newSubcategoryName.trim() && promptForm.categoryId) {
+                            await onAddSubcategory(promptForm.categoryId, newSubcategoryName);
+                            setNewSubcategoryName('');
+                          }
+                        }}
+                        className="px-3 py-2 bg-blue-500 text-black font-bold rounded-lg hover:bg-blue-600 transition-all text-xs"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {subcategories
+                        .filter(s => s.category_id === promptForm.categoryId)
+                        .map(sub => (
+                          <div
+                            key={sub.id}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                              promptForm.subcategoryId === sub.id
+                                ? 'bg-blue-500/30 border border-blue-500 text-blue-300'
+                                : 'bg-zinc-800 border border-zinc-700 text-gray-400 hover:border-blue-500'
+                            }`}
+                            onClick={() => setPromptForm({ ...promptForm, subcategoryId: sub.id })}
+                          >
+                            {sub.name}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSubcategory(sub.id);
+                              }}
+                              className="opacity-0 hover:opacity-100 transition-opacity text-gray-500 hover:text-red-500"
+                            >
+                              <X className="w-2 h-2" />
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <input
                 type="text"
