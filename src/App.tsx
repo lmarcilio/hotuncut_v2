@@ -930,7 +930,7 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
 const Hero = ({ onBuy, branding }: { onBuy: () => void, branding: any }) => {
   return (
     <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-black">
-      {/* Background Glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(251,146,60,0.2),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.16),transparent_35%),radial-gradient(circle_at_55%_85%,rgba(250,204,21,0.14),transparent_35%)] pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-orange-600/20 blur-[120px] rounded-full pointer-events-none" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -942,28 +942,31 @@ const Hero = ({ onBuy, branding }: { onBuy: () => void, branding: any }) => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 bg-orange-500/10 rounded-full border border-orange-500/20">
               <Logo branding={branding} className="scale-75" />
-              <span className="text-orange-500 text-sm font-semibold tracking-wide uppercase">Acesso Vitalício Disponível</span>
+              <span className="text-orange-500 text-sm font-semibold tracking-wide uppercase">Plataforma Premium para Conteudo +18</span>
             </div>
             <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-8">
-              Domine a IA <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
-                Sem Restrições
+              Crie Conteudo com IA <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-300 to-pink-400">
+                com Prompts +18 de Alta Conversao
               </span>
             </h1>
             <p className="max-w-2xl mx-auto text-lg md:text-xl text-gray-400 mb-10">
-              Aprenda a gerar imagens e vídeos realistas +18 utilizando prompts avançados. 
-              Descubra como contornar censuras e utilizar as ferramentas mais poderosas do mercado sem limites.
+              Biblioteca atualizada com prompts prontos, aulas praticas e estrategia para gerar imagens e videos realistas.
+              Entre hoje e tenha acesso imediato ao metodo usado por criadores que monetizam diariamente.
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+              <div className="px-4 py-2 bg-zinc-900/80 border border-zinc-700 rounded-full text-sm text-gray-300">+18 com aviso e filtro</div>
+              <div className="px-4 py-2 bg-zinc-900/80 border border-zinc-700 rounded-full text-sm text-gray-300">Novos prompts toda semana</div>
+              <div className="px-4 py-2 bg-zinc-900/80 border border-zinc-700 rounded-full text-sm text-gray-300">Acesso imediato apos pagamento</div>
+            </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button 
                 onClick={onBuy}
-                className="w-full sm:w-auto px-8 py-4 bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 group"
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 via-amber-400 to-pink-500 hover:brightness-110 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 group shadow-[0_20px_60px_rgba(244,114,35,0.35)]"
               >
                 Começar Agora <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="w-full sm:w-auto px-8 py-4 bg-zinc-900 text-white font-bold rounded-xl border border-zinc-800 hover:bg-zinc-800 transition-all">
-                Ver Exemplos
-              </button>
+              <a href="#pricing" className="w-full sm:w-auto px-8 py-4 bg-zinc-900 text-white font-bold rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-all text-center">Ver Oferta</a>
             </div>
           </motion.div>
           
@@ -1011,13 +1014,27 @@ const Features = () => {
       icon: <BookOpen className="w-6 h-6" />,
       title: "Aulas de Engenharia",
       description: "Aprenda a lógica por trás dos prompts para criar qualquer tipo de conteúdo imaginável."
+    },
+    {
+      icon: <Clock className="w-6 h-6" />,
+      title: "Atualizações Frequentes",
+      description: "Receba novos packs de prompts, modelos e ajustes toda semana para manter seu conteúdo atual."
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "Foco em Conversão",
+      description: "Estruturas de prompt pensadas para engajar, prender atenção e transformar visualização em assinante."
     }
   ];
 
   return (
     <section id="features" className="py-24 bg-zinc-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="text-center mb-14">
+          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">O que voce recebe ao assinar</h2>
+          <p className="text-gray-400 max-w-3xl mx-auto">Nao e apenas uma lista de prompts. E um sistema completo para produzir, escalar e vender conteudo com IA.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <motion.div
               key={index}
@@ -1034,6 +1051,56 @@ const Features = () => {
               <p className="text-gray-400 leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
+        </div>
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4 text-center">
+            <p className="text-2xl font-black text-orange-400">+500</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Prompts prontos</p>
+          </div>
+          <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4 text-center">
+            <p className="text-2xl font-black text-orange-400">+30</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Aulas praticas</p>
+          </div>
+          <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4 text-center">
+            <p className="text-2xl font-black text-orange-400">24h</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider">Acesso apos compra</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const ConversionSteps = ({ onBuy }: { onBuy: () => void }) => {
+  const steps = [
+    { title: 'Escolha seu nicho +18', text: 'Selecione packs de prompts para ensaios, POV, storytelling e conteudo premium.' },
+    { title: 'Copie, ajuste e gere', text: 'Use os modelos com instrucoes claras para gerar imagens e videos em poucos minutos.' },
+    { title: 'Publique e monetize', text: 'Aplique as tecnicas de entrega e narrativa para aumentar retenção e assinaturas.' }
+  ];
+
+  return (
+    <section className="py-24 bg-black border-y border-zinc-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <p className="text-orange-400 text-xs uppercase tracking-[0.25em] mb-4 font-bold">Metodo HotUncut</p>
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-5 tracking-tight">Da ideia a venda em 3 passos</h2>
+            <p className="text-gray-400 mb-8">Criamos uma jornada simples para acelerar sua produção e transformar criatividade em resultado financeiro.</p>
+            <button onClick={onBuy} className="px-8 py-4 rounded-xl bg-orange-500 text-black font-bold hover:bg-orange-600 transition-all">
+              Quero acessar agora
+            </button>
+          </div>
+          <div className="space-y-4">
+            {steps.map((step, index) => (
+              <div key={step.title} className="rounded-2xl bg-zinc-900/80 border border-zinc-800 p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-8 h-8 rounded-full bg-orange-500 text-black flex items-center justify-center text-sm font-black">{index + 1}</span>
+                  <h3 className="text-white text-xl font-bold">{step.title}</h3>
+                </div>
+                <p className="text-gray-400">{step.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -1088,10 +1155,10 @@ const Pricing = ({ onBuy }: { onBuy: () => void }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-3xl mx-auto bg-zinc-900 border-2 border-orange-500 rounded-3xl p-8 md:p-12 text-center shadow-[0_0_50px_rgba(255,79,0,0.2)]">
           <span className="px-4 py-1 bg-orange-500 text-black text-sm font-bold rounded-full uppercase mb-6 inline-block">
-            Oferta Especial de Lançamento
+            Oferta Especial para Novos Membros
           </span>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Acesso Vitalício</h2>
-          <p className="text-gray-400 mb-8">Pague uma vez, use para sempre. Sem assinaturas mensais.</p>
+          <p className="text-gray-400 mb-8">Assine hoje e tenha acesso vitalicio: pague uma vez e use para sempre.</p>
           
           <div className="flex items-center justify-center gap-2 mb-8">
             <span className="text-2xl text-gray-500 line-through">R$ 197,90</span>
@@ -1118,7 +1185,7 @@ const Pricing = ({ onBuy }: { onBuy: () => void }) => {
             onClick={onBuy}
             className="w-full py-5 bg-orange-500 hover:bg-orange-600 text-black text-xl font-bold rounded-2xl transition-all shadow-lg shadow-orange-500/20"
           >
-            Garantir Meu Acesso Agora
+            Assinar e Entrar Agora
           </button>
           <p className="mt-4 text-sm text-gray-500">Garantia de 7 dias ou seu dinheiro de volta.</p>
         </div>
@@ -4088,6 +4155,7 @@ const LandingPage = ({
       <main>
         <Hero onBuy={onBuy} branding={branding} />
         <Features />
+        <ConversionSteps onBuy={onBuy} />
         <Gallery branding={branding} />
         <Pricing onBuy={onBuy} />
         <Testimonials />
