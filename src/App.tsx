@@ -24,6 +24,7 @@ import {
   Lock,
   LogOut,
   User,
+  Users,
   Plus,
   Trash2,
   Edit2,
@@ -1653,7 +1654,10 @@ const AdminLogin = ({ onLogin, onClose }: { onLogin: () => void, onClose: () => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin123') {
+    const normalizedUsername = username.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (normalizedUsername === 'admin' && normalizedPassword === 'admin123') {
       onLogin();
     } else {
       setError('Credenciais inválidas');
