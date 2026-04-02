@@ -822,20 +822,31 @@ const MemberArea = ({
       </main>
 
       {/* Bottom Navigation (Mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-zinc-950 border-t border-zinc-900 z-50 px-2 py-2 pb-safe overflow-x-auto hide-scrollbar">
-        <div className="flex items-center justify-start min-w-max gap-4 px-2">
-          {menuItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-              {item.icon}
-              <span className="text-[10px] font-bold">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-zinc-950 border-t border-zinc-900 z-50 px-2 py-2 pb-safe overflow-x-auto hide-scrollbar">
+         <div className="flex items-center justify-start min-w-max gap-2 px-2">
+           {menuItems.map(item => (
+             <button
+               key={item.id}
+               onClick={() => setActiveTab(item.id)}
+               className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all whitespace-nowrap ${activeTab === item.id ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+             >
+               {item.icon}
+               <span className="text-[10px] font-bold">{item.label}</span>
+             </button>
+           ))}
+           {/* Logout button for mobile */}
+           <div className="ml-auto pl-2 border-l border-zinc-700">
+             <button 
+               onClick={onLogout}
+               className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all text-red-500 hover:bg-red-500/10"
+               title="Sair da Conta"
+             >
+               <LogOut className="w-5 h-5" />
+               <span className="text-[10px] font-bold">Sair</span>
+             </button>
+           </div>
+         </div>
+       </nav>
     </div>
   );
 };
@@ -3947,15 +3958,28 @@ const AdminDashboard = ({
             <Image className="w-5 h-5" />
             <span className="text-[10px] font-bold">Branding</span>
           </button>
-          <button
-            onClick={() => setActiveTab('webhooks')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'webhooks' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
-          >
-            <Activity className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Webhooks</span>
-          </button>
-        </div>
-      </nav>
+           <button
+             onClick={() => setActiveTab('webhooks')}
+             className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'webhooks' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+           >
+             <Activity className="w-5 h-5" />
+             <span className="text-[10px] font-bold">Webhooks</span>
+           </button>
+           {/* Logout button for admin mobile */}
+           <div className="ml-auto pl-2 border-l border-zinc-700">
+             <button
+               onClick={() => {
+                 supabase.auth.signOut().catch(console.error);
+               }}
+               className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all text-red-500 hover:bg-red-500/10`}
+               title="Sair da Conta"
+             >
+               <LogOut className="w-5 h-5" />
+               <span className="text-[10px] font-bold">Sair</span>
+             </button>
+           </div>
+         </div>
+       </nav>
     </div>
   );
 };
