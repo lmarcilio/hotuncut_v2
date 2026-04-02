@@ -90,11 +90,11 @@ const PremiumLandingPage = ({
               transition={{ duration: 0.6, delay: 0.4 }}
               className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 max-w-3xl mx-auto"
             >
-              {[
-                { icon: Zap, text: "Acesso Imediato", desc: "Direto após o pagamento" },
-                { icon: Lock, text: "+1000 Prompts", desc: "Atualizados semanalmente" },
-                { icon: Rocket, text: "Suporte 24/7", desc: "Comunidade exclusiva" }
-              ].map((item, idx) => (
+               {[
+                 { icon: Zap, text: "Acesso Imediato", desc: "Direto após o pagamento" },
+                 { icon: Lock, text: "Varios Prompts Prontos", desc: "Atualizados semanalmente" },
+                 { icon: Rocket, text: "Suporte 24/7", desc: "Comunidade exclusiva" }
+               ].map((item, idx) => (
                 <div key={idx} className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl hover:border-orange-500/50 transition-all backdrop-blur-sm">
                   <item.icon className="w-6 h-6 text-orange-500 mb-2 mx-auto" />
                   <p className="font-bold text-sm">{item.text}</p>
@@ -119,12 +119,6 @@ const PremiumLandingPage = ({
                 Liberar Acesso Agora
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-
-              {/* Secondary CTA */}
-              <a href="#pricing" className="px-10 py-5 bg-zinc-800/80 text-white font-bold text-lg rounded-xl border border-zinc-700 hover:bg-zinc-700 transition-all backdrop-blur-sm flex items-center justify-center gap-2">
-                Ver Oferta Especial
-                <ChevronDown className="w-5 h-5" />
-              </a>
             </motion.div>
 
             {/* Risk Reversal */}
@@ -264,8 +258,8 @@ const PremiumLandingPage = ({
             {[
               {
                 icon: Sparkles,
-                title: "+1000 Prompts Premium",
-                desc: "Biblioteca completa atualizada semanalmente com prompts testados e otimizados",
+                title: "Grande Variedade de Prompts",
+                desc: "Biblioteca completa com categorias diversas de prompts testados e otimizados para máxima conversão",
                 color: "from-orange-500 to-amber-500"
               },
               {
@@ -276,8 +270,8 @@ const PremiumLandingPage = ({
               },
               {
                 icon: Users,
-                title: "Comunidade VIP",
-                desc: "Rede de criadores compartilhando resultados, tips e oportunidades",
+                title: "Links das Ferramentas",
+                desc: "Acesso direto às melhores ferramentas e plataformas de IA para potencializar seus resultados",
                 color: "from-purple-500 to-pink-500"
               },
               {
@@ -323,6 +317,110 @@ const PremiumLandingPage = ({
           </div>
         </div>
       </section>
+
+      {/* Generated Images Showcase */}
+      <section className="py-20 lg:py-32 relative overflow-hidden bg-gradient-to-b from-black to-zinc-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,146,60,0.05),transparent_70%)] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+              Imagens Geradas Com Nossos <span className="text-orange-400">Prompts</span>
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              Veja a qualidade e criatividade dos conteúdos gerados por nossos criadores
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              {
+                img: "https://images.unsplash.com/photo-1618983479302-1461b3b67f1e?w=600&h=400&fit=crop",
+                title: "Design Criativo"
+              },
+              {
+                img: "https://images.unsplash.com/photo-1611339555312-e607c04352fa?w=600&h=400&fit=crop",
+                title: "Arte Digital"
+              },
+              {
+                img: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=400&fit=crop",
+                title: "Conteúdo Visual"
+              },
+              {
+                img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop",
+                title: "Produção Premium"
+              }
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="group relative rounded-2xl overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-pink-500/20 blur-2xl rounded-2xl pointer-events-none group-hover:blur-3xl transition-all" />
+                <div className="relative aspect-video rounded-2xl overflow-hidden border border-orange-500/30 shadow-2xl shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-all">
+                  <img 
+                    src={item.img} 
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-start p-6">
+                    <h3 className="text-2xl font-bold text-white">{item.title}</h3>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Platform Dashboard Showcase */}
+      {branding?.landing_images?.dashboard && (
+        <section className="py-20 lg:py-32 relative overflow-hidden bg-gradient-to-b from-zinc-950 to-black">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,146,60,0.08),transparent_70%)] pointer-events-none" />
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+                Seu Painel de <span className="text-orange-400">Controle</span>
+              </h2>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Interface intuitiva e poderosa para gerenciar seus prompts e acompanhar seus resultados em tempo real
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="relative group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-pink-500/30 blur-3xl rounded-3xl pointer-events-none group-hover:blur-4xl transition-all" />
+              <div className="relative aspect-video rounded-3xl overflow-hidden border-2 border-orange-500/40 shadow-2xl shadow-orange-500/30 group-hover:shadow-orange-500/50 transition-all">
+                <img 
+                  src={branding.landing_images.dashboard} 
+                  alt="Dashboard da Plataforma" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Testimonials - Social Proof */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-black to-zinc-950 relative overflow-hidden">
