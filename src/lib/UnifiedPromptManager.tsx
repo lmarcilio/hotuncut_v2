@@ -233,6 +233,11 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
     return prompts.filter(p => p.subcategory_id === subcategoryId);
   };
 
+  // Get orphaned prompts (prompts without subcategory_id)
+  const getOrphanedPrompts = () => {
+    return prompts.filter(p => !p.subcategory_id || p.subcategory_id === '');
+  };
+
   return (
     <div className="flex gap-8">
       {/* Tree View - Left Panel */}
@@ -389,6 +394,41 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                 )}
               </div>
             ))}
+
+            {/* Orphaned Prompts Section */}
+            {getOrphanedPrompts().length > 0 && (
+              <div className="mt-6 pt-6 border-t border-zinc-700">
+                <div className="px-3 py-2 mb-2 bg-red-500/10 border border-red-500 rounded-lg">
+                  <h4 className="text-xs font-bold text-red-500 uppercase">⚠️ Prompts sem Categoria</h4>
+                  <p className="text-[10px] text-red-400 mt-1">Estes prompts precisam ser atribuídos a uma subcategoria</p>
+                </div>
+                <div className="space-y-2">
+                  {getOrphanedPrompts().map(prompt => (
+                    <div
+                      key={prompt.id}
+                      className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all group text-xs ${
+                        selectedPrompt?.id === prompt.id
+                          ? 'bg-red-500/20 border border-red-500'
+                          : 'hover:bg-zinc-800 bg-red-500/5 border border-red-500/20'
+                      }`}
+                      onClick={() => setSelectedPrompt(prompt)}
+                    >
+                      <div className="w-3 h-3 text-red-500">⚠️</div>
+                      <span className="flex-1 text-gray-300 truncate">{prompt.title}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePrompt(prompt.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-red-500"
+                      >
+                        <Trash2 className="w-2 h-2" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -396,19 +436,24 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
       {/* Right Panel - Form */}
       <div className="flex-1">
         {showPromptForm ? (
-          // Prompt Form
-          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-white">
-                {selectedPrompt ? 'Editar Prompt' : 'Novo Prompt'}
-              </h3>
-              <button
-                onClick={() => setShowPromptForm(false)}
-                className="text-gray-500 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+           // Prompt Form
+           <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
+             <div className="flex justify-between items-center mb-6">
+               <div>
+                 <h3 className="text-xl font-bold text-white">
+                   {selectedPrompt ? 'Editar Prompt' : 'Novo Prompt'}
+                 </h3>
+                 {selectedPrompt && (!selectedPrompt.subcategory_id || selectedPrompt.subcategory_id === '') && (
+                   <p className="text-xs text-red-400 mt-2">⚠️ Este prompt não tem uma subcategoria atribuída. Atribua uma abaixo.</p>
+                 )}
+               </div>
+               <button
+                 onClick={() => setShowPromptForm(false)}
+                 className="text-gray-500 hover:text-white"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+             </div>
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
