@@ -239,9 +239,9 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   };
 
   return (
-    <div className="flex gap-8">
+    <div className="flex flex-col lg:flex-row gap-8">
       {/* Tree View - Left Panel */}
-      <div className="w-80 flex-shrink-0">
+      <div className="w-full lg:w-80 flex-shrink-0">
         <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-white">Hierarquia</h3>
@@ -433,11 +433,11 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
         </div>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex-1">
-        {showPromptForm ? (
-           // Prompt Form
-           <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
+       {/* Right Panel - Form */}
+       <div className="flex-1 min-w-0">
+         {showPromptForm ? (
+            // Prompt Form
+            <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-4 md:p-8">
              <div className="flex justify-between items-center mb-6">
                <div>
                  <h3 className="text-xl font-bold text-white">
@@ -456,7 +456,7 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
              </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <select
                   value={promptForm.categoryId}
                   onChange={(e) => setPromptForm({ ...promptForm, categoryId: e.target.value, subcategoryId: '' })}
