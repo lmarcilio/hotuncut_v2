@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import UnifiedPromptManager from './lib/UnifiedPromptManager';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { 
   Flame, 
@@ -1801,7 +1802,7 @@ const AdminDashboard = ({
   nexanoUrl: string,
   setNexanoUrl: (url: string) => void
 }) => {
-  const [activeTab, setActiveTab] = useState<'members' | 'categories' | 'prompts' | 'lessons' | 'tools' | 'branding' | 'webhooks'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'unified-prompts' | 'lessons' | 'tools' | 'branding' | 'webhooks'>('members');
   const [profiles, setProfiles] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -2805,16 +2806,10 @@ const AdminDashboard = ({
                 Membros
               </button>
               <button 
-                onClick={() => setActiveTab('categories')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'categories' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                onClick={() => setActiveTab('unified-prompts')}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'unified-prompts' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
-                Categorias
-              </button>
-              <button 
-                onClick={() => setActiveTab('prompts')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'prompts' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
-              >
-                Prompts
+                Categorias & Prompts
               </button>
               <button 
                 onClick={() => setActiveTab('lessons')}
@@ -3460,239 +3455,83 @@ const AdminDashboard = ({
               </div>
             )}
 
-            {activeTab === 'categories' && (
-              <div className="space-y-8">
-                {/* Categories Management */}
-                <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
-                  <h3 className="text-xl font-bold text-white mb-6">Categorias Principais</h3>
-                  <div className="flex gap-4 mb-6">
-                    <input 
-                      type="text" 
-                      placeholder="Nova Categoria (ex: Imagem, Vídeo)" 
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-                    />
-                    <button onClick={addCategory} className="px-6 py-2 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
-                      <Plus className="w-4 h-4" /> Adicionar
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {categories.map(cat => (
-                      <div key={cat.id} className="bg-black p-4 rounded-2xl border border-zinc-800 flex justify-between items-center group">
-                        <span className="text-white font-medium">{cat.name}</span>
-                        <button onClick={() => deleteCategory(cat.id)} className="text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            {activeTab === 'unified-prompts' && (
+              <UnifiedPromptManager 
+                categories={categories}
+                subcategories={subcategories}
+                prompts={prompts}
+                onAddCategory={async (name: string) => {
+                  await addCategory(name);
+                }}
+                onDeleteCategory={async (id: string) => {
+                  await deleteCategory(id);
+                }}
+                onAddSubcategory={async (categoryId: string, name: string) => {
+                  const { error } = await supabase.from('subcategories').insert([{ 
+                    name: name, 
+                    category_id: categoryId 
+                  }]);
+                  if (!error) await fetchSubcategories();
+                }}
+                onDeleteSubcategory={async (id: string) => {
+                  await deleteSubcategory(id);
+                }}
+                onAddPrompt={async (promptData: any) => {
+                  const { error } = await supabase.from('prompts').insert([{
+                    title: promptData.title,
+                    description: promptData.description,
+                    content: promptData.content,
+                    category_id: promptData.categoryId,
+                    subcategory_id: promptData.subcategoryId,
+                    is_favorite: promptData.isFavorite,
+                    is_special_18: promptData.isSpecial18,
+                    image_url: promptData.imageUrl || null
+                  }]);
+                  if (!error) await fetchPrompts();
+                }}
+                onDeletePrompt={async (id: string) => {
+                  await deletePrompt(id);
+                }}
+                onUpdatePrompt={async (id: string, promptData: any) => {
+                   const { error } = await supabase.from('prompts').update({
+                     title: promptData.title,
+                     description: promptData.description,
+                     content: promptData.content,
+                     category_id: promptData.categoryId,
+                     subcategory_id: promptData.subcategoryId,
+                     is_favorite: promptData.isFavorite,
+                     is_special_18: promptData.isSpecial18,
+                     image_url: promptData.imageUrl || null
+                   }).eq('id', id);
+                   if (!error) await fetchPrompts();
+                 }}
+                 onUploadImage={async (file: File) => {
+                   if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                     throw new Error('A imagem é muito grande. Por favor, escolha uma imagem com menos de 2MB.');
+                   }
 
-                {/* Subcategories Management */}
-                <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
-                  <h3 className="text-xl font-bold text-white mb-6">Subcategorias</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <select 
-                      value={newSubcategory.categoryId}
-                      onChange={(e) => setNewSubcategory({...newSubcategory, categoryId: e.target.value})}
-                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-                    >
-                      <option value="">Selecione a Categoria</option>
-                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                    </select>
-                    <input 
-                      type="text" 
-                      placeholder="Nome da Subcategoria" 
-                      value={newSubcategory.name}
-                      onChange={(e) => setNewSubcategory({...newSubcategory, name: e.target.value})}
-                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-                    />
-                    <button onClick={addSubcategory} className="px-6 py-2 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
-                      <Plus className="w-4 h-4" /> Adicionar
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {subcategories.map(sub => (
-                      <div key={sub.id} className="bg-black p-4 rounded-2xl border border-zinc-800 flex flex-col gap-1 group relative">
-                        <span className="text-[10px] text-orange-500 uppercase font-bold">{(sub as any).categories?.name}</span>
-                        <span className="text-white font-medium">{sub.name}</span>
-                        <button onClick={() => deleteSubcategory(sub.id)} className="absolute top-4 right-4 text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+                   const fileExt = file.name.split('.').pop();
+                   const fileName = `prompt-${Date.now()}.${fileExt}`;
+                   const filePath = `${fileName}`;
 
-            {activeTab === 'prompts' && (
-              <div className="space-y-8">
-                <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
-                  <h3 className="text-xl font-bold text-white mb-6">Novo Prompt</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <select 
-                      value={newPrompt.categoryId}
-                      onChange={(e) => setNewPrompt({...newPrompt, categoryId: e.target.value, subcategoryId: ''})}
-                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-                    >
-                      <option value="">Categoria</option>
-                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                    </select>
-                    <select 
-                      value={newPrompt.subcategoryId}
-                      onChange={(e) => setNewPrompt({...newPrompt, subcategoryId: e.target.value})}
-                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-                    >
-                      <option value="">Subcategoria</option>
-                      {subcategories.filter(s => s.category_id === newPrompt.categoryId).map(sub => (
-                        <option key={sub.id} value={sub.id}>{sub.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <input 
-                      type="text" 
-                      placeholder="Título do Prompt" 
-                      value={newPrompt.title}
-                      onChange={(e) => setNewPrompt({...newPrompt, title: e.target.value})}
-                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-                    />
-                    <input 
-                      type="text" 
-                      placeholder="Descrição Curta" 
-                      value={newPrompt.description}
-                      onChange={(e) => setNewPrompt({...newPrompt, description: e.target.value})}
-                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-                    />
-                  </div>
-                  <textarea 
-                    placeholder="Insira o prompt completo aqui..." 
-                    value={newPrompt.content}
-                    onChange={(e) => setNewPrompt({...newPrompt, content: e.target.value})}
-                    className="w-full h-32 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 resize-none"
-                  />
-                  
-                  {/* Prompt Image Upload */}
-                  <div className="mb-4">
-                    <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Imagem do Prompt (Opcional)</label>
-                    <div className="flex items-center gap-4">
-                      {newPrompt.imageUrl && (
-                        <img src={newPrompt.imageUrl} alt="Preview" className="w-16 h-16 object-cover rounded-xl border border-zinc-800" />
-                      )}
-                      <label className="flex-1 cursor-pointer">
-                        <input 
-                          type="file" 
-                          accept="image/*"
-                          onChange={handlePromptImageUpload}
-                          className="hidden"
-                        />
-                        <div className="w-full bg-black border border-zinc-800 border-dashed rounded-xl px-4 py-3 text-gray-400 hover:text-white hover:border-orange-500 transition-all flex items-center justify-center gap-2 text-sm">
-                          {uploadingPromptImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
-                          {uploadingPromptImage ? 'Enviando...' : 'Escolher Imagem (Máx 2MB)'}
-                        </div>
-                      </label>
-                    </div>
-                  </div>
+                   const { error: uploadError } = await supabase.storage
+                     .from('PROMPTS_IMAGES')
+                     .upload(filePath, file, { upsert: true });
 
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input 
-                          type="checkbox" 
-                          checked={newPrompt.isFavorite}
-                          onChange={(e) => setNewPrompt({...newPrompt, isFavorite: e.target.checked})}
-                          className="hidden"
-                        />
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${newPrompt.isFavorite ? 'bg-orange-500 border-orange-500' : 'border-zinc-700 group-hover:border-orange-500'}`}>
-                          {newPrompt.isFavorite && <Star className="w-3 h-3 text-black fill-current" />}
-                        </div>
-                        <span className="text-sm text-gray-400 group-hover:text-white">Favorito</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <input 
-                          type="checkbox" 
-                          checked={newPrompt.isSpecial18}
-                          onChange={(e) => setNewPrompt({...newPrompt, isSpecial18: e.target.checked})}
-                          className="hidden"
-                        />
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${newPrompt.isSpecial18 ? 'bg-red-500 border-red-500' : 'border-zinc-700 group-hover:border-red-500'}`}>
-                          {newPrompt.isSpecial18 && <AlertCircle className="w-3 h-3 text-white" />}
-                        </div>
-                        <span className="text-sm text-gray-400 group-hover:text-white">Destaque +18</span>
-                      </label>
-                    </div>
-                    <div className="flex gap-4">
-                      {newPrompt.id && (
-                        <button onClick={cancelEditPrompt} className="px-8 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all">
-                          Cancelar
-                        </button>
-                      )}
-                      <button onClick={addPrompt} className="px-8 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
-                        {newPrompt.id ? <Edit2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />} 
-                        {newPrompt.id ? 'Atualizar Prompt' : 'Salvar Prompt'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                   if (uploadError) {
+                     if (uploadError.message.includes('Bucket not found')) {
+                       throw new Error('O bucket "PROMPTS_IMAGES" não existe. Execute este código no SQL Editor do Supabase para criá-lo:\n\ninsert into storage.buckets (id, name, public) values (\'PROMPTS_IMAGES\', \'PROMPTS_IMAGES\', true) ON CONFLICT (id) DO NOTHING;\ncreate policy "Public Access PROMPTS_IMAGES" on storage.objects for select using ( bucket_id = \'PROMPTS_IMAGES\' );\ncreate policy "Auth Insert PROMPTS_IMAGES" on storage.objects for insert with check ( bucket_id = \'PROMPTS_IMAGES\' );\ncreate policy "Auth Update PROMPTS_IMAGES" on storage.objects for update with check ( bucket_id = \'PROMPTS_IMAGES\' );');
+                     }
+                     throw new Error(uploadError.message);
+                   }
 
-                <div className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden">
-                  <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-white">Prompts Cadastrados</h3>
-                    <button onClick={fetchPrompts} className="text-orange-500 hover:text-orange-400 text-sm">Atualizar</button>
-                  </div>
-                  <div className="divide-y divide-zinc-800">
-                    {prompts.map(p => (
-                      <div key={p.id} className="p-6 hover:bg-black/20 transition-all group">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex flex-wrap gap-2">
-                            <span className="px-2 py-1 bg-zinc-800 text-gray-400 text-[10px] font-bold rounded uppercase">{(p as any).categories?.name}</span>
-                            <span className="px-2 py-1 bg-zinc-800 text-orange-500 text-[10px] font-bold rounded uppercase">{(p as any).subcategories?.name}</span>
-                            {p.is_favorite && <span className="px-2 py-1 bg-orange-500/10 text-orange-500 text-[10px] font-bold rounded flex items-center gap-1"><Star className="w-3 h-3 fill-current" /> FAVORITO</span>}
-                            {p.is_special_18 && <span className="px-2 py-1 bg-red-500/10 text-red-500 text-[10px] font-bold rounded flex items-center gap-1"><AlertCircle className="w-3 h-3" /> +18 DESTAQUE</span>}
-                          </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onClick={() => toggleFavorite(p.id, p.is_favorite)} className={`p-2 rounded-lg hover:bg-zinc-800 ${p.is_favorite ? 'text-orange-500' : 'text-gray-500'}`}>
-                              <Star className={`w-4 h-4 ${p.is_favorite ? 'fill-current' : ''}`} />
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setNewPrompt({
-                                  id: p.id,
-                                  categoryId: p.category_id,
-                                  subcategoryId: p.subcategory_id,
-                                  title: p.title || '',
-                                  description: p.description || '',
-                                  content: p.content,
-                                  isFavorite: p.is_favorite || false,
-                                  isSpecial18: p.is_special_18 || false,
-                                  imageUrl: p.image_url || ''
-                                });
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }} 
-                              className="p-2 rounded-lg hover:bg-zinc-800 text-gray-500 hover:text-blue-500"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => deletePrompt(p.id)} className="p-2 rounded-lg hover:bg-zinc-800 text-gray-500 hover:text-red-500">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                        {p.title && <h4 className="text-white font-bold text-lg mb-1">{p.title}</h4>}
-                        {p.description && <p className="text-gray-400 text-sm mb-4">{p.description}</p>}
-                        {p.image_url && (
-                          <div className="mb-4 w-32 h-32 rounded-xl overflow-hidden border border-zinc-800">
-                            <img src={p.image_url} alt="Prompt" className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        <p className="text-gray-300 text-sm font-mono bg-black/40 p-4 rounded-xl border border-zinc-800/50">{p.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                   const { data: { publicUrl } } = supabase.storage
+                     .from('PROMPTS_IMAGES')
+                     .getPublicUrl(filePath);
+
+                   return publicUrl;
+                 }}
+               />
             )}
             {activeTab === 'lessons' && (
               <div className="space-y-8">
@@ -4081,18 +3920,11 @@ const AdminDashboard = ({
             <span className="text-[10px] font-bold">Membros</span>
           </button>
           <button
-            onClick={() => setActiveTab('categories')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'categories' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+            onClick={() => setActiveTab('unified-prompts')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'unified-prompts' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
           >
             <FolderTree className="w-5 h-5" />
             <span className="text-[10px] font-bold">Categorias</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('prompts')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'prompts' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
-          >
-            <Sparkles className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Prompts</span>
           </button>
           <button
             onClick={() => setActiveTab('lessons')}
