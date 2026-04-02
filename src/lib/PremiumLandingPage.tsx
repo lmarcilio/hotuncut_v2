@@ -340,20 +340,20 @@ const PremiumLandingPage = ({
           <div className="grid md:grid-cols-2 gap-8">
             {[
               {
-                img: "https://images.unsplash.com/photo-1618983479302-1461b3b67f1e?w=600&h=400&fit=crop",
-                title: "Design Criativo"
+                img: branding?.landing_images?.gallery1 || "https://images.unsplash.com/photo-1618983479302-1461b3b67f1e?w=600&h=400&fit=crop",
+                title: branding?.landing_images?.gallery1_text || "Design Criativo"
               },
               {
-                img: "https://images.unsplash.com/photo-1611339555312-e607c04352fa?w=600&h=400&fit=crop",
-                title: "Arte Digital"
+                img: branding?.landing_images?.gallery2 || "https://images.unsplash.com/photo-1611339555312-e607c04352fa?w=600&h=400&fit=crop",
+                title: branding?.landing_images?.gallery2_text || "Arte Digital"
               },
               {
-                img: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=400&fit=crop",
-                title: "Conteúdo Visual"
+                img: branding?.landing_images?.gallery3 || "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=400&fit=crop",
+                title: branding?.landing_images?.gallery3_text || "Conteúdo Visual"
               },
               {
-                img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop",
-                title: "Produção Premium"
+                img: branding?.landing_images?.gallery4 || "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop",
+                title: branding?.landing_images?.gallery4_text || "Produção Premium"
               }
             ].map((item, idx) => (
               <motion.div
