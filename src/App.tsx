@@ -50,7 +50,8 @@ import {
   ExternalLink,
   Database,
   FileText,
-  Home
+  Home,
+  FolderTree
 } from 'lucide-react';
 
 // --- Components ---
