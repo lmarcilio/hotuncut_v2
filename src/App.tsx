@@ -2918,12 +2918,21 @@ const AdminDashboard = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <div className="space-y-6">
-                    <div>
-                      <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Logo do Sistema</label>
-                      <div className="flex flex-col gap-4">
-                        {branding.logo_url && (
-                          <div className="p-4 bg-black rounded-2xl border border-zinc-800 flex items-center justify-center min-h-[150px] relative">
+                  <div className="space-y-8">
+                    {/* Logo Section */}
+                    <div className="bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-3xl p-8">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-black" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">Logo do Sistema</h3>
+                      </div>
+
+                      {/* Logo Preview */}
+                      {branding.logo_url && (
+                        <div className="mb-6">
+                          <p className="text-xs text-gray-400 uppercase font-bold mb-3">Preview Atual</p>
+                          <div className="p-6 bg-gradient-to-br from-black to-zinc-900 rounded-2xl border border-zinc-800 flex items-center justify-center min-h-[140px] relative group">
                             {previewError ? (
                               <div className="flex flex-col items-center gap-2 text-red-500">
                                 <AlertCircle className="w-8 h-8" />
@@ -2944,24 +2953,29 @@ const AdminDashboard = ({
                                 src={branding.logo_url} 
                                 alt="Preview Logo" 
                                 style={{ width: `${branding.logo_width}px` }}
-                                className="object-contain"
+                                className="object-contain drop-shadow-lg group-hover:drop-shadow-2xl transition-all"
                                 referrerPolicy="no-referrer"
                                 onError={() => setPreviewError(true)}
                               />
                             )}
                           </div>
-                        )}
-                        <input 
-                          type="file" 
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          className="hidden" 
-                          id="logo-upload"
-                        />
+                        </div>
+                      )}
+
+                      {/* Upload Controls */}
+                      <div className="space-y-3">
+                        <p className="text-xs text-gray-400 uppercase font-bold">Fazer Upload</p>
                         <div className="flex gap-2">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="hidden" 
+                            id="logo-upload"
+                          />
                           <label 
                             htmlFor="logo-upload"
-                            className="flex-1 py-4 bg-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer border border-zinc-700"
+                            className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-orange-600 text-sm"
                           >
                             {uploadingLogo ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
                             {branding.logo_url ? 'Trocar Logo' : 'Subir Logo'}
@@ -2969,43 +2983,52 @@ const AdminDashboard = ({
                           {branding.logo_url && (
                             <button 
                               onClick={() => setBranding(prev => ({ ...prev, logo_url: '' }))}
-                              className="px-4 py-4 bg-red-500/10 text-red-500 rounded-2xl hover:bg-red-500/20 transition-all border border-red-500/20"
+                              className="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-all border border-red-500/30 font-bold"
                               title="Remover Logo"
                             >
                               <Trash2 className="w-5 h-5" />
                             </button>
                           )}
                         </div>
+                      </div>
 
-                        <div className="mt-4">
-                          <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Ou use uma URL externa</label>
-                          <input 
-                            type="text" 
-                            placeholder="https://exemplo.com/logo.png"
-                            value={branding.logo_url && !branding.logo_url.startsWith('blob:') ? branding.logo_url : ''}
-                            onChange={(e) => setBranding(prev => ({ ...prev, logo_url: e.target.value }))}
-                            className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
-                          />
+                      {/* URL Input */}
+                      <div className="pt-4 border-t border-zinc-800">
+                        <p className="text-xs text-gray-400 uppercase font-bold mb-2 block">Ou use uma URL externa</p>
+                        <input 
+                          type="text" 
+                          placeholder="https://exemplo.com/logo.png"
+                          value={branding.logo_url && !branding.logo_url.startsWith('blob:') ? branding.logo_url : ''}
+                          onChange={(e) => setBranding(prev => ({ ...prev, logo_url: e.target.value }))}
+                          className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                        />
+                      </div>
+
+                      {/* Size Slider */}
+                      <div className="pt-4 border-t border-zinc-800">
+                        <p className="text-xs text-gray-400 uppercase font-bold mb-3 block">
+                          Tamanho: <span className="text-orange-400">{branding.logo_width}px</span>
+                        </p>
+                        <input 
+                          type="range" 
+                          min="50" 
+                          max="400" 
+                          step="5"
+                          value={branding.logo_width}
+                          onChange={(e) => setBranding(prev => ({ ...prev, logo_width: parseInt(e.target.value) }))}
+                          className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-500 mt-2">
+                          <span>50px (Mínimo)</span>
+                          <span>400px (Máximo)</span>
                         </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block">
-                        Tamanho da Logo ({branding.logo_width}px)
-                      </label>
-                      <input 
-                        type="range" 
-                        min="50" 
-                        max="400" 
-                        step="5"
-                        value={branding.logo_width}
-                        onChange={(e) => setBranding(prev => ({ ...prev, logo_width: parseInt(e.target.value) }))}
-                        className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                      />
-                      <div className="flex justify-between text-[10px] text-gray-500 mt-2">
-                        <span>50px</span>
-                        <span>400px</span>
+                      {/* Tip Box */}
+                      <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                        <p className="text-xs text-blue-300 leading-relaxed">
+                          💡 <strong>Dica:</strong> Use uma logo com fundo transparente (PNG) para melhor integração com o tema escuro. O slider ajusta o tamanho da logo em toda a plataforma.
+                        </p>
                       </div>
                     </div>
 
@@ -3114,14 +3137,41 @@ const AdminDashboard = ({
                                 </div>
                               </div>
 
-                              <div className="pt-4 border-t border-zinc-800/50">
-                                <h4 className="text-sm font-bold text-white mb-4">Benefícios</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  {renderImageUpload('benefit1', 'Benefício 1 (Prompt Studio)', '600x400')}
-                                  {renderImageUpload('benefit2', 'Benefício 2 (Video Lab)', '600x400')}
-                                  {renderImageUpload('benefit3', 'Benefício 3 (Bypass Academy)', '600x400')}
-                                </div>
-                              </div>
+                               <div className="pt-4 border-t border-zinc-800/50">
+                                 <h4 className="text-sm font-bold text-white mb-4">Benefícios</h4>
+                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                   {renderImageUpload('benefit1', 'Benefício 1 (Prompt Studio)', '600x400')}
+                                   {renderImageUpload('benefit2', 'Benefício 2 (Video Lab)', '600x400')}
+                                   {renderImageUpload('benefit3', 'Benefício 3 (Bypass Academy)', '600x400')}
+                                 </div>
+                               </div>
+
+                               <div className="pt-4 border-t border-zinc-800/50">
+                                 <h4 className="text-sm font-bold text-white mb-4">Painel de Controle (Dashboard)</h4>
+                                 <p className="text-xs text-gray-400 mb-3">Imagem que será exibida na seção de showcase do painel</p>
+                                 <div className="p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                   {renderImageUpload('dashboard', 'Imagem do Dashboard', '1920x1080')}
+                                 </div>
+                               </div>
+
+                               <div className="pt-4 border-t border-zinc-800/50">
+                                 <h4 className="text-sm font-bold text-white mb-4">Imagens Geradas com Prompts</h4>
+                                 <p className="text-xs text-gray-400 mb-3">4 imagens para o showcase de conteúdos gerados</p>
+                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                   <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                     {renderImageUpload('generated_1', 'Imagem Gerada 1', '600x400')}
+                                   </div>
+                                   <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                     {renderImageUpload('generated_2', 'Imagem Gerada 2', '600x400')}
+                                   </div>
+                                   <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                     {renderImageUpload('generated_3', 'Imagem Gerada 3', '600x400')}
+                                   </div>
+                                   <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                     {renderImageUpload('generated_4', 'Imagem Gerada 4', '600x400')}
+                                   </div>
+                                 </div>
+                               </div>
                             </>
                           );
                         })()}
@@ -3147,14 +3197,20 @@ const AdminDashboard = ({
                     </button>
                   </div>
 
-                  <div className="bg-black/50 p-8 rounded-[2.5rem] border border-zinc-800 flex flex-col items-center justify-center text-center">
-                    <div className="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <ImageIcon className="w-8 h-8 text-orange-500" />
+                  <div className="bg-gradient-to-br from-zinc-900 to-black border border-zinc-800 rounded-3xl p-8 flex flex-col justify-center">
+                    <div className="text-center space-y-4">
+                      <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center mx-auto">
+                        <Sparkles className="w-8 h-8 text-orange-400" />
+                      </div>
+                      <h4 className="text-white font-bold text-lg">Dica de Branding</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed">
+                        Todas as imagens da landing page são salvas em um banco de dados seguro. Você pode atualizar qualquer imagem a qualquer momento para testar diferentes visuais e estratégias de conversão.
+                      </p>
+                      <div className="mt-6 pt-6 border-t border-zinc-800">
+                        <p className="text-xs text-gray-500 uppercase font-bold mb-2">Formatos Recomendados</p>
+                        <p className="text-xs text-gray-400">PNG, JPG, WebP • Máx. 5MB • URLs diretas funcionam</p>
+                      </div>
                     </div>
-                    <h4 className="text-white font-bold mb-2">Dica de Proporção</h4>
-                    <p className="text-sm text-gray-500">
-                      Use uma logo com fundo transparente (PNG ou SVG) para melhor integração com o tema escuro. Ajuste o slider para encontrar o equilíbrio visual perfeito.
-                    </p>
                   </div>
                 </div>
               </div>
