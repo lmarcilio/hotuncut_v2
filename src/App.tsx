@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import UnifiedPromptManager from './lib/UnifiedPromptManager';
+import PremiumLandingPage from './lib/PremiumLandingPage';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { 
   Flame, 
@@ -4009,16 +4010,10 @@ const LandingPage = ({
       />
       
       <main>
-        <Hero onBuy={onBuy} branding={branding} />
-        <Features />
-        <ConversionSteps onBuy={onBuy} />
-        <Gallery branding={branding} />
-        <Pricing onBuy={onBuy} />
-        <Testimonials />
-        <WhyHotUncut branding={branding} />
-        <FinalCTA onBuy={onBuy} />
-        <TrustSeals />
-        <FAQ />
+        <PremiumLandingPage 
+          onBuy={onBuy}
+          branding={branding}
+        />
       </main>
       <Footer onAdminClick={onAdminClick} branding={branding} />
     </div>
