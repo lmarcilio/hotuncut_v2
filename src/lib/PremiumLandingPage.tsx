@@ -14,6 +14,15 @@ const PremiumLandingPage = ({
 }) => {
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0);
 
+  React.useEffect(() => {
+    console.log('PremiumLandingPage Branding:', branding);
+    console.log('Rateio URLs:', {
+      monthly: branding?.rateio_monthly_url,
+      quarterly: branding?.rateio_quarterly_url,
+      annual: branding?.rateio_annual_url
+    });
+  }, [branding]);
+
   return (
     <div className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-black overflow-hidden">
       {/* Hero Section - Ultra Impactante */}
@@ -622,7 +631,12 @@ const PremiumLandingPage = ({
                 <button 
                   onClick={() => {
                     const url = branding?.[plan.urlKey];
-                    if (url) window.open(url, '_blank');
+                    console.log('Plan URL Key:', plan.urlKey, 'URL:', url, 'Branding:', branding);
+                    if (url && url.trim()) {
+                      window.open(url, '_blank');
+                    } else {
+                      alert('URL não configurada para este plano. Entre em contato com o administrador.');
+                    }
                   }}
                   className={`w-full py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
                     plan.highlight

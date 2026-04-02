@@ -2121,8 +2121,11 @@ const AdminDashboard = ({
         .eq('id', 'global')
         .single();
       
+      console.log('Branding Data from Supabase:', data);
+      console.log('Branding Error:', error);
+      
       if (data && !error) {
-        setBranding({
+        const brandingData = {
           logo_url: data.logo_url || '',
           logo_width: data.logo_width || 150,
           landing_images: data.landing_images || {
@@ -2138,7 +2141,9 @@ const AdminDashboard = ({
           rateio_monthly_url: data.rateio_monthly_url || '',
           rateio_quarterly_url: data.rateio_quarterly_url || '',
           rateio_annual_url: data.rateio_annual_url || ''
-        });
+        };
+        console.log('Branding to set:', brandingData);
+        setBranding(brandingData);
         if (data.nexano_payment_url) {
           setSettings(prev => ({ ...prev, nexano_payment_url: data.nexano_payment_url }));
           setNexanoUrl(data.nexano_payment_url);
@@ -4301,7 +4306,10 @@ export default function App() {
   const [brandingSettings, setBrandingSettings] = useState({
     logo_url: null as string | null,
     logo_width: 150,
-    landing_images: null as any
+    landing_images: null as any,
+    rateio_monthly_url: '',
+    rateio_quarterly_url: '',
+    rateio_annual_url: ''
   });
 
   useEffect(() => {
@@ -4324,12 +4332,18 @@ export default function App() {
       .eq('id', 'global')
       .single();
     
+    console.log('Fetching brandingSettings:', { data, error });
+    
     if (data && !error) {
       setBrandingSettings({
         logo_url: data.logo_url,
         logo_width: data.logo_width,
-        landing_images: data.landing_images
+        landing_images: data.landing_images,
+        rateio_monthly_url: data.rateio_monthly_url || '',
+        rateio_quarterly_url: data.rateio_quarterly_url || '',
+        rateio_annual_url: data.rateio_annual_url || ''
       });
+      console.log('brandingSettings updated:', { data });
     }
   };
 
