@@ -62,27 +62,6 @@ const PremiumLandingPage = ({
               Prompts prontos + Estratégia comprovada = <span className="font-bold text-orange-400">Renda diária</span>
             </motion.p>
 
-            {/* Social Proof */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap items-center justify-center gap-6 mb-12 text-sm text-gray-400"
-            >
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-orange-500" />
-                <span>+2.847 Clientes Ativos</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-orange-500" />
-                <span>+R$ 4.2M Faturados</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-orange-500" />
-                <span>97% Satisfação</span>
-              </div>
-            </motion.div>
-
             {/* Value Props */}
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
@@ -515,6 +494,148 @@ const PremiumLandingPage = ({
               🔥 PEGAR OFERTA AGORA 🔥
             </button>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Rateio Pricing Section */}
+      <section className="py-20 lg:py-32 bg-gradient-to-b from-zinc-950 to-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,146,60,0.08),transparent_70%)] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Rateio Image Showcase - if available */}
+          {branding?.landing_images?.rateio_image && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="mb-20 relative group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-pink-500/20 blur-3xl rounded-3xl pointer-events-none group-hover:blur-4xl transition-all" />
+              <div className="relative aspect-video rounded-3xl overflow-hidden border-2 border-orange-500/40 shadow-2xl shadow-orange-500/30 group-hover:shadow-orange-500/50 transition-all">
+                <img 
+                  src={branding.landing_images.rateio_image} 
+                  alt="Rateio das IAs" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+            </motion.div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+              Rateio das <span className="text-orange-400">IAs</span>
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              Ganhe renda passiva compartilhando os lucros das IAs. Escolha o plano que melhor se adapta ao seu objetivo
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                name: "Mensal",
+                price: "R$ 37",
+                period: "/mês",
+                features: [
+                  "Acesso ao programa Rateio",
+                  "Receba comissões mensais",
+                  "Dashboard de monitoramento",
+                  "Suporte por email",
+                  "Relatórios básicos"
+                ],
+                highlight: false,
+                urlKey: "rateio_monthly_url"
+              },
+              {
+                name: "Trimestral",
+                price: "R$ 97",
+                period: "/3 meses",
+                features: [
+                  "Tudo do plano Mensal",
+                  "10% economia anual",
+                  "Prioridade no suporte",
+                  "Relatórios avançados",
+                  "Acesso a webinars exclusivos"
+                ],
+                highlight: true,
+                urlKey: "rateio_quarterly_url"
+              },
+              {
+                name: "Anual",
+                price: "R$ 290",
+                period: "/ano",
+                features: [
+                  "Tudo do plano Trimestral",
+                  "22% economia anual",
+                  "Suporte prioritário 24/7",
+                  "Consultoria mensal 1:1",
+                  "Bônus exclusivos trimestrais"
+                ],
+                highlight: false,
+                urlKey: "rateio_annual_url"
+              }
+            ].map((plan, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className={`relative p-8 rounded-2xl transition-all duration-300 ${
+                  plan.highlight
+                    ? "bg-gradient-to-br from-orange-900/50 to-pink-900/50 border-2 border-orange-500 shadow-[0_20px_60px_rgba(244,114,35,0.3)] scale-105 md:scale-100"
+                    : "bg-gradient-to-br from-zinc-900/50 to-black border border-zinc-800 hover:border-orange-500/50 hover:shadow-[0_20px_60px_rgba(244,114,35,0.2)]"
+                }`}
+              >
+                {plan.highlight && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="px-4 py-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold rounded-full">
+                      MAIS POPULAR
+                    </span>
+                  </div>
+                )}
+                
+                <h3 className="text-2xl font-bold mb-2 text-white">{plan.name}</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500">
+                    {plan.price}
+                  </span>
+                  <span className="text-gray-400 ml-2">{plan.period}</span>
+                </div>
+
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, fidx) => (
+                    <li key={fidx} className="flex items-center gap-3 text-gray-300">
+                      <CheckCircle2 className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button 
+                  onClick={() => {
+                    const url = branding?.landing_images?.[plan.urlKey];
+                    if (url) window.open(url, '_blank');
+                  }}
+                  className={`w-full py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                    plan.highlight
+                      ? "bg-gradient-to-r from-orange-500 to-pink-500 text-black hover:brightness-110 shadow-[0_15px_40px_rgba(244,114,35,0.4)]"
+                      : "bg-orange-500/20 text-orange-400 border border-orange-500/50 hover:bg-orange-500/30"
+                  }`}
+                >
+                  <Rocket className="w-5 h-5" />
+                  Começar Agora
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

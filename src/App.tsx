@@ -53,7 +53,9 @@ import {
   Database,
   FileText,
   Home,
-  FolderTree
+  FolderTree,
+  DollarSign,
+  Rocket
 } from 'lucide-react';
 
 // --- Components ---
@@ -1814,7 +1816,7 @@ const AdminDashboard = ({
   nexanoUrl: string,
   setNexanoUrl: (url: string) => void
 }) => {
-  const [activeTab, setActiveTab] = useState<'members' | 'unified-prompts' | 'lessons' | 'tools' | 'branding' | 'webhooks'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'unified-prompts' | 'lessons' | 'tools' | 'branding' | 'rateio' | 'webhooks'>('members');
   const [profiles, setProfiles] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -1876,7 +1878,10 @@ const AdminDashboard = ({
       benefit1: 'https://picsum.photos/seed/studio/600/400',
       benefit2: 'https://picsum.photos/seed/videolab/600/400',
       benefit3: 'https://picsum.photos/seed/bypass/600/400'
-    }
+    },
+    rateio_monthly_url: '',
+    rateio_quarterly_url: '',
+    rateio_annual_url: ''
   });
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -2107,7 +2112,7 @@ const AdminDashboard = ({
     fetchAllData();
   }, []);
 
-  const fetchBranding = async () => {
+   const fetchBranding = async () => {
     if (!supabase) return;
     try {
       const { data, error } = await supabase
@@ -2129,7 +2134,10 @@ const AdminDashboard = ({
             benefit1: 'https://picsum.photos/seed/studio/600/400',
             benefit2: 'https://picsum.photos/seed/videolab/600/400',
             benefit3: 'https://picsum.photos/seed/bypass/600/400'
-          }
+          },
+          rateio_monthly_url: data.rateio_monthly_url || '',
+          rateio_quarterly_url: data.rateio_quarterly_url || '',
+          rateio_annual_url: data.rateio_annual_url || ''
         });
         if (data.nexano_payment_url) {
           setSettings(prev => ({ ...prev, nexano_payment_url: data.nexano_payment_url }));
@@ -2189,7 +2197,7 @@ const AdminDashboard = ({
   const [brandingError, setBrandingError] = useState<string | null>(null);
   const [brandingSuccess, setBrandingSuccess] = useState<string | null>(null);
 
-  const saveBranding = async () => {
+   const saveBranding = async () => {
     if (!supabase) return;
     setBrandingError(null);
     setBrandingSuccess(null);
@@ -2203,6 +2211,9 @@ const AdminDashboard = ({
           logo_width: branding.logo_width,
           nexano_payment_url: settings.nexano_payment_url,
           landing_images: branding.landing_images,
+          rateio_monthly_url: branding.rateio_monthly_url,
+          rateio_quarterly_url: branding.rateio_quarterly_url,
+          rateio_annual_url: branding.rateio_annual_url,
           updated_at: new Date().toISOString()
         });
 
@@ -2835,18 +2846,24 @@ const AdminDashboard = ({
               >
                 Ferramentas
               </button>
-              <button 
-                onClick={() => setActiveTab('branding')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'branding' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
-              >
-                Branding
-              </button>
-              <button 
-                onClick={() => setActiveTab('webhooks')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'webhooks' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
-              >
-                Webhooks
-              </button>
+               <button 
+                 onClick={() => setActiveTab('branding')}
+                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'branding' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+               >
+                 Branding
+               </button>
+               <button 
+                 onClick={() => setActiveTab('rateio')}
+                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'rateio' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+               >
+                 Rateio
+               </button>
+               <button 
+                 onClick={() => setActiveTab('webhooks')}
+                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'webhooks' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+               >
+                 Webhooks
+               </button>
             </div>
             <button 
               onClick={onClose}
@@ -3154,8 +3171,16 @@ const AdminDashboard = ({
                                  </div>
                                </div>
 
-                               <div className="pt-4 border-t border-zinc-800/50">
-                                 <h4 className="text-sm font-bold text-white mb-4">Imagens Geradas com Prompts</h4>
+                                <div className="pt-4 border-t border-zinc-800/50">
+                                  <h4 className="text-sm font-bold text-white mb-4">Rateio das IAs</h4>
+                                  <p className="text-xs text-gray-400 mb-3">Imagem que será exibida na seção de pricing do Rateio</p>
+                                  <div className="p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                    {renderImageUpload('rateio_image', 'Imagem do Rateio', '1920x1080')}
+                                  </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-zinc-800/50">
+                                  <h4 className="text-sm font-bold text-white mb-4">Imagens Geradas com Prompts</h4>
                                  <p className="text-xs text-gray-400 mb-3">4 imagens para o showcase de conteúdos gerados</p>
                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                    <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
@@ -3213,6 +3238,113 @@ const AdminDashboard = ({
                     </div>
                   </div>
                 </div>
+              </div>
+             )}
+
+            {activeTab === 'rateio' && (
+              <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
+                <h3 className="text-xl font-bold text-white mb-8">Configurações do Rateio das IAs</h3>
+                
+                <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-2xl mb-8">
+                  <div className="flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
+                    <div>
+                      <p className="text-sm text-orange-500 font-bold mb-1">Configuração de URLs de Compra</p>
+                      <p className="text-xs text-orange-500/80 leading-relaxed">
+                        Adicione as URLs de compra para cada plano do Rateio. Os botões de compra na landing page irão redirecionar para estas URLs.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="max-w-2xl space-y-8">
+                  {/* Monthly Plan */}
+                  <div className="bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-3xl p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <Rocket className="w-6 h-6 text-black" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-white">Plano Mensal</h4>
+                        <p className="text-xs text-gray-400">R$ 37/mês</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] text-gray-500 uppercase font-bold block">URL de Compra - Mensal</label>
+                      <input 
+                        type="text" 
+                        placeholder="https://exemplo.com/comprar/mensal"
+                        value={branding.rateio_monthly_url}
+                        onChange={(e) => setBranding(prev => ({ ...prev, rateio_monthly_url: e.target.value }))}
+                        className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quarterly Plan */}
+                  <div className="bg-gradient-to-br from-orange-500/20 to-pink-500/20 border border-orange-500/40 rounded-3xl p-8 ring-2 ring-orange-500/30">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <Star className="w-6 h-6 text-black" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-white">Plano Trimestral</h4>
+                        <p className="text-xs text-orange-400 font-semibold">MAIS POPULAR - R$ 97/3 meses</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] text-gray-500 uppercase font-bold block">URL de Compra - Trimestral</label>
+                      <input 
+                        type="text" 
+                        placeholder="https://exemplo.com/comprar/trimestral"
+                        value={branding.rateio_quarterly_url}
+                        onChange={(e) => setBranding(prev => ({ ...prev, rateio_quarterly_url: e.target.value }))}
+                        className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Annual Plan */}
+                  <div className="bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-3xl p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <Flame className="w-6 h-6 text-black" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-white">Plano Anual</h4>
+                        <p className="text-xs text-gray-400">R$ 290/ano</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] text-gray-500 uppercase font-bold block">URL de Compra - Anual</label>
+                      <input 
+                        type="text" 
+                        placeholder="https://exemplo.com/comprar/anual"
+                        value={branding.rateio_annual_url}
+                        onChange={(e) => setBranding(prev => ({ ...prev, rateio_annual_url: e.target.value }))}
+                        className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {brandingError && (
+                  <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-sm whitespace-pre-wrap">
+                    {brandingError}
+                  </div>
+                )}
+                {brandingSuccess && (
+                  <div className="mt-6 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-500 text-sm">
+                    {brandingSuccess}
+                  </div>
+                )}
+
+                <button 
+                  onClick={saveBranding}
+                  className="w-full mt-8 py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+                >
+                  <Save className="w-5 h-5" /> Salvar Configurações do Rateio
+                </button>
               </div>
             )}
 
@@ -4008,20 +4140,27 @@ const AdminDashboard = ({
             <LinkIcon className="w-5 h-5" />
             <span className="text-[10px] font-bold">Ferramentas</span>
           </button>
-          <button
-            onClick={() => setActiveTab('branding')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'branding' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
-          >
-            <Image className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Branding</span>
-          </button>
            <button
-             onClick={() => setActiveTab('webhooks')}
-             className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'webhooks' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+             onClick={() => setActiveTab('branding')}
+             className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'branding' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
            >
-             <Activity className="w-5 h-5" />
-             <span className="text-[10px] font-bold">Webhooks</span>
+             <Image className="w-5 h-5" />
+             <span className="text-[10px] font-bold">Branding</span>
            </button>
+           <button
+             onClick={() => setActiveTab('rateio')}
+             className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'rateio' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+           >
+             <DollarSign className="w-5 h-5" />
+             <span className="text-[10px] font-bold">Rateio</span>
+           </button>
+            <button
+              onClick={() => setActiveTab('webhooks')}
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'webhooks' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+              <Activity className="w-5 h-5" />
+              <span className="text-[10px] font-bold">Webhooks</span>
+            </button>
            {/* Logout button for admin mobile */}
            <div className="ml-auto pl-2 border-l border-zinc-700">
              <button
