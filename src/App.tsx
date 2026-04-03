@@ -3075,25 +3075,47 @@ const AdminDashboard = ({
     .map(item => item.trim())
     .filter(Boolean);
 
-  const parseVideoExamples = (value: string) => value
-    .split('\n')
-    .map(item => item.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [title, url, thumbnail] = line.split('|').map(part => part.trim());
-      return { title: title || '', url: url || '', thumbnail: thumbnail || '' };
-    })
-    .filter(item => item.url);
+  const parseVideoExamples = (value: string) => {
+    const lines = value
+      .split('\n')
+      .map(item => item.trim())
+      .filter(Boolean);
 
-  const parsePromptLibrary = (value: string) => value
-    .split('\n')
-    .map(item => item.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [title, content] = line.split('|').map(part => part.trim());
-      return { title: title || '', content: content || '' };
-    })
-    .filter(item => item.content);
+    return lines
+      .map((line) => {
+        const [title, url, thumbnail] = line.split('|').map(part => part.trim());
+
+        if (url) {
+          return { title: title || '', url, thumbnail: thumbnail || '' };
+        }
+
+        if (/^https?:\/\//i.test(line)) {
+          return { title: '', url: line, thumbnail: '' };
+        }
+
+        return null;
+      })
+      .filter((item): item is { title: string; url: string; thumbnail: string } => !!item && !!item.url);
+  };
+
+  const parsePromptLibrary = (value: string) => {
+    const lines = value
+      .split('\n')
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    return lines
+      .map((line, idx) => {
+        const [title, content] = line.split('|').map(part => part.trim());
+
+        if (content) {
+          return { title: title || `Prompt ${idx + 1}`, content };
+        }
+
+        return { title: `Prompt ${idx + 1}`, content: line };
+      })
+      .filter(item => item.content);
+  };
 
   const saveTool = async () => {
     if (!newTool.name || !newTool.url) return;
