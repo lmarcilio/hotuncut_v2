@@ -175,6 +175,12 @@ const MemberArea = ({
     }
   }, [lessons, activeTab]);
 
+  useEffect(() => {
+    if (activeTab !== 'tools' && selectedTool) {
+      setSelectedTool(null);
+    }
+  }, [activeTab, selectedTool]);
+
   const handleLessonSelect = (lesson: any) => {
     setSelectedLesson(lesson);
     if (lesson.updated_at) {
@@ -264,123 +270,6 @@ const MemberArea = ({
                 >
                   <Copy className="w-5 h-5" /> Copiar Prompt
                 </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {selectedTool && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="max-w-5xl w-full bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-2xl relative max-h-[90vh] overflow-y-auto"
-            >
-              <button
-                onClick={() => setSelectedTool(null)}
-                className="absolute top-6 right-6 p-2 bg-zinc-800 text-gray-400 rounded-full hover:text-white hover:bg-zinc-700 transition-all z-10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="p-8 md:p-10 space-y-8">
-                <div>
-                  <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{selectedTool.category || 'Geral'}</span>
-                  <h2 className="text-3xl font-black text-white mt-2">{selectedTool.name}</h2>
-                  {selectedTool.description && <p className="text-gray-400 mt-3">{selectedTool.description}</p>}
-                </div>
-
-                {selectedTool.youtube_video_url && getYoutubeEmbedUrl(selectedTool.youtube_video_url) && (
-                  <div className="aspect-video rounded-2xl overflow-hidden border border-zinc-800 bg-black">
-                    <iframe
-                      className="w-full h-full"
-                      src={getYoutubeEmbedUrl(selectedTool.youtube_video_url)}
-                      title={`Video ${selectedTool.name}`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                )}
-
-                {Array.isArray(selectedTool.main_applications) && selectedTool.main_applications.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-2xl font-bold text-white">Principais Aplicacoes</h3>
-                    <div className="space-y-3">
-                      {selectedTool.main_applications.map((item: string, idx: number) => (
-                        <div key={`${item}-${idx}`} className="bg-blue-950/20 border border-blue-900/40 rounded-xl px-4 py-3 text-gray-200">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {Array.isArray(selectedTool.video_examples) && selectedTool.video_examples.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-2xl font-bold text-white">Exemplos Praticos em Video</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {selectedTool.video_examples.map((video: any, idx: number) => (
-                        <a
-                          key={`${video.url || video.title}-${idx}`}
-                          href={video.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group bg-black border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500/50 transition-all"
-                        >
-                          {video.thumbnail && <img src={video.thumbnail} alt={video.title || 'Video'} className="w-full h-28 object-cover" referrerPolicy="no-referrer" />}
-                          <div className="p-4">
-                            <p className="text-sm text-gray-200 font-semibold line-clamp-2 group-hover:text-orange-500 transition-all">{video.title || 'Assistir exemplo'}</p>
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {Array.isArray(selectedTool.prompt_library) && selectedTool.prompt_library.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-2xl font-bold text-white">Biblioteca de Prompts</h3>
-                    <div className="space-y-4">
-                      {selectedTool.prompt_library.map((promptItem: any, idx: number) => (
-                        <div key={`${promptItem.title || 'prompt'}-${idx}`} className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-5">
-                          <div className="flex justify-between items-center gap-3 mb-3">
-                            <p className="text-white font-bold">{promptItem.title || `Prompt ${idx + 1}`}</p>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(promptItem.content || '');
-                                alert('Prompt copiado!');
-                              }}
-                              className="px-3 py-1.5 bg-zinc-700 text-gray-200 text-xs rounded-lg hover:bg-zinc-600 transition-all flex items-center gap-2"
-                            >
-                              <Copy className="w-3 h-3" /> Copiar
-                            </button>
-                          </div>
-                          <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-black border border-zinc-700 rounded-xl p-4">{promptItem.content || ''}</pre>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(selectedTool.cta_title || selectedTool.cta_button_label || selectedTool.cta_button_url) && (
-                  <div className="rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 to-cyan-500/10 p-8 text-center">
-                    <h3 className="text-3xl font-black text-white mb-3">{selectedTool.cta_title || 'Pronto para comecar?'}</h3>
-                    {selectedTool.cta_description && <p className="text-gray-300 mb-6">{selectedTool.cta_description}</p>}
-                    {selectedTool.cta_button_url && (
-                      <a
-                        href={selectedTool.cta_button_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 text-black hover:opacity-90 transition-all"
-                      >
-                        {selectedTool.cta_button_label || 'Acessar ferramenta'} <ExternalLink className="w-4 h-4" />
-                      </a>
-                    )}
-                  </div>
-                )}
               </div>
             </motion.div>
           </div>
@@ -943,45 +832,153 @@ const MemberArea = ({
           )}
 
           {activeTab === 'tools' && (
-            <div className="space-y-12">
-              {Array.from(new Set(tools.map(t => t.category || 'Geral'))).map(category => (
-                <div key={category} className="space-y-6">
-                  <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-500 flex items-center justify-center">
-                      <LinkIcon className="w-4 h-4" />
-                    </span>
-                    {category}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {tools.filter(t => (t.category || 'Geral') === category).map((tool) => (
-                      <button
-                        key={tool.id}
-                        onClick={() => setSelectedTool(tool)}
-                        className="group relative bg-zinc-900/50 rounded-[2.5rem] border border-zinc-800 p-6 hover:border-orange-500/50 transition-all hover:scale-[1.02]"
-                      >
-                        {tool.image_url ? (
-                          <div className="aspect-video mb-6 overflow-hidden rounded-2xl bg-black">
-                            <img 
-                              src={tool.image_url} 
-                              alt={tool.name} 
-                              className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
-                        ) : (
-                          <div className="aspect-video mb-6 rounded-2xl bg-zinc-800 flex items-center justify-center">
-                            <LinkIcon className="w-8 h-8 text-gray-600 group-hover:text-orange-500 transition-all" />
-                          </div>
-                        )}
-                        <div className="flex justify-between items-center">
-                          <h4 className="text-xl font-bold text-white group-hover:text-orange-500 transition-all">{tool.name}</h4>
-                          <ArrowRight className="w-5 h-5 text-gray-700 group-hover:text-orange-500 transition-all" />
+            <div className="space-y-10">
+              {selectedTool ? (
+                <div className="space-y-8">
+                  <button
+                    onClick={() => setSelectedTool(null)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-gray-200 hover:border-orange-500/50 hover:text-white transition-all"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Voltar para ferramentas
+                  </button>
+
+                  <div className="bg-zinc-900/60 border border-zinc-800 rounded-[2rem] p-6 md:p-8 space-y-8">
+                    <div>
+                      <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{selectedTool.category || 'Geral'}</span>
+                      <h2 className="text-3xl md:text-4xl font-black text-white mt-2">{selectedTool.name}</h2>
+                      {selectedTool.description && <p className="text-gray-300 mt-3">{selectedTool.description}</p>}
+                    </div>
+
+                    {selectedTool.youtube_video_url && getYoutubeEmbedUrl(selectedTool.youtube_video_url) && (
+                      <div className="aspect-video rounded-2xl overflow-hidden border border-zinc-700 bg-black">
+                        <iframe
+                          className="w-full h-full"
+                          src={getYoutubeEmbedUrl(selectedTool.youtube_video_url)}
+                          title={`Video ${selectedTool.name}`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    )}
+
+                    {Array.isArray(selectedTool.main_applications) && selectedTool.main_applications.length > 0 && (
+                      <section className="space-y-4">
+                        <h3 className="text-2xl font-bold text-white">Principais Aplicacoes</h3>
+                        <div className="space-y-3">
+                          {selectedTool.main_applications.map((item: string, idx: number) => (
+                            <div key={`${item}-${idx}`} className="bg-blue-950/20 border border-blue-900/40 rounded-xl px-4 py-3 text-gray-200">{item}</div>
+                          ))}
                         </div>
-                      </button>
-                    ))}
+                      </section>
+                    )}
+
+                    {Array.isArray(selectedTool.video_examples) && selectedTool.video_examples.length > 0 && (
+                      <section className="space-y-4">
+                        <h3 className="text-2xl font-bold text-white">Exemplos Praticos em Video</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {selectedTool.video_examples.map((video: any, idx: number) => (
+                            <a
+                              key={`${video.url || video.title}-${idx}`}
+                              href={video.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group bg-black border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500/50 transition-all"
+                            >
+                              {video.thumbnail && <img src={video.thumbnail} alt={video.title || 'Video'} className="w-full h-28 object-cover" referrerPolicy="no-referrer" />}
+                              <div className="p-4">
+                                <p className="text-sm text-gray-200 font-semibold line-clamp-2 group-hover:text-orange-500 transition-all">{video.title || 'Assistir exemplo'}</p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {Array.isArray(selectedTool.prompt_library) && selectedTool.prompt_library.length > 0 && (
+                      <section className="space-y-4">
+                        <h3 className="text-2xl font-bold text-white">Biblioteca de Prompts</h3>
+                        <div className="space-y-4">
+                          {selectedTool.prompt_library.map((promptItem: any, idx: number) => (
+                            <div key={`${promptItem.title || 'prompt'}-${idx}`} className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-5">
+                              <div className="flex justify-between items-center gap-3 mb-3">
+                                <p className="text-white font-bold">{promptItem.title || `Prompt ${idx + 1}`}</p>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(promptItem.content || '');
+                                    alert('Prompt copiado!');
+                                  }}
+                                  className="px-3 py-1.5 bg-zinc-700 text-gray-200 text-xs rounded-lg hover:bg-zinc-600 transition-all flex items-center gap-2"
+                                >
+                                  <Copy className="w-3 h-3" /> Copiar
+                                </button>
+                              </div>
+                              <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-black border border-zinc-700 rounded-xl p-4">{promptItem.content || ''}</pre>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {(selectedTool.cta_title || selectedTool.cta_description || selectedTool.cta_button_label || selectedTool.cta_button_url || selectedTool.url) && (
+                      <section className="rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 to-cyan-500/10 p-8 text-center">
+                        <h3 className="text-3xl font-black text-white mb-3">{selectedTool.cta_title || 'Pronto para comecar?'}</h3>
+                        {selectedTool.cta_description && <p className="text-gray-300 mb-6">{selectedTool.cta_description}</p>}
+                        {(selectedTool.cta_button_url || selectedTool.url) && (
+                          <a
+                            href={selectedTool.cta_button_url || selectedTool.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 text-black hover:opacity-90 transition-all"
+                          >
+                            {selectedTool.cta_button_label || 'Acessar ferramenta'} <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                      </section>
+                    )}
                   </div>
                 </div>
-              ))}
+              ) : (
+                <>
+                  {Array.from(new Set(tools.map(t => t.category || 'Geral'))).map(category => (
+                    <div key={category} className="space-y-6">
+                      <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-500 flex items-center justify-center">
+                          <LinkIcon className="w-4 h-4" />
+                        </span>
+                        {category}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {tools.filter(t => (t.category || 'Geral') === category).map((tool) => (
+                          <button
+                            key={tool.id}
+                            onClick={() => setSelectedTool(tool)}
+                            className="text-left group relative bg-zinc-900/50 rounded-[2.5rem] border border-zinc-800 p-6 hover:border-orange-500/50 transition-all hover:scale-[1.02]"
+                          >
+                            {tool.image_url ? (
+                              <div className="aspect-video mb-6 overflow-hidden rounded-2xl bg-black">
+                                <img
+                                  src={tool.image_url}
+                                  alt={tool.name}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </div>
+                            ) : (
+                              <div className="aspect-video mb-6 rounded-2xl bg-zinc-800 flex items-center justify-center">
+                                <LinkIcon className="w-8 h-8 text-gray-600 group-hover:text-orange-500 transition-all" />
+                              </div>
+                            )}
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-xl font-bold text-white group-hover:text-orange-500 transition-all">{tool.name}</h4>
+                              <ArrowRight className="w-5 h-5 text-gray-700 group-hover:text-orange-500 transition-all" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
 
