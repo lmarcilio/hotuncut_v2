@@ -149,7 +149,15 @@ const MemberArea = ({
   });
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
+  const [selectedTool, setSelectedTool] = useState<any>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
+
+  const getYoutubeEmbedUrl = (url: string) => {
+    if (!url) return '';
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
+    const videoId = match?.[1];
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+  };
 
   // Reset subcategory when category changes
   useEffect(() => {
@@ -256,6 +264,123 @@ const MemberArea = ({
                 >
                   <Copy className="w-5 h-5" /> Copiar Prompt
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedTool && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="max-w-5xl w-full bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-2xl relative max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setSelectedTool(null)}
+                className="absolute top-6 right-6 p-2 bg-zinc-800 text-gray-400 rounded-full hover:text-white hover:bg-zinc-700 transition-all z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="p-8 md:p-10 space-y-8">
+                <div>
+                  <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{selectedTool.category || 'Geral'}</span>
+                  <h2 className="text-3xl font-black text-white mt-2">{selectedTool.name}</h2>
+                  {selectedTool.description && <p className="text-gray-400 mt-3">{selectedTool.description}</p>}
+                </div>
+
+                {selectedTool.youtube_video_url && getYoutubeEmbedUrl(selectedTool.youtube_video_url) && (
+                  <div className="aspect-video rounded-2xl overflow-hidden border border-zinc-800 bg-black">
+                    <iframe
+                      className="w-full h-full"
+                      src={getYoutubeEmbedUrl(selectedTool.youtube_video_url)}
+                      title={`Video ${selectedTool.name}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
+
+                {Array.isArray(selectedTool.main_applications) && selectedTool.main_applications.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-white">Principais Aplicacoes</h3>
+                    <div className="space-y-3">
+                      {selectedTool.main_applications.map((item: string, idx: number) => (
+                        <div key={`${item}-${idx}`} className="bg-blue-950/20 border border-blue-900/40 rounded-xl px-4 py-3 text-gray-200">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {Array.isArray(selectedTool.video_examples) && selectedTool.video_examples.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-white">Exemplos Praticos em Video</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {selectedTool.video_examples.map((video: any, idx: number) => (
+                        <a
+                          key={`${video.url || video.title}-${idx}`}
+                          href={video.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group bg-black border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500/50 transition-all"
+                        >
+                          {video.thumbnail && <img src={video.thumbnail} alt={video.title || 'Video'} className="w-full h-28 object-cover" referrerPolicy="no-referrer" />}
+                          <div className="p-4">
+                            <p className="text-sm text-gray-200 font-semibold line-clamp-2 group-hover:text-orange-500 transition-all">{video.title || 'Assistir exemplo'}</p>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {Array.isArray(selectedTool.prompt_library) && selectedTool.prompt_library.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-white">Biblioteca de Prompts</h3>
+                    <div className="space-y-4">
+                      {selectedTool.prompt_library.map((promptItem: any, idx: number) => (
+                        <div key={`${promptItem.title || 'prompt'}-${idx}`} className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-5">
+                          <div className="flex justify-between items-center gap-3 mb-3">
+                            <p className="text-white font-bold">{promptItem.title || `Prompt ${idx + 1}`}</p>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(promptItem.content || '');
+                                alert('Prompt copiado!');
+                              }}
+                              className="px-3 py-1.5 bg-zinc-700 text-gray-200 text-xs rounded-lg hover:bg-zinc-600 transition-all flex items-center gap-2"
+                            >
+                              <Copy className="w-3 h-3" /> Copiar
+                            </button>
+                          </div>
+                          <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-black border border-zinc-700 rounded-xl p-4">{promptItem.content || ''}</pre>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(selectedTool.cta_title || selectedTool.cta_button_label || selectedTool.cta_button_url) && (
+                  <div className="rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 to-cyan-500/10 p-8 text-center">
+                    <h3 className="text-3xl font-black text-white mb-3">{selectedTool.cta_title || 'Pronto para comecar?'}</h3>
+                    {selectedTool.cta_description && <p className="text-gray-300 mb-6">{selectedTool.cta_description}</p>}
+                    {selectedTool.cta_button_url && (
+                      <a
+                        href={selectedTool.cta_button_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-cyan-400 text-black hover:opacity-90 transition-all"
+                      >
+                        {selectedTool.cta_button_label || 'Acessar ferramenta'} <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -829,11 +954,9 @@ const MemberArea = ({
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {tools.filter(t => (t.category || 'Geral') === category).map((tool) => (
-                      <a 
+                      <button
                         key={tool.id}
-                        href={tool.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        onClick={() => setSelectedTool(tool)}
                         className="group relative bg-zinc-900/50 rounded-[2.5rem] border border-zinc-800 p-6 hover:border-orange-500/50 transition-all hover:scale-[1.02]"
                       >
                         {tool.image_url ? (
@@ -854,7 +977,7 @@ const MemberArea = ({
                           <h4 className="text-xl font-bold text-white group-hover:text-orange-500 transition-all">{tool.name}</h4>
                           <ArrowRight className="w-5 h-5 text-gray-700 group-hover:text-orange-500 transition-all" />
                         </div>
-                      </a>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1993,7 +2116,16 @@ const AdminDashboard = ({
     name: '',
     url: '',
     imageUrl: '',
-    category: 'Imagem'
+    category: 'Imagem',
+    description: '',
+    youtubeVideoUrl: '',
+    mainApplications: '',
+    videoExamples: '',
+    promptLibrary: '',
+    ctaTitle: '',
+    ctaDescription: '',
+    ctaButtonLabel: '',
+    ctaButtonUrl: ''
   });
   const [editingToolId, setEditingToolId] = useState<string | null>(null);
 
@@ -2817,9 +2949,48 @@ const AdminDashboard = ({
   };
 
   const resetToolForm = () => {
-    setNewTool({ name: '', url: '', imageUrl: '', category: 'Imagem' });
+    setNewTool({
+      name: '',
+      url: '',
+      imageUrl: '',
+      category: 'Imagem',
+      description: '',
+      youtubeVideoUrl: '',
+      mainApplications: '',
+      videoExamples: '',
+      promptLibrary: '',
+      ctaTitle: '',
+      ctaDescription: '',
+      ctaButtonLabel: '',
+      ctaButtonUrl: ''
+    });
     setEditingToolId(null);
   };
+
+  const parseList = (value: string) => value
+    .split('\n')
+    .map(item => item.trim())
+    .filter(Boolean);
+
+  const parseVideoExamples = (value: string) => value
+    .split('\n')
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [title, url, thumbnail] = line.split('|').map(part => part.trim());
+      return { title: title || '', url: url || '', thumbnail: thumbnail || '' };
+    })
+    .filter(item => item.url);
+
+  const parsePromptLibrary = (value: string) => value
+    .split('\n')
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [title, content] = line.split('|').map(part => part.trim());
+      return { title: title || '', content: content || '' };
+    })
+    .filter(item => item.content);
 
   const saveTool = async () => {
     if (!newTool.name || !newTool.url) return;
@@ -2828,7 +2999,16 @@ const AdminDashboard = ({
       name: newTool.name,
       url: newTool.url,
       image_url: newTool.imageUrl,
-      category: newTool.category || 'Geral'
+      category: newTool.category || 'Geral',
+      description: newTool.description,
+      youtube_video_url: newTool.youtubeVideoUrl,
+      main_applications: parseList(newTool.mainApplications),
+      video_examples: parseVideoExamples(newTool.videoExamples),
+      prompt_library: parsePromptLibrary(newTool.promptLibrary),
+      cta_title: newTool.ctaTitle,
+      cta_description: newTool.ctaDescription,
+      cta_button_label: newTool.ctaButtonLabel,
+      cta_button_url: newTool.ctaButtonUrl
     };
 
     const { error } = editingToolId
@@ -2853,7 +3033,20 @@ const AdminDashboard = ({
       name: tool.name || '',
       url: tool.url || '',
       imageUrl: tool.image_url || '',
-      category: tool.category || 'Geral'
+      category: tool.category || 'Geral',
+      description: tool.description || '',
+      youtubeVideoUrl: tool.youtube_video_url || '',
+      mainApplications: Array.isArray(tool.main_applications) ? tool.main_applications.join('\n') : '',
+      videoExamples: Array.isArray(tool.video_examples)
+        ? tool.video_examples.map((item: any) => `${item.title || ''} | ${item.url || ''} | ${item.thumbnail || ''}`).join('\n')
+        : '',
+      promptLibrary: Array.isArray(tool.prompt_library)
+        ? tool.prompt_library.map((item: any) => `${item.title || ''} | ${item.content || ''}`).join('\n')
+        : '',
+      ctaTitle: tool.cta_title || '',
+      ctaDescription: tool.cta_description || '',
+      ctaButtonLabel: tool.cta_button_label || '',
+      ctaButtonUrl: tool.cta_button_url || ''
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -4127,6 +4320,66 @@ const AdminDashboard = ({
                     placeholder="URL da Imagem (Opcional)" 
                     value={newTool.imageUrl}
                     onChange={(e) => setNewTool({...newTool, imageUrl: e.target.value})}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 mb-4"
+                  />
+                  <textarea
+                    placeholder="Descrição da ferramenta (opcional)"
+                    value={newTool.description}
+                    onChange={(e) => setNewTool({ ...newTool, description: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 min-h-[90px]"
+                  />
+                  <input
+                    type="text"
+                    placeholder="URL de vídeo do YouTube (para destaque no topo)"
+                    value={newTool.youtubeVideoUrl}
+                    onChange={(e) => setNewTool({ ...newTool, youtubeVideoUrl: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 mb-4"
+                  />
+                  <textarea
+                    placeholder="Principais aplicações (1 por linha)"
+                    value={newTool.mainApplications}
+                    onChange={(e) => setNewTool({ ...newTool, mainApplications: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 min-h-[120px]"
+                  />
+                  <textarea
+                    placeholder="Exemplos de vídeo (1 por linha): Título | URL YouTube | URL thumbnail(opcional)"
+                    value={newTool.videoExamples}
+                    onChange={(e) => setNewTool({ ...newTool, videoExamples: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 min-h-[120px]"
+                  />
+                  <textarea
+                    placeholder="Biblioteca de prompts (1 por linha): Título | Prompt"
+                    value={newTool.promptLibrary}
+                    onChange={(e) => setNewTool({ ...newTool, promptLibrary: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 min-h-[120px]"
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input
+                      type="text"
+                      placeholder="Título da chamada final (CTA)"
+                      value={newTool.ctaTitle}
+                      onChange={(e) => setNewTool({ ...newTool, ctaTitle: e.target.value })}
+                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Texto do botão CTA"
+                      value={newTool.ctaButtonLabel}
+                      onChange={(e) => setNewTool({ ...newTool, ctaButtonLabel: e.target.value })}
+                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    />
+                  </div>
+                  <textarea
+                    placeholder="Descrição da chamada final (CTA)"
+                    value={newTool.ctaDescription}
+                    onChange={(e) => setNewTool({ ...newTool, ctaDescription: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4 min-h-[90px]"
+                  />
+                  <input
+                    type="text"
+                    placeholder="URL do botão CTA"
+                    value={newTool.ctaButtonUrl}
+                    onChange={(e) => setNewTool({ ...newTool, ctaButtonUrl: e.target.value })}
                     className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 mb-4"
                   />
                   <div className="flex gap-3">
