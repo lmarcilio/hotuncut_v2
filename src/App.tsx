@@ -154,9 +154,107 @@ const MemberArea = ({
 
   const getYoutubeEmbedUrl = (url: string) => {
     if (!url) return '';
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&?/]+)/);
     const videoId = match?.[1];
     return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+  };
+
+  const normalizeStringList = (value: any): string[] => {
+    if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean);
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return [];
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) return parsed.map((item) => String(item)).filter(Boolean);
+      } catch {
+        return trimmed.split('\n').map((item) => item.trim()).filter(Boolean);
+      }
+      return [];
+    }
+    return [];
+  };
+
+  const normalizeVideoExamples = (value: any): Array<{ title: string; url: string; thumbnail: string }> => {
+    if (Array.isArray(value)) {
+      return value
+        .map((item: any) => ({
+          title: String(item?.title || ''),
+          url: String(item?.url || ''),
+          thumbnail: String(item?.thumbnail || '')
+        }))
+        .filter((item) => item.url);
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return [];
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((item: any) => ({
+              title: String(item?.title || ''),
+              url: String(item?.url || ''),
+              thumbnail: String(item?.thumbnail || '')
+            }))
+            .filter((item) => item.url);
+        }
+      } catch {
+        return trimmed
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const [title, url, thumbnail] = line.split('|').map((part) => part.trim());
+            if (url) return { title: title || '', url, thumbnail: thumbnail || '' };
+            return { title: '', url: line, thumbnail: '' };
+          })
+          .filter((item) => item.url.startsWith('http'));
+      }
+    }
+
+    return [];
+  };
+
+  const normalizePromptLibrary = (value: any): Array<{ title: string; content: string }> => {
+    if (Array.isArray(value)) {
+      return value
+        .map((item: any) => ({
+          title: String(item?.title || ''),
+          content: String(item?.content || '')
+        }))
+        .filter((item) => item.content);
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return [];
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((item: any) => ({
+              title: String(item?.title || ''),
+              content: String(item?.content || '')
+            }))
+            .filter((item) => item.content);
+        }
+      } catch {
+        return trimmed
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line, idx) => {
+            const [title, content] = line.split('|').map((part) => part.trim());
+            if (content) return { title: title || `Prompt ${idx + 1}`, content };
+            return { title: `Prompt ${idx + 1}`, content: line };
+          })
+          .filter((item) => item.content);
+      }
+    }
+
+    return [];
   };
 
   // Reset subcategory when category changes
@@ -834,6 +932,12 @@ const MemberArea = ({
           {activeTab === 'tools' && (
             <div className="space-y-10">
               {selectedTool ? (
+                (() => {
+                  const applications = normalizeStringList(selectedTool.main_applications);
+                  const videoExamples = normalizeVideoExamples(selectedTool.video_examples);
+                  const promptLibrary = normalizePromptLibrary(selectedTool.prompt_library);
+
+                  return (
                 <div className="space-y-8">
                   <button
                     onClick={() => setSelectedTool(null)}
@@ -861,22 +965,22 @@ const MemberArea = ({
                       </div>
                     )}
 
-                    {Array.isArray(selectedTool.main_applications) && selectedTool.main_applications.length > 0 && (
+                    {applications.length > 0 && (
                       <section className="space-y-4">
                         <h3 className="text-2xl font-bold text-white">Principais Aplicacoes</h3>
                         <div className="space-y-3">
-                          {selectedTool.main_applications.map((item: string, idx: number) => (
+                          {applications.map((item: string, idx: number) => (
                             <div key={`${item}-${idx}`} className="bg-blue-950/20 border border-blue-900/40 rounded-xl px-4 py-3 text-gray-200">{item}</div>
                           ))}
                         </div>
                       </section>
                     )}
 
-                    {Array.isArray(selectedTool.video_examples) && selectedTool.video_examples.length > 0 && (
+                    {videoExamples.length > 0 && (
                       <section className="space-y-4">
                         <h3 className="text-2xl font-bold text-white">Exemplos Praticos em Video</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {selectedTool.video_examples.map((video: any, idx: number) => (
+                          {videoExamples.map((video: any, idx: number) => (
                             <a
                               key={`${video.url || video.title}-${idx}`}
                               href={video.url}
@@ -894,11 +998,11 @@ const MemberArea = ({
                       </section>
                     )}
 
-                    {Array.isArray(selectedTool.prompt_library) && selectedTool.prompt_library.length > 0 && (
+                    {promptLibrary.length > 0 && (
                       <section className="space-y-4">
                         <h3 className="text-2xl font-bold text-white">Biblioteca de Prompts</h3>
                         <div className="space-y-4">
-                          {selectedTool.prompt_library.map((promptItem: any, idx: number) => (
+                          {promptLibrary.map((promptItem: any, idx: number) => (
                             <div key={`${promptItem.title || 'prompt'}-${idx}`} className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-5">
                               <div className="flex justify-between items-center gap-3 mb-3">
                                 <p className="text-white font-bold">{promptItem.title || `Prompt ${idx + 1}`}</p>
@@ -937,6 +1041,8 @@ const MemberArea = ({
                     )}
                   </div>
                 </div>
+                  );
+                })()
               ) : (
                 <>
                   {Array.from(new Set(tools.map(t => t.category || 'Geral'))).map(category => (
