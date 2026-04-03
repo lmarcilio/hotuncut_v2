@@ -92,6 +92,25 @@ const Logo = ({ className = "", branding }: { className?: string, branding: any 
   );
 };
 
+const safeGetFromStorage = (key: string, fallback = '') => {
+  try {
+    if (typeof window === 'undefined') return fallback;
+    const value = window.localStorage.getItem(key);
+    return value ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const safeSetToStorage = (key: string, value: string) => {
+  try {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Safari private mode may block localStorage
+  }
+};
+
 const MemberArea = ({ 
   user, 
   profile, 
@@ -144,7 +163,7 @@ const MemberArea = ({
   const [showAdultModal, setShowAdultModal] = useState(false);
 
   const [viewedUpdates, setViewedUpdates] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem(`viewed_updates_${user.id}`);
+    const saved = safeGetFromStorage(`viewed_updates_${user.id}`);
     return saved ? JSON.parse(saved) : {};
   });
   const [showUpdateToast, setShowUpdateToast] = useState(false);
@@ -291,7 +310,7 @@ const MemberArea = ({
     if (lesson.updated_at) {
       const newViewed = { ...viewedUpdates, [lesson.id]: lesson.updated_at };
       setViewedUpdates(newViewed);
-      localStorage.setItem(`viewed_updates_${user.id}`, JSON.stringify(newViewed));
+      safeSetToStorage(`viewed_updates_${user.id}`, JSON.stringify(newViewed));
     }
   };
 
@@ -2247,6 +2266,10 @@ const AdminDashboard = ({
   const [editingToolId, setEditingToolId] = useState<string | null>(null);
 
   const defaultToolCategories = ['Imagem', 'Vídeos', 'Ebook', 'Geral'];
+  const [managedToolCategories, setManagedToolCategories] = useState<string[]>(defaultToolCategories);
+  const [newToolCategoryName, setNewToolCategoryName] = useState('');
+  const [editingToolCategory, setEditingToolCategory] = useState<string | null>(null);
+  const [editingToolCategoryValue, setEditingToolCategoryValue] = useState('');
 
   const [branding, setBranding] = useState({
     logo_url: '',
@@ -2526,6 +2549,27 @@ const AdminDashboard = ({
         };
         console.log('Branding to set:', brandingData);
         setBranding(brandingData);
+        const categoriesFromSettings = (() => {
+          if (Array.isArray(data.tool_categories)) {
+            return data.tool_categories.map((item: any) => String(item).trim()).filter(Boolean);
+          }
+          if (typeof data.tool_categories === 'string') {
+            try {
+              const parsed = JSON.parse(data.tool_categories);
+              if (Array.isArray(parsed)) {
+                return parsed.map((item: any) => String(item).trim()).filter(Boolean);
+              }
+            } catch {
+              return data.tool_categories.split('\n').map((item: string) => item.trim()).filter(Boolean);
+            }
+          }
+          return [];
+        })();
+
+        if (categoriesFromSettings.length > 0) {
+          setManagedToolCategories(Array.from(new Set([...defaultToolCategories, ...categoriesFromSettings])));
+        }
+
         if (data.nexano_payment_url) {
           setSettings(prev => ({ ...prev, nexano_payment_url: data.nexano_payment_url }));
           setNexanoUrl(data.nexano_payment_url);
@@ -3211,9 +3255,98 @@ const AdminDashboard = ({
     fetchTools();
   };
 
+  const saveToolCategories = async (categories: string[]) => {
+    const normalized = Array.from(new Set(categories.map((item) => item.trim()).filter(Boolean)));
+    const { error } = await supabase.from('settings').upsert({
+      id: 'global',
+      tool_categories: normalized,
+      updated_at: new Date().toISOString()
+    });
+
+    if (error) {
+      alert('Erro ao salvar categorias de ferramenta: ' + error.message);
+      return false;
+    }
+
+    setManagedToolCategories(normalized);
+    return true;
+  };
+
+  const addToolCategory = async () => {
+    const category = newToolCategoryName.trim();
+    if (!category) return;
+
+    const exists = managedToolCategories.some((item) => item.toLowerCase() === category.toLowerCase());
+    if (exists) {
+      alert('Esta categoria já existe.');
+      return;
+    }
+
+    const ok = await saveToolCategories([...managedToolCategories, category]);
+    if (ok) {
+      setNewToolCategoryName('');
+    }
+  };
+
+  const startEditToolCategory = (category: string) => {
+    setEditingToolCategory(category);
+    setEditingToolCategoryValue(category);
+  };
+
+  const confirmEditToolCategory = async () => {
+    if (!editingToolCategory) return;
+    const nextName = editingToolCategoryValue.trim();
+    if (!nextName) return;
+
+    const duplicate = managedToolCategories.some((item) => item.toLowerCase() === nextName.toLowerCase() && item !== editingToolCategory);
+    if (duplicate) {
+      alert('Já existe uma categoria com este nome.');
+      return;
+    }
+
+    if (nextName !== editingToolCategory) {
+      const { error } = await supabase.from('tools').update({ category: nextName }).eq('category', editingToolCategory);
+      if (error) {
+        alert('Erro ao atualizar categoria nas ferramentas: ' + error.message);
+        return;
+      }
+    }
+
+    const updated = managedToolCategories.map((item) => item === editingToolCategory ? nextName : item);
+    const ok = await saveToolCategories(updated);
+    if (ok) {
+      if (newTool.category === editingToolCategory) {
+        setNewTool({ ...newTool, category: nextName });
+      }
+      setEditingToolCategory(null);
+      setEditingToolCategoryValue('');
+      fetchTools();
+    }
+  };
+
+  const deleteToolCategory = async (category: string) => {
+    if (!window.confirm(`Excluir a categoria "${category}"? Ferramentas desta categoria irão para "Geral".`)) return;
+
+    const { error } = await supabase.from('tools').update({ category: 'Geral' }).eq('category', category);
+    if (error) {
+      alert('Erro ao reclassificar ferramentas: ' + error.message);
+      return;
+    }
+
+    const remaining = managedToolCategories.filter((item) => item !== category);
+    const ok = await saveToolCategories(remaining.length > 0 ? remaining : defaultToolCategories);
+    if (ok) {
+      if (newTool.category === category) {
+        setNewTool({ ...newTool, category: 'Geral' });
+      }
+      fetchTools();
+    }
+  };
+
   const toolCategories = Array.from(
     new Set([
       ...defaultToolCategories,
+      ...managedToolCategories,
       ...tools.map(tool => tool.category || 'Geral')
     ])
   );
@@ -4428,6 +4561,48 @@ const AdminDashboard = ({
             {activeTab === 'tools' && (
               <div className="space-y-8">
                 <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
+                  <h3 className="text-xl font-bold text-white mb-4">Categorias de Ferramentas</h3>
+                  <div className="flex gap-3 mb-4">
+                    <input
+                      type="text"
+                      placeholder="Nova categoria"
+                      value={newToolCategoryName}
+                      onChange={(e) => setNewToolCategoryName(e.target.value)}
+                      className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    />
+                    <button onClick={addToolCategory} className="px-4 py-2 bg-zinc-800 text-white rounded-xl hover:bg-zinc-700 transition-all flex items-center gap-2">
+                      <Plus className="w-4 h-4" /> Adicionar
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+                    {managedToolCategories.map((category) => (
+                      <div key={category} className="bg-black border border-zinc-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                        {editingToolCategory === category ? (
+                          <input
+                            type="text"
+                            value={editingToolCategoryValue}
+                            onChange={(e) => setEditingToolCategoryValue(e.target.value)}
+                            className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-white outline-none focus:border-orange-500"
+                          />
+                        ) : (
+                          <span className="text-gray-200 font-medium">{category}</span>
+                        )}
+
+                        <div className="flex items-center gap-2">
+                          {editingToolCategory === category ? (
+                            <>
+                              <button onClick={confirmEditToolCategory} className="p-1.5 text-gray-400 hover:text-green-500"><Save className="w-4 h-4" /></button>
+                              <button onClick={() => { setEditingToolCategory(null); setEditingToolCategoryValue(''); }} className="p-1.5 text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
+                            </>
+                          ) : (
+                            <button onClick={() => startEditToolCategory(category)} className="p-1.5 text-gray-400 hover:text-blue-500"><Edit2 className="w-4 h-4" /></button>
+                          )}
+                          <button onClick={() => deleteToolCategory(category)} className="p-1.5 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   <h3 className="text-xl font-bold text-white mb-6">Cadastrar Ferramenta</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <input 
@@ -4851,22 +5026,22 @@ export default function App() {
   const [settings, setSettings] = useState({
     supabase_url: import.meta.env.VITE_SUPABASE_URL || '',
     supabase_anon_key: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-    nexano_payment_url: localStorage.getItem('nexano_payment_url') || 'https://pay.nexano.com.br/checkout/seu-produto'
+    nexano_payment_url: safeGetFromStorage('nexano_payment_url', 'https://pay.nexano.com.br/checkout/seu-produto')
   });
 
   // --- CONFIGURAÇÃO NEXANO ---
-  const [nexanoUrl, setNexanoUrl] = useState(localStorage.getItem('nexano_payment_url') || "https://pay.nexano.com.br/checkout/seu-produto");
+  const [nexanoUrl, setNexanoUrl] = useState(safeGetFromStorage('nexano_payment_url', 'https://pay.nexano.com.br/checkout/seu-produto'));
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setNexanoUrl(localStorage.getItem('nexano_payment_url') || "https://pay.nexano.com.br/checkout/seu-produto");
+      setNexanoUrl(safeGetFromStorage('nexano_payment_url', 'https://pay.nexano.com.br/checkout/seu-produto'));
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const savePaymentUrl = async (url: string) => {
-    localStorage.setItem('nexano_payment_url', url);
+    safeSetToStorage('nexano_payment_url', url);
     setSettings(prev => ({ ...prev, nexano_payment_url: url }));
     setNexanoUrl(url);
     
