@@ -626,7 +626,7 @@ const MemberArea = ({
                     )}
                     
                     {prompt.image_url && (
-                      <div className="w-full h-48 mb-6 rounded-3xl overflow-hidden border border-zinc-800 relative group">
+                      <div className="w-full aspect-square mb-6 rounded-3xl overflow-hidden border border-zinc-800 relative group">
                         <img 
                           src={prompt.image_url} 
                           alt={prompt.subcategories?.name || "Prompt image"} 

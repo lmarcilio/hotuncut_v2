@@ -610,25 +610,25 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                  className="w-full h-48 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 resize-none"
                />
 
-               {/* Image Upload Section */}
-               <div className="space-y-2">
-                 <label className="text-sm text-gray-400">Imagem do Prompt (opcional)</label>
-                 {promptForm.imageUrl && (
-                   <div className="relative w-full h-40 bg-black rounded-xl border border-zinc-800 overflow-hidden">
-                     <img 
-                       src={promptForm.imageUrl} 
-                       alt="Preview" 
-                       className="w-full h-full object-cover"
-                       referrerPolicy="no-referrer"
-                     />
-                     <button
-                       onClick={() => setPromptForm({ ...promptForm, imageUrl: '' })}
-                       className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-all"
-                     >
-                       <X className="w-4 h-4 text-white" />
-                     </button>
-                   </div>
-                 )}
+                {/* Image Upload Section */}
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Imagem do Prompt (opcional) - Proporção 1:1 (Quadrado)</label>
+                  {promptForm.imageUrl && (
+                    <div className="relative w-full aspect-square bg-black rounded-xl border border-zinc-800 overflow-hidden">
+                      <img 
+                        src={promptForm.imageUrl} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <button
+                        onClick={() => setPromptForm({ ...promptForm, imageUrl: '' })}
+                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 p-2 rounded-lg transition-all"
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                  )}
                  <div className="flex gap-2">
                    <input
                      type="file"
