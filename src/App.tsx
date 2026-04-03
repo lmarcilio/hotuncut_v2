@@ -1995,6 +1995,9 @@ const AdminDashboard = ({
     imageUrl: '',
     category: 'Imagem'
   });
+  const [editingToolId, setEditingToolId] = useState<string | null>(null);
+
+  const defaultToolCategories = ['Imagem', 'Vídeos', 'Ebook', 'Geral'];
 
   const [branding, setBranding] = useState({
     logo_url: '',
@@ -2813,25 +2816,46 @@ const AdminDashboard = ({
     if (data && !error) setTools(data);
   };
 
-  const addTool = async () => {
+  const resetToolForm = () => {
+    setNewTool({ name: '', url: '', imageUrl: '', category: 'Imagem' });
+    setEditingToolId(null);
+  };
+
+  const saveTool = async () => {
     if (!newTool.name || !newTool.url) return;
-    const { error } = await supabase.from('tools').insert([{ 
+
+    const payload = {
       name: newTool.name,
       url: newTool.url,
       image_url: newTool.imageUrl,
-      category: newTool.category,
-      order_index: tools.length
-    }]);
+      category: newTool.category || 'Geral'
+    };
+
+    const { error } = editingToolId
+      ? await supabase.from('tools').update(payload).eq('id', editingToolId)
+      : await supabase.from('tools').insert([{ ...payload, order_index: tools.length }]);
+
     if (error) {
       if (error.message.includes('category')) {
         alert('Erro: Coluna "category" faltando na tabela "tools". Execute no SQL Editor do Supabase:\n\nALTER TABLE tools ADD COLUMN IF NOT EXISTS category TEXT DEFAULT \'Imagem\';');
       } else {
-        alert('Erro ao adicionar ferramenta: ' + error.message);
+        alert(`Erro ao ${editingToolId ? 'atualizar' : 'adicionar'} ferramenta: ` + error.message);
       }
     } else {
-      setNewTool({ name: '', url: '', imageUrl: '', category: 'Imagem' });
+      resetToolForm();
       fetchTools();
     }
+  };
+
+  const handleEditTool = (tool: any) => {
+    setEditingToolId(tool.id);
+    setNewTool({
+      name: tool.name || '',
+      url: tool.url || '',
+      imageUrl: tool.image_url || '',
+      category: tool.category || 'Geral'
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const deleteTool = async (id: string) => {
@@ -2854,6 +2878,20 @@ const AdminDashboard = ({
     ]);
     fetchTools();
   };
+
+  const toolCategories = Array.from(
+    new Set([
+      ...defaultToolCategories,
+      ...tools.map(tool => tool.category || 'Geral')
+    ])
+  );
+
+  const groupedTools = toolCategories
+    .map((category) => ({
+      category,
+      items: tools.filter((tool) => (tool.category || 'Geral') === category)
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <div className="fixed inset-0 z-[100] bg-black overflow-y-auto">
@@ -4079,10 +4117,9 @@ const AdminDashboard = ({
                       onChange={(e) => setNewTool({...newTool, category: e.target.value})}
                       className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
                     >
-                      <option value="Imagem">Imagem</option>
-                      <option value="Vídeos">Vídeos</option>
-                      <option value="Ebook">Ebook</option>
-                      <option value="Geral">Geral</option>
+                      {toolCategories.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
                     </select>
                   </div>
                   <input 
@@ -4092,32 +4129,48 @@ const AdminDashboard = ({
                     onChange={(e) => setNewTool({...newTool, imageUrl: e.target.value})}
                     className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 mb-4"
                   />
-                  <button onClick={addTool} className="w-full py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
-                    <Plus className="w-5 h-5" /> Salvar Ferramenta
-                  </button>
+                  <div className="flex gap-3">
+                    <button onClick={saveTool} className="flex-1 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
+                      {editingToolId ? <Save className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                      {editingToolId ? 'Atualizar Ferramenta' : 'Salvar Ferramenta'}
+                    </button>
+                    {editingToolId && (
+                      <button onClick={resetToolForm} className="px-6 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all">
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
 
-                  <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {tools.map((tool, idx) => (
-                      <div key={tool.id} className="bg-black p-6 rounded-[2rem] border border-zinc-800 flex flex-col gap-4 group relative">
-                        {tool.image_url && (
-                          <img 
-                            src={tool.image_url} 
-                            alt={tool.name} 
-                            className="w-full h-32 object-cover rounded-2xl"
-                            referrerPolicy="no-referrer"
-                          />
-                        )}
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest block mb-1">{tool.category || 'Geral'}</span>
-                            <h4 className="text-white font-bold">{tool.name}</h4>
-                            <p className="text-[10px] text-gray-500 truncate max-w-[150px]">{tool.url}</p>
-                          </div>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onClick={() => moveTool(tool.id, 'up')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronUp className="w-3 h-3" /></button>
-                            <button onClick={() => moveTool(tool.id, 'down')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronDown className="w-3 h-3" /></button>
-                            <button onClick={() => deleteTool(tool.id)} className="p-1 text-gray-500 hover:text-red-500 ml-1"><Trash2 className="w-3 h-3" /></button>
-                          </div>
+                  <div className="mt-12 space-y-8">
+                    {groupedTools.map(({ category, items }) => (
+                      <div key={category} className="space-y-4">
+                        <h4 className="text-lg font-black text-orange-500 uppercase tracking-wider">{category}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {items.map((tool) => (
+                            <div key={tool.id} className="bg-black p-6 rounded-[2rem] border border-zinc-800 flex flex-col gap-4 group relative">
+                              {tool.image_url && (
+                                <img 
+                                  src={tool.image_url} 
+                                  alt={tool.name} 
+                                  className="w-full h-32 object-cover rounded-2xl"
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest block mb-1">{tool.category || 'Geral'}</span>
+                                  <h4 className="text-white font-bold">{tool.name}</h4>
+                                  <p className="text-[10px] text-gray-500 truncate max-w-[150px]">{tool.url}</p>
+                                </div>
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                  <button onClick={() => handleEditTool(tool)} className="p-1 text-gray-500 hover:text-blue-500"><Edit2 className="w-3 h-3" /></button>
+                                  <button onClick={() => moveTool(tool.id, 'up')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronUp className="w-3 h-3" /></button>
+                                  <button onClick={() => moveTool(tool.id, 'down')} className="p-1 text-gray-500 hover:text-orange-500"><ChevronDown className="w-3 h-3" /></button>
+                                  <button onClick={() => deleteTool(tool.id)} className="p-1 text-gray-500 hover:text-red-500 ml-1"><Trash2 className="w-3 h-3" /></button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
