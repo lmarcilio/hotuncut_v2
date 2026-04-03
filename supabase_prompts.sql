@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 CREATE TABLE IF NOT EXISTS categories (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
+    is_censored BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -31,7 +32,10 @@ CREATE TABLE IF NOT EXISTS prompts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     category_id UUID REFERENCES categories(id) ON DELETE CASCADE NOT NULL,
     subcategory_id UUID REFERENCES subcategories(id) ON DELETE CASCADE NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
     content TEXT NOT NULL,
+    image_url TEXT,
     is_favorite BOOLEAN DEFAULT false,
     is_special_18 BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -166,3 +170,23 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Migrations to add missing columns if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='categories' AND column_name='is_censored') THEN
+        ALTER TABLE categories ADD COLUMN is_censored BOOLEAN DEFAULT false;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='prompts' AND column_name='title') THEN
+        ALTER TABLE prompts ADD COLUMN title TEXT;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='prompts' AND column_name='description') THEN
+        ALTER TABLE prompts ADD COLUMN description TEXT;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='prompts' AND column_name='image_url') THEN
+        ALTER TABLE prompts ADD COLUMN image_url TEXT;
+    END IF;
+END $$;

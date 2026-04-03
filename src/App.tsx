@@ -527,160 +527,168 @@ const MemberArea = ({
             </div>
           )}
 
-          {activeTab === 'prompts' && (
-            <div className="space-y-12">
-              {/* Filters */}
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  <button 
-                    onClick={() => setSelectedCategory('all')}
-                    className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === 'all' ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
-                  >
-                    Todos
-                  </button>
-                  {categories
-                    .filter(cat => {
-                      // Only show categories that have prompts matching the current adult mode
-                      return prompts.some(p => p.category_id === cat.id && !!p.is_special_18 === isAdultMode);
-                    })
-                    .map(cat => (
-                    <button 
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === cat.id ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                  <button 
-                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                    className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${showFavoritesOnly ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
-                  >
-                    <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> Favoritos
-                  </button>
-                  
-                  {/* Adult Mode Toggle */}
-                  {!isAdultMode ? (
-                    <button 
-                      onClick={() => setShowAdultModal(true)}
-                      className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 ml-auto"
-                    >
-                      <AlertCircle className="w-4 h-4" /> Conteúdo +18
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => {
-                        setIsAdultMode(false);
-                        setSelectedCategory('all');
-                      }}
-                      className="px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700 ml-auto"
-                    >
-                      Voltar para Conteúdo Normal
-                    </button>
-                  )}
-                </div>
+           {activeTab === 'prompts' && (
+             <div className="space-y-12">
+               {/* Content Type Selector */}
+               <div className="flex gap-2 border-b border-zinc-700 pb-6">
+                 <button
+                   onClick={() => {
+                     setIsAdultMode(false);
+                     setSelectedCategory('all');
+                   }}
+                   className={`px-6 py-3 font-bold text-lg transition-all flex items-center gap-2 ${
+                     !isAdultMode
+                       ? 'text-green-400 border-b-2 border-green-400'
+                       : 'text-gray-400 hover:text-white'
+                   }`}
+                 >
+                   🔓 Conteúdo Normal
+                 </button>
+                 <button
+                   onClick={() => setShowAdultModal(true)}
+                   className={`px-6 py-3 font-bold text-lg transition-all flex items-center gap-2 ${
+                     isAdultMode
+                       ? 'text-red-400 border-b-2 border-red-400'
+                       : 'text-gray-400 hover:text-white'
+                   }`}
+                 >
+                   🔒 Conteúdo +18
+                 </button>
+               </div>
 
-                {/* Subcategories Filter Row */}
-                {selectedCategory !== 'all' && (
-                  <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-zinc-800">
-                    <button 
-                      onClick={() => setSelectedSubcategory('all')}
-                      className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === 'all' ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
-                    >
-                      Todas as Subcategorias
-                    </button>
-                    {subcategories
-                      .filter(sub => sub.category_id === selectedCategory)
-                      .filter(sub => prompts.some(p => p.subcategory_id === sub.id && !!p.is_special_18 === isAdultMode))
-                      .map(sub => (
-                      <button 
-                        key={sub.id}
-                        onClick={() => setSelectedSubcategory(sub.id)}
-                        className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === sub.id ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
-                      >
-                        {sub.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+               {/* Filters */}
+               <div className="flex flex-col gap-4">
+                 <div className="flex flex-wrap items-center gap-4">
+                   <button 
+                     onClick={() => setSelectedCategory('all')}
+                     className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === 'all' ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
+                   >
+                     Todos
+                   </button>
+                   {categories
+                     .filter(cat => {
+                       // Only show categories that have prompts matching the current adult mode
+                       return prompts.some(p => p.category_id === cat.id && !!p.is_special_18 === isAdultMode);
+                     })
+                     .map(cat => (
+                     <button 
+                       key={cat.id}
+                       onClick={() => setSelectedCategory(cat.id)}
+                       className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${selectedCategory === cat.id ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
+                     >
+                       {cat.name}
+                       {cat.is_censored && <span className="text-red-400 text-xs font-bold">[CENSURADO]</span>}
+                     </button>
+                   ))}
+                   <button 
+                     onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                     className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${showFavoritesOnly ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
+                   >
+                     <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} /> Favoritos
+                   </button>
+                 </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {prompts
-                  .filter(p => !!p.is_special_18 === isAdultMode)
-                  .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
-                  .filter(p => selectedSubcategory === 'all' || p.subcategory_id === selectedSubcategory)
-                  .filter(p => !showFavoritesOnly || p.is_favorite)
-                  .map(prompt => (
-                  <motion.div 
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    key={prompt.id} 
-                    className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${prompt.is_special_18 ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
-                  >
-                    {prompt.is_special_18 && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1 animate-pulse z-10">
-                        <AlertCircle className="w-3 h-3" /> CONTEÚDO +18
-                      </div>
-                    )}
-                    
-                    {prompt.image_url && (
-                      <div className="w-full aspect-square mb-6 rounded-3xl overflow-hidden border border-zinc-800 relative group">
-                        <img 
-                          src={prompt.image_url} 
-                          alt={prompt.subcategories?.name || "Prompt image"} 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                    )}
+                 {/* Subcategories Filter Row */}
+                 {selectedCategory !== 'all' && (
+                   <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-zinc-800">
+                     <button 
+                       onClick={() => setSelectedSubcategory('all')}
+                       className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === 'all' ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
+                     >
+                       Todas as Subcategorias
+                     </button>
+                     {subcategories
+                       .filter(sub => sub.category_id === selectedCategory)
+                       .filter(sub => prompts.some(p => p.subcategory_id === sub.id && !!p.is_special_18 === isAdultMode))
+                       .map(sub => (
+                       <button 
+                         key={sub.id}
+                         onClick={() => setSelectedSubcategory(sub.id)}
+                         className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === sub.id ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
+                       >
+                         {sub.name}
+                       </button>
+                     ))}
+                   </div>
+                 )}
+               </div>
 
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{prompt.categories?.name} &bull; {prompt.subcategories?.name}</span>
-                        <h4 className="text-white font-bold text-xl">{prompt.title || prompt.subcategories?.name}</h4>
-                      </div>
-                      <button 
-                        onClick={() => toggleFavorite(prompt.id, prompt.is_favorite)}
-                        className={`p-2 rounded-xl transition-all ${prompt.is_favorite ? 'text-yellow-500 bg-yellow-500/10' : 'text-gray-500 hover:text-yellow-500 hover:bg-zinc-800'}`}
-                      >
-                        <Star className={`w-5 h-5 ${prompt.is_favorite ? 'fill-current' : ''}`} />
-                      </button>
-                    </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                 {prompts
+                   .filter(p => !!p.is_special_18 === isAdultMode)
+                   .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
+                   .filter(p => selectedSubcategory === 'all' || p.subcategory_id === selectedSubcategory)
+                   .filter(p => !showFavoritesOnly || p.is_favorite)
+                   .map(prompt => (
+                   <motion.div 
+                     layout
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     key={prompt.id} 
+                     className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${prompt.is_special_18 ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
+                   >
+                     {prompt.is_special_18 && (
+                       <div className="absolute -top-4 right-4 px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1 animate-pulse z-10">
+                         🔞 +18
+                       </div>
+                     )}
+                     
+                     {prompt.image_url && (
+                       <div className="w-full aspect-square mb-6 rounded-3xl overflow-hidden border border-zinc-800 relative group">
+                         <img 
+                           src={prompt.image_url} 
+                           alt={prompt.subcategories?.name || "Prompt image"} 
+                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                         />
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                       </div>
+                     )}
 
-                    {prompt.description && (
-                      <p className="text-gray-400 text-sm mb-6 line-clamp-3">
-                        {prompt.description}
-                      </p>
-                    )}
+                     <div className="flex justify-between items-start mb-4">
+                       <div className="space-y-1 flex-1">
+                         <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{prompt.categories?.name} &bull; {prompt.subcategories?.name}</span>
+                         <h4 className="text-white font-bold text-xl">{prompt.title || prompt.subcategories?.name}</h4>
+                       </div>
+                       <button 
+                         onClick={() => toggleFavorite(prompt.id, prompt.is_favorite)}
+                         className={`p-2 rounded-xl transition-all flex-shrink-0 ${prompt.is_favorite ? 'text-yellow-500 bg-yellow-500/10' : 'text-gray-500 hover:text-yellow-500 hover:bg-zinc-800'}`}
+                       >
+                         <Star className={`w-5 h-5 ${prompt.is_favorite ? 'fill-current' : ''}`} />
+                       </button>
+                     </div>
 
-                    <div className="flex flex-col gap-4">
-                      <button 
-                        onClick={() => setSelectedPrompt(prompt)}
-                        className="w-full py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center justify-center gap-2"
-                      >
-                        Prompt Completo
-                      </button>
+                     {prompt.description && (
+                       <p className="text-gray-400 text-sm mb-6 line-clamp-3">
+                         {prompt.description}
+                       </p>
+                     )}
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Clock className="w-3 h-3" /> {new Date(prompt.created_at).toLocaleDateString()}
-                        </div>
-                        <button 
-                          onClick={() => {
-                            navigator.clipboard.writeText(prompt.content);
-                            alert('Prompt copiado!');
-                          }}
-                          className="text-sm text-orange-500 font-bold hover:underline flex items-center gap-2"
-                        >
-                          <Copy className="w-4 h-4" /> Copiar
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                     <div className="flex flex-col gap-4">
+                       <button 
+                         onClick={() => setSelectedPrompt(prompt)}
+                         className="w-full py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center justify-center gap-2"
+                       >
+                         Prompt Completo
+                       </button>
+
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-2 text-xs text-gray-500">
+                           <Clock className="w-3 h-3" /> {new Date(prompt.created_at).toLocaleDateString()}
+                         </div>
+                         <button 
+                           onClick={() => {
+                             navigator.clipboard.writeText(prompt.content);
+                             alert('Prompt copiado!');
+                           }}
+                           className="text-sm text-orange-500 font-bold hover:underline flex items-center gap-2"
+                         >
+                           <Copy className="w-4 h-4" /> Copiar
+                         </button>
+                       </div>
+                     </div>
+                   </motion.div>
+                 ))}
+               </div>
             </div>
           )}
 
@@ -2465,14 +2473,15 @@ const AdminDashboard = ({
   };
 
   // Category Actions
-  const addCategory = async () => {
-    if (!newCategory) return;
-    const { error } = await supabase.from('categories').insert([{ name: newCategory }]);
+  const addCategory = async (categoryName?: string, isCensored?: boolean) => {
+    const name = categoryName || newCategory;
+    if (!name) return;
+    const { error } = await supabase.from('categories').insert([{ name, is_censored: isCensored || false }]);
     if (error) {
       console.error('Erro ao adicionar categoria:', error);
       alert('Erro ao adicionar categoria: ' + error.message);
     } else {
-      setNewCategory('');
+      if (!categoryName) setNewCategory('');
       fetchCategories();
     }
   };
@@ -3786,10 +3795,10 @@ const AdminDashboard = ({
               <UnifiedPromptManager 
                 categories={categories}
                 subcategories={subcategories}
-                prompts={prompts}
-                onAddCategory={async (name: string) => {
-                  await addCategory(name);
-                }}
+                 prompts={prompts}
+                 onAddCategory={async (name: string, isCensored?: boolean) => {
+                   await addCategory(name, isCensored);
+                 }}
                 onDeleteCategory={async (id: string) => {
                   await deleteCategory(id);
                 }}

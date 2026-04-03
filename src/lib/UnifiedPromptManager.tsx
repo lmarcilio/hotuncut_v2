@@ -4,6 +4,7 @@ import { ChevronRight, ChevronDown, Plus, Trash2, Edit2, Save, X, Upload, Loader
 interface Category {
   id: string;
   name: string;
+  is_censored?: boolean;
 }
 
 interface Subcategory {
@@ -29,7 +30,7 @@ interface UnifiedPromptManagerProps {
   categories: Category[];
   subcategories: Subcategory[];
   prompts: Prompt[];
-  onAddCategory: (name: string) => Promise<void>;
+  onAddCategory: (name: string, isCensored?: boolean) => Promise<void>;
   onDeleteCategory: (id: string) => Promise<void>;
   onAddSubcategory: (categoryId: string, name: string) => Promise<void>;
   onDeleteSubcategory: (id: string) => Promise<void>;
@@ -59,9 +60,11 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const [editingNode, setEditingNode] = useState<{ type: string; id: string } | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIsCensored, setNewCategoryIsCensored] = useState(false);
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [showNewSubcategoryForm, setShowNewSubcategoryForm] = useState(false);
   const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState('');
+  const [activeTab, setActiveTab] = useState<'safe' | 'censored'>('safe');
   
   // Prompt form state
   const [showPromptForm, setShowPromptForm] = useState(false);
@@ -103,8 +106,9 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
     try {
-      await onAddCategory(newCategoryName);
+      await onAddCategory(newCategoryName, newCategoryIsCensored);
       setNewCategoryName('');
+      setNewCategoryIsCensored(false);
     } catch (error) {
       console.error('Erro ao adicionar categoria:', error);
     }
@@ -238,6 +242,14 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
     return prompts.filter(p => !p.subcategory_id || p.subcategory_id === '');
   };
 
+  // Get filtered categories by tab
+  const getFilteredCategories = () => {
+    return categories.filter(cat => {
+      const isCensored = cat.is_censored || false;
+      return activeTab === 'censored' ? isCensored : !isCensored;
+    });
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-8">
       {/* Tree View - Left Panel */}
@@ -245,6 +257,30 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
         <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-white">Hierarquia</h3>
+          </div>
+
+          {/* Tabs for Safe/Censored */}
+          <div className="flex gap-2 mb-4 border-b border-zinc-700">
+            <button
+              onClick={() => setActiveTab('safe')}
+              className={`px-4 py-2 font-semibold text-sm transition-all ${
+                activeTab === 'safe'
+                  ? 'text-green-400 border-b-2 border-green-400'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              🔓 Conteúdo Normal
+            </button>
+            <button
+              onClick={() => setActiveTab('censored')}
+              className={`px-4 py-2 font-semibold text-sm transition-all ${
+                activeTab === 'censored'
+                  ? 'text-red-400 border-b-2 border-red-400'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              🔒 Conteúdo Censurado
+            </button>
           </div>
 
           {/* Add Category */}
@@ -264,11 +300,22 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                 <Plus className="w-4 h-4" />
               </button>
             </div>
+            <label className="flex items-center gap-2 cursor-pointer ml-2">
+              <input
+                type="checkbox"
+                checked={newCategoryIsCensored}
+                onChange={(e) => setNewCategoryIsCensored(e.target.checked)}
+                className="w-4 h-4 rounded"
+              />
+              <span className={`text-sm ${newCategoryIsCensored ? 'text-red-400' : 'text-gray-400'}`}>
+                Marcar como censurada
+              </span>
+            </label>
           </div>
 
           {/* Tree of Categories and Subcategories */}
           <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {categories.map(category => (
+            {getFilteredCategories().map(category => (
               <div key={category.id}>
                 {/* Category Node */}
                 <div
@@ -291,7 +338,10 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                   ) : (
                     <div className="w-4 h-4" />
                   )}
-                  <span className="flex-1 text-white font-medium text-sm">{category.name}</span>
+                  <span className="flex-1 text-white font-medium text-sm flex items-center gap-2">
+                    {category.name}
+                    {category.is_censored && <span className="text-red-400 text-xs font-bold">[CENSURADO]</span>}
+                  </span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -351,10 +401,12 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                                    selectedPrompt?.id === prompt.id
                                      ? 'bg-green-500/20 border border-green-500'
                                      : 'hover:bg-zinc-800'
-                                 }`}
+                                 } ${prompt.is_special_18 ? 'border border-red-500/30' : ''}`}
                                  onClick={() => handleEditPrompt(prompt)}
                                >
-                                <div className="w-3 h-3" />
+                                <div className="w-3 h-3 flex items-center justify-center">
+                                  {prompt.is_special_18 ? <span className="text-red-500 text-[10px] font-bold">🔞</span> : ''}
+                                </div>
                                 <span className="flex-1 text-gray-300 truncate">{prompt.title}</span>
                                 <button
                                   onClick={(e) => {
@@ -438,22 +490,29 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
          {showPromptForm ? (
             // Prompt Form
             <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-4 md:p-8">
-             <div className="flex justify-between items-center mb-6">
-               <div>
-                 <h3 className="text-xl font-bold text-white">
-                   {selectedPrompt ? 'Editar Prompt' : 'Novo Prompt'}
-                 </h3>
-                 {selectedPrompt && (!selectedPrompt.subcategory_id || selectedPrompt.subcategory_id === '') && (
-                   <p className="text-xs text-red-400 mt-2">⚠️ Este prompt não tem uma subcategoria atribuída. Atribua uma abaixo.</p>
-                 )}
-               </div>
-               <button
-                 onClick={() => setShowPromptForm(false)}
-                 className="text-gray-500 hover:text-white"
-               >
-                 <X className="w-5 h-5" />
-               </button>
-             </div>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white">
+                      {selectedPrompt ? 'Editar Prompt' : 'Novo Prompt'}
+                    </h3>
+                    {selectedPrompt?.is_special_18 && (
+                      <span className="px-2 py-1 bg-red-500/20 border border-red-500 rounded text-red-400 text-xs font-bold">
+                        🔞 CONTEÚDO +18
+                      </span>
+                    )}
+                  </div>
+                  {selectedPrompt && (!selectedPrompt.subcategory_id || selectedPrompt.subcategory_id === '') && (
+                    <p className="text-xs text-red-400 mt-2">⚠️ Este prompt não tem uma subcategoria atribuída. Atribua uma abaixo.</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowPromptForm(false)}
+                  className="text-gray-500 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -668,14 +727,20 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                   <span className="text-white text-sm">Favorito</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-all ${
+                  promptForm.isSpecial18
+                    ? 'bg-red-500/20 border-red-500'
+                    : 'border-zinc-700 hover:border-red-500'
+                }`}>
                   <input
                     type="checkbox"
                     checked={promptForm.isSpecial18}
                     onChange={(e) => setPromptForm({ ...promptForm, isSpecial18: e.target.checked })}
                     className="w-4 h-4"
                   />
-                  <span className="text-white text-sm">Conteúdo +18</span>
+                  <span className={`text-sm font-bold ${promptForm.isSpecial18 ? 'text-red-400' : 'text-white'}`}>
+                    🔞 Conteúdo +18
+                  </span>
                 </label>
               </div>
 
