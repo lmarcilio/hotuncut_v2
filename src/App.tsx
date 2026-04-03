@@ -159,6 +159,13 @@ const MemberArea = ({
     return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
   };
 
+  const getYoutubeThumbnailUrl = (url: string) => {
+    if (!url) return '';
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&?/]+)/);
+    const videoId = match?.[1];
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  };
+
   const normalizeStringList = (value: any): string[] => {
     if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean);
     if (typeof value === 'string') {
@@ -988,9 +995,16 @@ const MemberArea = ({
                               rel="noopener noreferrer"
                               className="group bg-black border border-zinc-800 rounded-2xl overflow-hidden hover:border-orange-500/50 transition-all"
                             >
-                              {video.thumbnail && <img src={video.thumbnail} alt={video.title || 'Video'} className="w-full h-28 object-cover" referrerPolicy="no-referrer" />}
+                              {(video.thumbnail || getYoutubeThumbnailUrl(video.url)) && (
+                                <img
+                                  src={video.thumbnail || getYoutubeThumbnailUrl(video.url)}
+                                  alt={video.title || `Exemplo ${idx + 1}`}
+                                  className="w-full h-28 object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
                               <div className="p-4">
-                                <p className="text-sm text-gray-200 font-semibold line-clamp-2 group-hover:text-orange-500 transition-all">{video.title || 'Assistir exemplo'}</p>
+                                <p className="text-sm text-gray-200 font-semibold line-clamp-2 group-hover:text-orange-500 transition-all">{video.title || `Exemplo ${idx + 1}`}</p>
                               </div>
                             </a>
                           ))}
