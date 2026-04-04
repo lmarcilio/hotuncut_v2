@@ -1274,20 +1274,19 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
   return (
     <nav
       className={`fixed w-full z-50 border-b border-orange-500/20 backdrop-blur-md transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
-      style={topBannerUrl
-        ? {
-            backgroundImage: `linear-gradient(to right, rgba(13,18,24,0.3), rgba(13,18,24,0.65)), url(${topBannerUrl})`,
-            backgroundSize: '100% 100%, auto 100%',
-            backgroundPosition: '0 0, left center',
-            backgroundRepeat: 'no-repeat, no-repeat'
-          }
-        : { backgroundColor: '#1b2834' }}
+      style={{ backgroundColor: '#1b2834' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center" style={{ height: `${topBannerHeight}px` }}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             {topBannerUrl ? (
-              <div className="w-64 h-14" aria-hidden="true" />
+              <img
+                src={topBannerUrl}
+                alt="Topo"
+                className="h-full w-auto object-contain"
+                style={{ maxHeight: `${topBannerHeight - 12}px` }}
+                referrerPolicy="no-referrer"
+              />
             ) : (
               <Logo branding={branding} />
             )}
