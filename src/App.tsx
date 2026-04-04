@@ -73,7 +73,7 @@ const Logo = ({ className = "", branding }: { className?: string, branding: any 
       <img
         src={branding.logo_url}
         alt="Logo"
-        style={{ width: `${branding.logo_width || 150}px`, maxHeight: '96px' }}
+        style={{ width: `${branding.logo_width || 150}px` }}
         className={`object-contain w-auto h-auto ${className}`}
         referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
@@ -1246,7 +1246,7 @@ const MemberArea = ({
 const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogout: () => void, onLoginClick: () => void, branding: any }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
-  const navHeight = Math.min(132, Math.max(80, Math.round((branding?.logo_width || 150) * 0.42) + 18));
+  const navHeight = Math.min(420, Math.max(80, Math.round((branding?.logo_width || 150) * 0.9)));
 
   useEffect(() => {
     let lastY = window.scrollY;
