@@ -1270,11 +1270,25 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
   }, [isOpen]);
 
   return (
-    <nav className={`fixed w-full z-50 border-b border-orange-500/20 backdrop-blur-md bg-[#1b2834]/95 transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <nav
+      className={`fixed w-full z-50 border-b border-orange-500/20 backdrop-blur-md transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
+      style={branding?.logo_url
+        ? {
+            backgroundImage: `linear-gradient(to right, rgba(13,18,24,0.15), rgba(13,18,24,0.55)), url(${branding.logo_url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'left center',
+            backgroundRepeat: 'no-repeat'
+          }
+        : { backgroundColor: '#1b2834' }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <div className="flex items-center gap-2">
-            <Logo branding={branding} />
+            {branding?.logo_url ? (
+              <div className="w-56 h-14" aria-hidden="true" />
+            ) : (
+              <Logo branding={branding} />
+            )}
           </div>
           
           {/* Desktop Nav */}
@@ -1321,7 +1335,7 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#1b2834] border-b border-orange-500/20 overflow-hidden"
+            className="md:hidden bg-[#1b2834]/95 border-b border-orange-500/20 overflow-hidden"
           >
             <div className="px-4 pt-2 pb-6 space-y-4">
               <a href="#features" className="block text-gray-300" onClick={() => setIsOpen(false)}>Recursos</a>
