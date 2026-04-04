@@ -2309,7 +2309,8 @@ const AdminDashboard = ({
       gallery4: 'https://picsum.photos/seed/ai4/800/800',
       benefit1: 'https://picsum.photos/seed/studio/600/400',
       benefit2: 'https://picsum.photos/seed/videolab/600/400',
-      benefit3: 'https://picsum.photos/seed/bypass/600/400'
+      benefit3: 'https://picsum.photos/seed/bypass/600/400',
+      generated_video_url: ''
     },
     rateio_monthly_url: '',
     rateio_quarterly_url: '',
@@ -2568,7 +2569,8 @@ const AdminDashboard = ({
             gallery4: 'https://picsum.photos/seed/ai4/800/800',
             benefit1: 'https://picsum.photos/seed/studio/600/400',
             benefit2: 'https://picsum.photos/seed/videolab/600/400',
-            benefit3: 'https://picsum.photos/seed/bypass/600/400'
+            benefit3: 'https://picsum.photos/seed/bypass/600/400',
+            generated_video_url: ''
           },
           rateio_monthly_url: data.rateio_monthly_url || '',
           rateio_quarterly_url: data.rateio_quarterly_url || '',
@@ -2604,6 +2606,64 @@ const AdminDashboard = ({
       }
     } catch (err) {
       console.error('Erro ao buscar branding:', err);
+    }
+  };
+
+  const handleLandingVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    if (!file.type.startsWith('video/')) {
+      alert('Formato invalido. Selecione um arquivo de video.');
+      return;
+    }
+
+    if (file.size > 200 * 1024 * 1024) {
+      alert('O video e muito grande. Escolha um arquivo com menos de 200MB.');
+      return;
+    }
+
+    const key = 'generated_video_url';
+    setUploadingLandingImage(key);
+    setBrandingError(null);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `landing-video-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('BRANDING')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Erro ao fazer upload do video:', uploadError);
+        if (uploadError.message.includes('Bucket not found')) {
+          setBrandingError(`Erro ao fazer upload para o bucket BRANDING: ${uploadError.message}. Certifique-se de que o bucket existe e e publico.`);
+        } else {
+          setBrandingError(`Erro no upload do video: ${uploadError.message}`);
+        }
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('BRANDING')
+        .getPublicUrl(filePath);
+
+      setBranding(prev => ({
+        ...prev,
+        landing_images: {
+          ...prev.landing_images,
+          generated_video_url: publicUrl
+        }
+      }));
+      setBrandingSuccess('Video atualizado com sucesso!');
+      setTimeout(() => setBrandingSuccess(null), 3000);
+    } catch (err: any) {
+      console.error('Erro inesperado no upload de video:', err);
+      setBrandingError(`Erro inesperado no upload: ${err.message || String(err)}`);
+    } finally {
+      setUploadingLandingImage(null);
     }
   };
 
@@ -3847,8 +3907,8 @@ const AdminDashboard = ({
 
                                 <div className="pt-4 border-t border-zinc-800/50">
                                   <h4 className="text-sm font-bold text-white mb-4">Imagens Geradas com Prompts</h4>
-                                 <p className="text-xs text-gray-400 mb-3">4 imagens para o showcase de conteúdos gerados</p>
-                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <p className="text-xs text-gray-400 mb-3">4 imagens para o showcase de conteúdos gerados</p>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                    <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
                                      {renderImageUpload('generated_1', 'Imagem Gerada 1', '600x400')}
                                    </div>
@@ -3858,11 +3918,41 @@ const AdminDashboard = ({
                                    <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
                                      {renderImageUpload('generated_3', 'Imagem Gerada 3', '600x400')}
                                    </div>
-                                   <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
-                                     {renderImageUpload('generated_4', 'Imagem Gerada 4', '600x400')}
-                                   </div>
-                                 </div>
-                               </div>
+                                    <div className="space-y-2 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                      {renderImageUpload('generated_4', 'Imagem Gerada 4', '600x400')}
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-6 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800 space-y-2">
+                                    <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest block truncate">
+                                      Video central abaixo das imagens
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={branding.landing_images.generated_video_url || ''}
+                                        onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, generated_video_url: e.target.value } }))}
+                                        className="flex-1 min-w-0 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm"
+                                        placeholder="URL do video (YouTube, Vimeo ou video hospedado)"
+                                      />
+                                      <input
+                                        type="file"
+                                        accept="video/*"
+                                        onChange={handleLandingVideoUpload}
+                                        className="hidden"
+                                        id="upload-generated-video"
+                                      />
+                                      <label
+                                        htmlFor="upload-generated-video"
+                                        className="px-4 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all flex items-center justify-center cursor-pointer border border-zinc-700 shrink-0"
+                                        title="Enviar video do PC"
+                                      >
+                                        {uploadingLandingImage === 'generated_video_url' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                                      </label>
+                                    </div>
+                                    <p className="text-xs text-gray-500">Voce pode colar uma URL ou enviar um video da sua maquina (ate 200MB).</p>
+                                  </div>
+                                </div>
                             </>
                           );
                         })()}

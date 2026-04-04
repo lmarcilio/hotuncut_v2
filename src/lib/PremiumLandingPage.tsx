@@ -15,6 +15,30 @@ const PremiumLandingPage = ({
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0);
   const headerHeight = Math.min(420, Math.max(80, Math.round((branding?.logo_width || 150) * 0.9)));
   const heroTopPadding = headerHeight + 72;
+  const landingVideoUrl = branding?.landing_images?.generated_video_url || '';
+
+  const getVideoEmbedUrl = (url: string) => {
+    if (!url) return '';
+
+    const trimmedUrl = url.trim();
+    if (trimmedUrl.includes('youtube.com/embed/')) return trimmedUrl;
+
+    const youtubeMatch = trimmedUrl.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([^&?/]+)/);
+    if (youtubeMatch?.[1]) return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+
+    const vimeoMatch = trimmedUrl.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch?.[1]) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+
+    return '';
+  };
+
+  const isDirectVideoUrl = (url: string) => {
+    if (!url) return false;
+    const cleaned = url.split('?')[0].toLowerCase();
+    return ['.mp4', '.webm', '.ogg', '.mov', '.m4v'].some(ext => cleaned.endsWith(ext));
+  };
+
+  const landingVideoEmbedUrl = getVideoEmbedUrl(landingVideoUrl);
 
   React.useEffect(() => {
     console.log('PremiumLandingPage Branding:', branding);
@@ -368,6 +392,44 @@ const PremiumLandingPage = ({
               </motion.div>
             ))}
           </div>
+
+          {(landingVideoEmbedUrl || isDirectVideoUrl(landingVideoUrl)) && (
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mt-14 max-w-4xl mx-auto"
+            >
+              <div className="text-center mb-6">
+                <h3 className="text-2xl md:text-3xl font-bold text-white flex items-center justify-center gap-2">
+                  <Video className="w-6 h-6 text-orange-400" />
+                  Video de Exemplo
+                </h3>
+              </div>
+              {landingVideoEmbedUrl ? (
+                <div className="relative aspect-video rounded-2xl overflow-hidden border border-orange-500/30 shadow-2xl shadow-orange-500/20">
+                  <iframe
+                    src={landingVideoEmbedUrl}
+                    title="Video de exemplo dos prompts"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <div className="relative rounded-2xl overflow-hidden border border-orange-500/30 shadow-2xl shadow-orange-500/20 bg-black">
+                  <video
+                    src={landingVideoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full max-h-[70vh]"
+                  />
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </section>
 
