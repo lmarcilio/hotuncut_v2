@@ -1357,8 +1357,11 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
 };
 
 const Hero = ({ onBuy, branding }: { onBuy: () => void, branding: any }) => {
+  const headerHeight = Math.min(420, Math.max(80, Math.round((branding?.logo_width || 150) * 0.9)));
+  const heroTopPadding = headerHeight + 72;
+
   return (
-    <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-black">
+    <section className="relative pb-20 lg:pb-32 overflow-hidden bg-black" style={{ paddingTop: `${heroTopPadding}px` }}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(251,146,60,0.2),transparent_35%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.16),transparent_35%),radial-gradient(circle_at_55%_85%,rgba(250,204,21,0.14),transparent_35%)] pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-orange-600/20 blur-[120px] rounded-full pointer-events-none" />
       
