@@ -1248,6 +1248,8 @@ const MemberArea = ({
 const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogout: () => void, onLoginClick: () => void, branding: any }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
+  const topBannerUrl = branding?.landing_images?.top_nav_banner || branding?.logo_url;
+  const topBannerHeight = Math.min(140, Math.max(64, Number(branding?.landing_images?.top_nav_height || 80)));
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -1272,9 +1274,9 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
   return (
     <nav
       className={`fixed w-full z-50 border-b border-orange-500/20 backdrop-blur-md transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
-      style={branding?.logo_url
+      style={topBannerUrl
         ? {
-            backgroundImage: `linear-gradient(to right, rgba(13,18,24,0.35), rgba(13,18,24,0.7)), url(${branding.logo_url})`,
+            backgroundImage: `linear-gradient(to right, rgba(13,18,24,0.3), rgba(13,18,24,0.65)), url(${topBannerUrl})`,
             backgroundSize: '100% 100%, auto 100%',
             backgroundPosition: '0 0, left center',
             backgroundRepeat: 'no-repeat, no-repeat'
@@ -1282,9 +1284,9 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
         : { backgroundColor: '#1b2834' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 items-center">
+        <div className="flex justify-between items-center" style={{ height: `${topBannerHeight}px` }}>
           <div className="flex items-center gap-2">
-            {branding?.logo_url ? (
+            {topBannerUrl ? (
               <div className="w-64 h-14" aria-hidden="true" />
             ) : (
               <Logo branding={branding} />
@@ -2319,7 +2321,9 @@ const AdminDashboard = ({
       gallery4: 'https://picsum.photos/seed/ai4/800/800',
       benefit1: 'https://picsum.photos/seed/studio/600/400',
       benefit2: 'https://picsum.photos/seed/videolab/600/400',
-      benefit3: 'https://picsum.photos/seed/bypass/600/400'
+      benefit3: 'https://picsum.photos/seed/bypass/600/400',
+      top_nav_banner: '',
+      top_nav_height: 80
     },
     rateio_monthly_url: '',
     rateio_quarterly_url: '',
@@ -2578,7 +2582,9 @@ const AdminDashboard = ({
             gallery4: 'https://picsum.photos/seed/ai4/800/800',
             benefit1: 'https://picsum.photos/seed/studio/600/400',
             benefit2: 'https://picsum.photos/seed/videolab/600/400',
-            benefit3: 'https://picsum.photos/seed/bypass/600/400'
+            benefit3: 'https://picsum.photos/seed/bypass/600/400',
+            top_nav_banner: '',
+            top_nav_height: 80
           },
           rateio_monthly_url: data.rateio_monthly_url || '',
           rateio_quarterly_url: data.rateio_quarterly_url || '',
@@ -3779,6 +3785,31 @@ const AdminDashboard = ({
                                     className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm min-h-[100px]"
                                     placeholder="Descrição do anúncio..."
                                   />
+                                </div>
+                              </div>
+
+                              <div className="pt-4 border-t border-zinc-800/50 mb-6">
+                                <h4 className="text-sm font-bold text-white mb-3">Banner do Topo (Navbar)</h4>
+                                <div className="space-y-4 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+                                  {renderImageUpload('top_nav_banner', 'Imagem do Topo', '1920x220')}
+                                  <div>
+                                    <p className="text-xs text-gray-400 uppercase font-bold mb-2">
+                                      Altura do topo: <span className="text-orange-400">{Number(branding.landing_images.top_nav_height || 80)}px</span>
+                                    </p>
+                                    <input
+                                      type="range"
+                                      min="64"
+                                      max="140"
+                                      step="2"
+                                      value={Number(branding.landing_images.top_nav_height || 80)}
+                                      onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, top_nav_height: parseInt(e.target.value, 10) } }))}
+                                      className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                    />
+                                    <div className="flex justify-between text-[10px] text-gray-500 mt-2">
+                                      <span>64px</span>
+                                      <span>140px</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
 
