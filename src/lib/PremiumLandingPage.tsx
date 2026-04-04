@@ -13,6 +13,8 @@ const PremiumLandingPage = ({
   branding: any 
 }) => {
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0);
+  const headerHeight = Math.min(420, Math.max(80, Math.round((branding?.logo_width || 150) * 0.9)));
+  const heroTopPadding = headerHeight + 72;
 
   React.useEffect(() => {
     console.log('PremiumLandingPage Branding:', branding);
@@ -26,7 +28,7 @@ const PremiumLandingPage = ({
   return (
     <div className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-black overflow-hidden">
       {/* Hero Section - Ultra Impactante */}
-      <section className="relative pt-20 pb-32 lg:pt-32 lg:pb-48 overflow-hidden">
+      <section className="relative pb-32 lg:pb-48 overflow-hidden" style={{ paddingTop: `${heroTopPadding}px` }}>
         {/* Background Effects */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(251,146,60,0.3),transparent_40%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,0.2),transparent_40%),radial-gradient(circle_at_55%_85%,rgba(250,204,21,0.15),transparent_40%)] pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-orange-600/30 blur-[140px] rounded-full pointer-events-none animate-pulse" />
