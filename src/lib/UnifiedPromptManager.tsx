@@ -672,6 +672,13 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                 {/* Image Upload Section */}
                 <div className="space-y-2">
                   <label className="text-sm text-gray-400">Imagem do Prompt (opcional) - Proporção 1:1 (Quadrado)</label>
+                  <input
+                    type="text"
+                    placeholder="URL da imagem (opcional)"
+                    value={promptForm.imageUrl}
+                    onChange={(e) => setPromptForm({ ...promptForm, imageUrl: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                  />
                   {promptForm.imageUrl && (
                     <div className="relative w-full aspect-square bg-black rounded-xl border border-zinc-800 overflow-hidden">
                       <img 
