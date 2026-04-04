@@ -70,16 +70,14 @@ const Logo = ({ className = "", branding }: { className?: string, branding: any 
 
   if (branding.logo_url && !imgError) {
     return (
-      <div className={`flex items-center justify-center rounded-lg bg-[#1b2834] ${className}`}>
-        <img
-          src={branding.logo_url}
-          alt="Logo"
-          style={{ maxWidth: `${branding.logo_width || 150}px`, maxHeight: '56px' }}
-          className="h-14 w-auto object-contain"
-          referrerPolicy="no-referrer"
-          onError={() => setImgError(true)}
-        />
-      </div>
+      <img
+        src={branding.logo_url}
+        alt="Logo"
+        style={{ width: `${branding.logo_width || 150}px`, maxHeight: '96px' }}
+        className={`object-contain w-auto h-auto ${className}`}
+        referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
+      />
     );
   }
   return (
@@ -1248,8 +1246,7 @@ const MemberArea = ({
 const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogout: () => void, onLoginClick: () => void, branding: any }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
-  const topBannerUrl = branding?.landing_images?.top_nav_banner || branding?.logo_url;
-  const topBannerHeight = Math.min(140, Math.max(64, Number(branding?.landing_images?.top_nav_height || 80)));
+  const navHeight = Math.min(132, Math.max(80, Math.round((branding?.logo_width || 150) * 0.42) + 18));
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -1277,19 +1274,9 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
       style={{ backgroundColor: '#1b2834' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center" style={{ height: `${topBannerHeight}px` }}>
+        <div className="flex justify-between items-center" style={{ height: `${navHeight}px` }}>
           <div className="flex items-center gap-2 min-w-0">
-            {topBannerUrl ? (
-              <img
-                src={topBannerUrl}
-                alt="Topo"
-                className="h-full w-auto object-contain"
-                style={{ maxHeight: `${topBannerHeight - 12}px` }}
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <Logo branding={branding} />
-            )}
+            <Logo branding={branding} />
           </div>
           
           {/* Desktop Nav */}
@@ -2320,9 +2307,7 @@ const AdminDashboard = ({
       gallery4: 'https://picsum.photos/seed/ai4/800/800',
       benefit1: 'https://picsum.photos/seed/studio/600/400',
       benefit2: 'https://picsum.photos/seed/videolab/600/400',
-      benefit3: 'https://picsum.photos/seed/bypass/600/400',
-      top_nav_banner: '',
-      top_nav_height: 80
+      benefit3: 'https://picsum.photos/seed/bypass/600/400'
     },
     rateio_monthly_url: '',
     rateio_quarterly_url: '',
@@ -2581,9 +2566,7 @@ const AdminDashboard = ({
             gallery4: 'https://picsum.photos/seed/ai4/800/800',
             benefit1: 'https://picsum.photos/seed/studio/600/400',
             benefit2: 'https://picsum.photos/seed/videolab/600/400',
-            benefit3: 'https://picsum.photos/seed/bypass/600/400',
-            top_nav_banner: '',
-            top_nav_height: 80
+            benefit3: 'https://picsum.photos/seed/bypass/600/400'
           },
           rateio_monthly_url: data.rateio_monthly_url || '',
           rateio_quarterly_url: data.rateio_quarterly_url || '',
@@ -3784,31 +3767,6 @@ const AdminDashboard = ({
                                     className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 text-sm min-h-[100px]"
                                     placeholder="Descrição do anúncio..."
                                   />
-                                </div>
-                              </div>
-
-                              <div className="pt-4 border-t border-zinc-800/50 mb-6">
-                                <h4 className="text-sm font-bold text-white mb-3">Banner do Topo (Navbar)</h4>
-                                <div className="space-y-4 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
-                                  {renderImageUpload('top_nav_banner', 'Imagem do Topo', '1920x220')}
-                                  <div>
-                                    <p className="text-xs text-gray-400 uppercase font-bold mb-2">
-                                      Altura do topo: <span className="text-orange-400">{Number(branding.landing_images.top_nav_height || 80)}px</span>
-                                    </p>
-                                    <input
-                                      type="range"
-                                      min="64"
-                                      max="140"
-                                      step="2"
-                                      value={Number(branding.landing_images.top_nav_height || 80)}
-                                      onChange={(e) => setBranding(prev => ({ ...prev, landing_images: { ...prev.landing_images, top_nav_height: parseInt(e.target.value, 10) } }))}
-                                      className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                                    />
-                                    <div className="flex justify-between text-[10px] text-gray-500 mt-2">
-                                      <span>64px</span>
-                                      <span>140px</span>
-                                    </div>
-                                  </div>
                                 </div>
                               </div>
 
