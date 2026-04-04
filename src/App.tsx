@@ -1270,8 +1270,7 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
 
   return (
     <nav
-      className={`fixed w-full z-50 border-b border-orange-500/20 backdrop-blur-md transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
-      style={{ backgroundColor: '#1b2834' }}
+      className={`fixed w-full z-50 bg-transparent border-b border-orange-500/20 backdrop-blur-md transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center" style={{ height: `${navHeight}px` }}>
