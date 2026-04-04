@@ -1274,10 +1274,10 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
       className={`fixed w-full z-50 border-b border-orange-500/20 backdrop-blur-md transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
       style={branding?.logo_url
         ? {
-            backgroundImage: `linear-gradient(to right, rgba(13,18,24,0.15), rgba(13,18,24,0.55)), url(${branding.logo_url})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'left center',
-            backgroundRepeat: 'no-repeat'
+            backgroundImage: `linear-gradient(to right, rgba(13,18,24,0.35), rgba(13,18,24,0.7)), url(${branding.logo_url})`,
+            backgroundSize: '100% 100%, auto 100%',
+            backgroundPosition: '0 0, left center',
+            backgroundRepeat: 'no-repeat, no-repeat'
           }
         : { backgroundColor: '#1b2834' }}
     >
@@ -1285,7 +1285,7 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
         <div className="flex justify-between h-20 items-center">
           <div className="flex items-center gap-2">
             {branding?.logo_url ? (
-              <div className="w-56 h-14" aria-hidden="true" />
+              <div className="w-64 h-14" aria-hidden="true" />
             ) : (
               <Logo branding={branding} />
             )}
