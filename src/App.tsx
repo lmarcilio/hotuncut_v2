@@ -5094,6 +5094,13 @@ export default function App() {
         rateio_quarterly_url: data.rateio_quarterly_url || '',
         rateio_annual_url: data.rateio_annual_url || ''
       });
+
+      if (data.nexano_payment_url) {
+        setNexanoUrl(data.nexano_payment_url);
+        setSettings(prev => ({ ...prev, nexano_payment_url: data.nexano_payment_url }));
+        safeSetToStorage('nexano_payment_url', data.nexano_payment_url);
+      }
+
       console.log('brandingSettings updated:', { data });
     }
   };
@@ -5254,12 +5261,20 @@ export default function App() {
   };
 
   const handleBuy = () => {
+    const baseUrl = (nexanoUrl || '').trim();
+    if (!baseUrl) {
+      alert('URL de checkout não configurada. Entre em contato com o suporte.');
+      return;
+    }
+
+    const normalizedBaseUrl = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+
     // Sempre redireciona para o checkout, conforme solicitado pelo usuário
     const checkoutUrl = user 
-      ? (nexanoUrl.includes('?') ? `${nexanoUrl}&email=${encodeURIComponent(user.email)}` : `${nexanoUrl}?email=${encodeURIComponent(user.email)}`)
-      : nexanoUrl;
+      ? (normalizedBaseUrl.includes('?') ? `${normalizedBaseUrl}&email=${encodeURIComponent(user.email)}` : `${normalizedBaseUrl}?email=${encodeURIComponent(user.email)}`)
+      : normalizedBaseUrl;
     
-    window.location.href = checkoutUrl;
+    window.location.assign(checkoutUrl);
   };
 
   const changePassword = async (newPassword: string) => {
