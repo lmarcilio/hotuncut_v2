@@ -70,14 +70,16 @@ const Logo = ({ className = "", branding }: { className?: string, branding: any 
 
   if (branding.logo_url && !imgError) {
     return (
-      <img 
-        src={branding.logo_url} 
-        alt="Logo" 
-        style={{ width: `${branding.logo_width}px` }}
-        className={`object-contain ${className}`}
-        referrerPolicy="no-referrer"
-        onError={() => setImgError(true)}
-      />
+      <div className={`flex items-center justify-center rounded-lg bg-[#1b2834] ${className}`}>
+        <img
+          src={branding.logo_url}
+          alt="Logo"
+          style={{ maxWidth: `${branding.logo_width || 150}px`, maxHeight: '56px' }}
+          className="h-14 w-auto object-contain"
+          referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
+        />
+      </div>
     );
   }
   return (
@@ -1245,9 +1247,30 @@ const MemberArea = ({
 
 const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogout: () => void, onLoginClick: () => void, branding: any }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const isGoingDown = currentY > lastY;
+      if (currentY < 40) {
+        setIsNavbarVisible(true);
+      } else if (isGoingDown && !isOpen) {
+        setIsNavbarVisible(false);
+      } else {
+        setIsNavbarVisible(true);
+      }
+      lastY = currentY;
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isOpen]);
 
   return (
-    <nav className="fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-orange-500/20">
+    <nav className={`fixed w-full z-50 border-b border-orange-500/20 backdrop-blur-md bg-[#1b2834]/95 transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <div className="flex items-center gap-2">
@@ -1298,7 +1321,7 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-black border-b border-orange-500/20 overflow-hidden"
+            className="md:hidden bg-[#1b2834] border-b border-orange-500/20 overflow-hidden"
           >
             <div className="px-4 pt-2 pb-6 space-y-4">
               <a href="#features" className="block text-gray-300" onClick={() => setIsOpen(false)}>Recursos</a>
