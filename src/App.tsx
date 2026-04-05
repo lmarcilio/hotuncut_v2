@@ -55,7 +55,8 @@ import {
   Home,
   FolderTree,
   DollarSign,
-  Rocket
+  Rocket,
+  FolderOpen
 } from 'lucide-react';
 
 // --- Components ---
@@ -131,6 +132,8 @@ const MemberArea = ({
   selectedLesson,
   setSelectedLesson,
   tools,
+  digitalCollectionCategories,
+  digitalCollectionLinks,
   onUpdateProfile,
   onChangePassword
 }: { 
@@ -152,6 +155,8 @@ const MemberArea = ({
   selectedLesson: any,
   setSelectedLesson: (lesson: any) => void,
   tools: any[],
+  digitalCollectionCategories: any[],
+  digitalCollectionLinks: any[],
   onUpdateProfile: (nick: string, avatar: string | null) => void,
   onChangePassword: (pass: string) => void,
   branding: any
@@ -319,6 +324,7 @@ const MemberArea = ({
     { id: 'prompts', label: 'Prompts', icon: <Sparkles className="w-5 h-5" /> },
     { id: 'lessons', label: 'Aulas', icon: <BookOpen className="w-5 h-5" /> },
     { id: 'tools', label: 'Ferramentas', icon: <LinkIcon className="w-5 h-5" /> },
+    { id: 'digital-collection', label: 'Acervo Digital', icon: <FolderOpen className="w-5 h-5" /> },
     { id: 'settings', label: 'Configurações', icon: <Settings className="w-5 h-5" /> },
   ];
 
@@ -501,6 +507,7 @@ const MemberArea = ({
               {activeTab === 'prompts' && 'Biblioteca de Prompts'}
               {activeTab === 'lessons' && 'Treinamento Exclusivo'}
               {activeTab === 'tools' && 'Ferramentas de Elite'}
+              {activeTab === 'digital-collection' && 'Acervo Digital'}
               {activeTab === 'settings' && 'Minha Conta'}
             </h1>
             <p className="text-gray-400 font-medium">
@@ -508,6 +515,7 @@ const MemberArea = ({
               {activeTab === 'prompts' && 'Os melhores comandos para gerar conteúdo sem limites.'}
               {activeTab === 'lessons' && 'Aprenda o passo a passo da engenharia de prompts.'}
               {activeTab === 'tools' && 'Acesse as plataformas mais poderosas do mercado.'}
+              {activeTab === 'digital-collection' && 'Materiais e links organizados por categoria para acelerar sua produção.'}
               {activeTab === 'settings' && 'Gerencie seus dados e preferências de acesso.'}
             </p>
           </div>
@@ -1117,6 +1125,58 @@ const MemberArea = ({
                     </div>
                   ))}
                 </>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'digital-collection' && (
+            <div className="space-y-10">
+              {digitalCollectionCategories.length === 0 ? (
+                <div className="bg-zinc-900/60 border border-zinc-800 rounded-[2rem] p-10 text-center text-gray-400">
+                  Nenhuma categoria cadastrada no acervo ainda.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {digitalCollectionCategories.map((category: any, categoryIdx: number) => {
+                    const links = digitalCollectionLinks.filter((item: any) => item.category_id === category.id);
+                    const gradients = [
+                      'from-indigo-500/90 to-purple-500/80',
+                      'from-emerald-500/90 to-green-500/80',
+                      'from-orange-500/90 to-red-500/80',
+                      'from-cyan-500/90 to-blue-500/80'
+                    ];
+                    const cardGradient = gradients[categoryIdx % gradients.length];
+
+                    return (
+                      <div key={category.id} className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden">
+                        <div className={`bg-gradient-to-r ${cardGradient} px-5 py-6`}>
+                          <h3 className="text-xl font-black text-white">{category.name}</h3>
+                        </div>
+                        <div className="p-5 space-y-3">
+                          {links.length === 0 ? (
+                            <div className="bg-black/40 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-gray-500">
+                              Sem links nesta categoria.
+                            </div>
+                          ) : links.map((item: any) => (
+                            <a
+                              key={item.id}
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group flex items-center justify-between gap-4 bg-black/40 border border-zinc-800 hover:border-orange-500/50 rounded-xl px-4 py-3 transition-all"
+                            >
+                              <div>
+                                <p className="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">{item.title}</p>
+                                <p className="text-xs text-gray-500">{item.subtitle || 'Link externo'}</p>
+                              </div>
+                              <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-orange-400 transition-colors" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
@@ -2232,7 +2292,7 @@ const AdminDashboard = ({
   nexanoUrl: string,
   setNexanoUrl: (url: string) => void
 }) => {
-  const [activeTab, setActiveTab] = useState<'members' | 'unified-prompts' | 'lessons' | 'tools' | 'branding' | 'rateio' | 'webhooks'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'unified-prompts' | 'lessons' | 'tools' | 'digital-collection' | 'branding' | 'rateio' | 'webhooks'>('members');
   const [profiles, setProfiles] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -2240,6 +2300,8 @@ const AdminDashboard = ({
   const [modules, setModules] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
+  const [digitalCollectionCategories, setDigitalCollectionCategories] = useState<any[]>([]);
+  const [digitalCollectionLinks, setDigitalCollectionLinks] = useState<any[]>([]);
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [webhookStatus, setWebhookStatus] = useState<{message: string, type: 'success' | 'error' | 'info'} | null>(null);
   const [expectedToken, setExpectedToken] = useState<string>('dsuxblan');
@@ -2297,6 +2359,13 @@ const AdminDashboard = ({
   const [newToolCategoryName, setNewToolCategoryName] = useState('');
   const [editingToolCategory, setEditingToolCategory] = useState<string | null>(null);
   const [editingToolCategoryValue, setEditingToolCategoryValue] = useState('');
+  const [newDigitalCollectionCategory, setNewDigitalCollectionCategory] = useState('');
+  const [newDigitalCollectionLink, setNewDigitalCollectionLink] = useState({
+    categoryId: '',
+    title: '',
+    subtitle: '',
+    url: ''
+  });
 
   const [branding, setBranding] = useState({
     logo_url: '',
@@ -2530,6 +2599,7 @@ const AdminDashboard = ({
         fetchModules(),
         fetchLessons(),
         fetchTools(),
+        fetchDigitalCollection(),
         fetchBranding(),
         fetchWebhookEvents(true),
         fetchServerConfig()
@@ -3196,6 +3266,25 @@ const AdminDashboard = ({
     if (data && !error) setTools(data);
   };
 
+  const fetchDigitalCollection = async () => {
+    const [categoriesRes, linksRes] = await Promise.all([
+      supabase.from('digital_collection_categories').select('*').order('order_index').order('created_at'),
+      supabase.from('digital_collection_links').select('*').order('order_index').order('created_at')
+    ]);
+
+    if (categoriesRes.error) {
+      console.error('Erro ao buscar categorias do acervo:', categoriesRes.error);
+    } else {
+      setDigitalCollectionCategories(categoriesRes.data || []);
+    }
+
+    if (linksRes.error) {
+      console.error('Erro ao buscar links do acervo:', linksRes.error);
+    } else {
+      setDigitalCollectionLinks(linksRes.data || []);
+    }
+  };
+
   const resetToolForm = () => {
     setNewTool({
       name: '',
@@ -3430,6 +3519,110 @@ const AdminDashboard = ({
     }
   };
 
+  const digitalCollectionSetupSQL = `CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS digital_collection_categories (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  order_index integer DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS digital_collection_links (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_id uuid NOT NULL REFERENCES digital_collection_categories(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  subtitle text,
+  url text NOT NULL,
+  order_index integer DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE digital_collection_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE digital_collection_links ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir tudo para anon" ON digital_collection_categories;
+CREATE POLICY "Permitir tudo para anon" ON digital_collection_categories
+FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Permitir tudo para anon" ON digital_collection_links;
+CREATE POLICY "Permitir tudo para anon" ON digital_collection_links
+FOR ALL USING (true) WITH CHECK (true);`;
+
+  const addDigitalCollectionCategory = async () => {
+    const name = newDigitalCollectionCategory.trim();
+    if (!name) return;
+
+    const { error } = await supabase.from('digital_collection_categories').insert([{
+      name,
+      order_index: digitalCollectionCategories.length
+    }]);
+
+    if (error) {
+      if (error.message.includes('relation "digital_collection_categories" does not exist')) {
+        alert('Erro: tabela do Acervo Digital não existe. Execute no SQL Editor do Supabase:\n\n' + digitalCollectionSetupSQL);
+      } else if (error.message.includes('policy') || error.message.includes('row-level security')) {
+        alert('Erro de permissão (RLS) nas tabelas do Acervo Digital. Execute no SQL Editor do Supabase:\n\n' + digitalCollectionSetupSQL);
+      } else {
+        alert('Erro ao criar categoria do acervo: ' + error.message);
+      }
+      return;
+    }
+
+    setNewDigitalCollectionCategory('');
+    fetchDigitalCollection();
+  };
+
+  const deleteDigitalCollectionCategory = async (id: string) => {
+    if (!window.confirm('Excluir esta categoria? Todos os links dela também serão removidos.')) return;
+    const { error } = await supabase.from('digital_collection_categories').delete().eq('id', id);
+    if (error) {
+      alert('Erro ao excluir categoria: ' + error.message);
+      return;
+    }
+    fetchDigitalCollection();
+  };
+
+  const addDigitalCollectionLink = async () => {
+    if (!newDigitalCollectionLink.categoryId || !newDigitalCollectionLink.title.trim() || !newDigitalCollectionLink.url.trim()) {
+      alert('Preencha categoria, título e URL do link.');
+      return;
+    }
+
+    const categoryLinksCount = digitalCollectionLinks.filter((item) => item.category_id === newDigitalCollectionLink.categoryId).length;
+
+    const { error } = await supabase.from('digital_collection_links').insert([{
+      category_id: newDigitalCollectionLink.categoryId,
+      title: newDigitalCollectionLink.title.trim(),
+      subtitle: newDigitalCollectionLink.subtitle.trim(),
+      url: newDigitalCollectionLink.url.trim(),
+      order_index: categoryLinksCount
+    }]);
+
+    if (error) {
+      if (error.message.includes('relation "digital_collection_links" does not exist')) {
+        alert('Erro: tabela de links do Acervo Digital não existe. Execute no SQL Editor do Supabase:\n\n' + digitalCollectionSetupSQL);
+      } else if (error.message.includes('policy') || error.message.includes('row-level security')) {
+        alert('Erro de permissão (RLS) nas tabelas do Acervo Digital. Execute no SQL Editor do Supabase:\n\n' + digitalCollectionSetupSQL);
+      } else {
+        alert('Erro ao cadastrar link no acervo: ' + error.message);
+      }
+      return;
+    }
+
+    setNewDigitalCollectionLink({ ...newDigitalCollectionLink, title: '', subtitle: '', url: '' });
+    fetchDigitalCollection();
+  };
+
+  const deleteDigitalCollectionLink = async (id: string) => {
+    const { error } = await supabase.from('digital_collection_links').delete().eq('id', id);
+    if (error) {
+      alert('Erro ao excluir link: ' + error.message);
+      return;
+    }
+    fetchDigitalCollection();
+  };
+
   const toolCategories = Array.from(
     new Set([
       ...defaultToolCategories,
@@ -3571,6 +3764,12 @@ const AdminDashboard = ({
                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'tools' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Ferramentas
+              </button>
+              <button 
+                onClick={() => setActiveTab('digital-collection')}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'digital-collection' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+              >
+                Acervo Digital
               </button>
                <button 
                  onClick={() => setActiveTab('branding')}
@@ -4675,6 +4874,114 @@ const AdminDashboard = ({
                 </div>
               </div>
             )}
+
+            {activeTab === 'digital-collection' && (
+              <div className="space-y-8">
+                <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
+                  <h3 className="text-xl font-bold text-white mb-6">Categorias do Acervo Digital</h3>
+                  <div className="flex gap-3 mb-4">
+                    <input
+                      type="text"
+                      placeholder="Nome da categoria (ex: Banco de Imagens)"
+                      value={newDigitalCollectionCategory}
+                      onChange={(e) => setNewDigitalCollectionCategory(e.target.value)}
+                      className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    />
+                    <button onClick={addDigitalCollectionCategory} className="px-4 py-2 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center gap-2">
+                      <Plus className="w-4 h-4" /> Adicionar
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {digitalCollectionCategories.length === 0 ? (
+                      <p className="text-sm text-gray-500">Nenhuma categoria cadastrada.</p>
+                    ) : digitalCollectionCategories.map((category) => (
+                      <div key={category.id} className="bg-black border border-zinc-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-white font-semibold">{category.name}</p>
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                            {digitalCollectionLinks.filter((item) => item.category_id === category.id).length} links
+                          </p>
+                        </div>
+                        <button onClick={() => deleteDigitalCollectionCategory(category.id)} className="p-2 text-gray-500 hover:text-red-500 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
+                  <h3 className="text-xl font-bold text-white mb-6">Cadastrar Link no Acervo</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <select
+                      value={newDigitalCollectionLink.categoryId}
+                      onChange={(e) => setNewDigitalCollectionLink({ ...newDigitalCollectionLink, categoryId: e.target.value })}
+                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    >
+                      <option value="">Selecione a categoria</option>
+                      {digitalCollectionCategories.map((category) => (
+                        <option key={category.id} value={category.id}>{category.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Título do botão"
+                      value={newDigitalCollectionLink.title}
+                      onChange={(e) => setNewDigitalCollectionLink({ ...newDigitalCollectionLink, title: e.target.value })}
+                      className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Texto menor do botão (descrição curta)"
+                    value={newDigitalCollectionLink.subtitle}
+                    onChange={(e) => setNewDigitalCollectionLink({ ...newDigitalCollectionLink, subtitle: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 mb-4"
+                  />
+                  <input
+                    type="text"
+                    placeholder="URL do link"
+                    value={newDigitalCollectionLink.url}
+                    onChange={(e) => setNewDigitalCollectionLink({ ...newDigitalCollectionLink, url: e.target.value })}
+                    className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500 mb-4"
+                  />
+                  <button onClick={addDigitalCollectionLink} className="w-full py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
+                    <Plus className="w-5 h-5" /> Salvar Link
+                  </button>
+
+                  <div className="mt-10 space-y-6">
+                    {digitalCollectionCategories.map((category) => {
+                      const links = digitalCollectionLinks.filter((item) => item.category_id === category.id);
+                      return (
+                        <div key={category.id} className="space-y-3">
+                          <h4 className="text-sm font-black uppercase tracking-wider text-orange-500">{category.name}</h4>
+                          {links.length === 0 ? (
+                            <p className="text-xs text-gray-500">Sem links cadastrados nesta categoria.</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {links.map((item) => (
+                                <div key={item.id} className="bg-black/50 border border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4">
+                                  <div className="min-w-0">
+                                    <p className="text-white font-semibold truncate">{item.title}</p>
+                                    <p className="text-xs text-gray-500 truncate">{item.subtitle}</p>
+                                    <p className="text-[10px] text-gray-600 truncate">{item.url}</p>
+                                  </div>
+                                  <button onClick={() => deleteDigitalCollectionLink(item.id)} className="p-2 text-gray-500 hover:text-red-500 transition-colors shrink-0">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'tools' && (
               <div className="space-y-8">
                 <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6">
@@ -5013,6 +5320,13 @@ const AdminDashboard = ({
             <LinkIcon className="w-5 h-5" />
             <span className="text-[10px] font-bold">Ferramentas</span>
           </button>
+          <button
+            onClick={() => setActiveTab('digital-collection')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'digital-collection' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <FolderOpen className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Acervo</span>
+          </button>
            <button
              onClick={() => setActiveTab('branding')}
              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === 'branding' ? 'text-orange-500' : 'text-gray-500 hover:text-gray-300'}`}
@@ -5138,7 +5452,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
-  const [memberTab, setMemberTab] = useState<'home' | 'prompts' | 'lessons' | 'tools' | 'settings'>('home');
+  const [memberTab, setMemberTab] = useState<'home' | 'prompts' | 'lessons' | 'tools' | 'digital-collection' | 'settings'>('home');
 
   const [settings, setSettings] = useState({
     supabase_url: import.meta.env.VITE_SUPABASE_URL || '',
@@ -5185,6 +5499,7 @@ export default function App() {
       fetchPremiumContent();
       fetchCourseContent();
       fetchToolsContent();
+      fetchDigitalCollectionContent();
     }
   }, [user]);
 
@@ -5273,6 +5588,24 @@ export default function App() {
       if (data) setTools(data);
     } catch (err) {
       console.error('Erro ao buscar ferramentas:', err);
+    }
+  };
+
+  const fetchDigitalCollectionContent = async () => {
+    if (!supabase) return;
+    try {
+      const [categoriesRes, linksRes] = await Promise.all([
+        supabase.from('digital_collection_categories').select('*').order('order_index').order('created_at'),
+        supabase.from('digital_collection_links').select('*').order('order_index').order('created_at')
+      ]);
+
+      if (categoriesRes.error) console.error('Erro ao buscar categorias do acervo:', categoriesRes.error);
+      if (linksRes.error) console.error('Erro ao buscar links do acervo:', linksRes.error);
+
+      if (categoriesRes.data) setDigitalCollectionCategories(categoriesRes.data);
+      if (linksRes.data) setDigitalCollectionLinks(linksRes.data);
+    } catch (err) {
+      console.error('Erro ao buscar acervo digital:', err);
     }
   };
   const [loading, setLoading] = useState(true);
@@ -5440,6 +5773,7 @@ export default function App() {
               fetchPremiumContent();
               fetchCourseContent();
               fetchToolsContent();
+              fetchDigitalCollectionContent();
             }
           }} 
           onSimulateMember={(email) => {
@@ -5505,6 +5839,8 @@ export default function App() {
           selectedLesson={selectedLesson}
           setSelectedLesson={setSelectedLesson}
           tools={tools}
+          digitalCollectionCategories={digitalCollectionCategories}
+          digitalCollectionLinks={digitalCollectionLinks}
           onUpdateProfile={updateProfile}
           onChangePassword={changePassword}
         />
