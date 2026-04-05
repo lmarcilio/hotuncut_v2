@@ -5449,6 +5449,8 @@ export default function App() {
   const [modules, setModules] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
+  const [digitalCollectionCategories, setDigitalCollectionCategories] = useState<any[]>([]);
+  const [digitalCollectionLinks, setDigitalCollectionLinks] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
