@@ -84,14 +84,19 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  const normalizeAudience = (value: any, fallbackPlus18 = false): 'normal' | 'plus18' => {
+    const normalized = String(value || '').toLowerCase().trim();
+    if (['plus18', 'plus_18', 'adult', 'nsfw', '18+', '+18', 'censored'].includes(normalized)) return 'plus18';
+    if (['normal', 'safe', 'default', 'all-ages', 'all_ages'].includes(normalized)) return 'normal';
+    return fallbackPlus18 ? 'plus18' : 'normal';
+  };
+
   const isCategoryPlus18 = (category: Category) => {
-    if (category.audience) return category.audience === 'plus18';
-    return !!category.is_censored;
+    return normalizeAudience(category.audience, !!category.is_censored) === 'plus18';
   };
 
   const getPromptAudience = (prompt: Prompt): 'normal' | 'plus18' => {
-    if (prompt.audience) return prompt.audience;
-    return prompt.is_special_18 ? 'plus18' : 'normal';
+    return normalizeAudience(prompt.audience, !!prompt.is_special_18);
   };
 
   // Toggle expand/collapse

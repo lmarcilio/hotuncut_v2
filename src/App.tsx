@@ -329,14 +329,20 @@ const MemberArea = ({
     { id: 'settings', label: 'Configurações', icon: <Settings className="w-5 h-5" /> },
   ];
 
+  const normalizeAudience = (value: any, fallbackPlus18 = false): 'normal' | 'plus18' => {
+    const normalized = String(value || '').toLowerCase().trim();
+    if (['plus18', 'plus_18', 'adult', 'nsfw', '18+', '+18', 'censored'].includes(normalized)) return 'plus18';
+    if (['normal', 'safe', 'default', 'all-ages', 'all_ages'].includes(normalized)) return 'normal';
+    return fallbackPlus18 ? 'plus18' : 'normal';
+  };
+
   const matchesPromptAudience = (prompt: any) => {
-    const audience = prompt.audience || (prompt.is_special_18 ? 'plus18' : 'normal');
+    const audience = normalizeAudience(prompt.audience, !!prompt.is_special_18);
     return isAdultMode ? audience === 'plus18' : audience === 'normal';
   };
 
   const getCategoryAudience = (category: any) => {
-    if (category?.audience) return category.audience;
-    return category?.is_censored ? 'plus18' : 'normal';
+    return normalizeAudience(category?.audience, !!category?.is_censored);
   };
 
   const normalizedSearch = promptSearch.trim().toLowerCase();
@@ -803,9 +809,9 @@ const MemberArea = ({
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
                      key={prompt.id} 
-                      className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${(prompt.audience === 'plus18' || (!!prompt.is_special_18 && !prompt.audience)) ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
+                      className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${normalizeAudience(prompt.audience, !!prompt.is_special_18) === 'plus18' ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
                     >
-                      {(prompt.audience === 'plus18' || (!!prompt.is_special_18 && !prompt.audience)) && (
+                      {normalizeAudience(prompt.audience, !!prompt.is_special_18) === 'plus18' && (
                         <div className="absolute -top-4 right-4 px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1 animate-pulse z-10">
                           🔞 +18
                         </div>
