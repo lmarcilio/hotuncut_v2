@@ -3709,7 +3709,7 @@ FOR ALL USING (true) WITH CHECK (true);`;
       </AnimatePresence>
 
       <div className="max-w-7xl mx-auto px-4 py-12 pb-24 md:pb-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-12">
           <div className="flex justify-between items-center w-full md:w-auto">
             <div>
               <h1 className="text-4xl font-black text-white">PAINEL <span className="text-orange-500">ADMIN</span></h1>
@@ -3722,8 +3722,8 @@ FOR ALL USING (true) WITH CHECK (true);`;
               <X className="w-6 h-6" />
             </button>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-            <div className="hidden md:flex bg-zinc-900 rounded-xl p-1 border border-zinc-800 overflow-x-auto hide-scrollbar w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto min-w-0">
+            <div className="hidden md:flex bg-zinc-900 rounded-xl p-1 border border-zinc-800 overflow-x-auto hide-scrollbar w-full min-w-0 max-w-full">
               <button 
                 onClick={() => setActiveTab('members')}
                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'members' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
