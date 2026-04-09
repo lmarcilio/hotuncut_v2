@@ -175,6 +175,7 @@ const MemberArea = ({
   const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
   const [selectedTool, setSelectedTool] = useState<any>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
+  const [promptSearch, setPromptSearch] = useState('');
 
   const getYoutubeEmbedUrl = (url: string) => {
     if (!url) return '';
@@ -327,6 +328,41 @@ const MemberArea = ({
     { id: 'digital-collection', label: 'Acervo Digital', icon: <FolderOpen className="w-5 h-5" /> },
     { id: 'settings', label: 'Configurações', icon: <Settings className="w-5 h-5" /> },
   ];
+
+  const matchesPromptAudience = (prompt: any) => {
+    const audience = prompt.audience || (prompt.is_special_18 ? 'plus18' : 'normal');
+    return isAdultMode ? audience === 'plus18' : audience === 'normal';
+  };
+
+  const getCategoryAudience = (category: any) => {
+    if (category?.audience) return category.audience;
+    return category?.is_censored ? 'plus18' : 'normal';
+  };
+
+  const normalizedSearch = promptSearch.trim().toLowerCase();
+
+  const filteredPromptList = prompts
+    .filter(matchesPromptAudience)
+    .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
+    .filter(p => selectedSubcategory === 'all' || p.subcategory_id === selectedSubcategory)
+    .filter(p => !showFavoritesOnly || p.is_favorite)
+    .filter(p => {
+      if (!normalizedSearch) return true;
+      const title = String(p.title || '').toLowerCase();
+      const description = String(p.description || '').toLowerCase();
+      const content = String(p.content || '').toLowerCase();
+      return title.includes(normalizedSearch) || description.includes(normalizedSearch) || content.includes(normalizedSearch);
+    });
+
+  const filteredCategories = categories.filter(cat => {
+    const isCorrectAudience = getCategoryAudience(cat) === (isAdultMode ? 'plus18' : 'normal');
+    if (!isCorrectAudience) return false;
+    return prompts.some(p => p.category_id === cat.id && matchesPromptAudience(p));
+  });
+
+  const filteredSubcategories = subcategories
+    .filter(sub => sub.category_id === selectedCategory)
+    .filter(sub => prompts.some(p => p.subcategory_id === sub.id && matchesPromptAudience(p)));
 
   return (
     <div className="min-h-screen bg-black flex">
@@ -702,30 +738,34 @@ const MemberArea = ({
                  </button>
                </div>
 
-               {/* Filters */}
-               <div className="flex flex-col gap-4">
-                 <div className="flex flex-wrap items-center gap-4">
-                   <button 
-                     onClick={() => setSelectedCategory('all')}
-                     className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === 'all' ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
-                   >
-                     Todos
-                   </button>
-                   {categories
-                     .filter(cat => {
-                       // Only show categories that have prompts matching the current adult mode
-                       return prompts.some(p => p.category_id === cat.id && !!p.is_special_18 === isAdultMode);
-                     })
-                     .map(cat => (
-                     <button 
-                       key={cat.id}
-                       onClick={() => setSelectedCategory(cat.id)}
-                       className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${selectedCategory === cat.id ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
-                     >
-                       {cat.name}
-                       {cat.is_censored && <span className="text-red-400 text-xs font-bold">[CENSURADO]</span>}
-                     </button>
-                   ))}
+                {/* Filters */}
+                <div className="flex flex-col gap-4">
+                  <div className="w-full md:max-w-md">
+                    <input
+                      type="text"
+                      value={promptSearch}
+                      onChange={(e) => setPromptSearch(e.target.value)}
+                      placeholder="Buscar por título, descrição ou conteúdo..."
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-white placeholder:text-gray-500 outline-none focus:border-orange-500"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <button 
+                      onClick={() => setSelectedCategory('all')}
+                      className={`px-6 py-2 rounded-xl font-bold transition-all ${selectedCategory === 'all' ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
+                    >
+                      Todos
+                    </button>
+                    {filteredCategories.map(cat => (
+                      <button 
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${selectedCategory === cat.id ? 'bg-orange-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
+                      >
+                        {cat.name}
+                        {getCategoryAudience(cat) === 'plus18' && <span className="text-red-400 text-xs font-bold">[+18]</span>}
+                      </button>
+                    ))}
                    <button 
                      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                      className={`px-6 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${showFavoritesOnly ? 'bg-yellow-500 text-black' : 'bg-zinc-900 text-gray-400 hover:text-white border border-zinc-800'}`}
@@ -743,13 +783,10 @@ const MemberArea = ({
                      >
                        Todas as Subcategorias
                      </button>
-                     {subcategories
-                       .filter(sub => sub.category_id === selectedCategory)
-                       .filter(sub => prompts.some(p => p.subcategory_id === sub.id && !!p.is_special_18 === isAdultMode))
-                       .map(sub => (
-                       <button 
-                         key={sub.id}
-                         onClick={() => setSelectedSubcategory(sub.id)}
+                      {filteredSubcategories.map(sub => (
+                        <button 
+                          key={sub.id}
+                          onClick={() => setSelectedSubcategory(sub.id)}
                          className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === sub.id ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
                        >
                          {sub.name}
@@ -759,24 +796,19 @@ const MemberArea = ({
                  )}
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                 {prompts
-                   .filter(p => !!p.is_special_18 === isAdultMode)
-                   .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
-                   .filter(p => selectedSubcategory === 'all' || p.subcategory_id === selectedSubcategory)
-                   .filter(p => !showFavoritesOnly || p.is_favorite)
-                   .map(prompt => (
-                   <motion.div 
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredPromptList.map(prompt => (
+                    <motion.div 
                      layout
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
                      key={prompt.id} 
-                     className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${prompt.is_special_18 ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
-                   >
-                     {prompt.is_special_18 && (
-                       <div className="absolute -top-4 right-4 px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1 animate-pulse z-10">
-                         🔞 +18
-                       </div>
+                      className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${(prompt.audience === 'plus18' || (!!prompt.is_special_18 && !prompt.audience)) ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
+                    >
+                      {(prompt.audience === 'plus18' || (!!prompt.is_special_18 && !prompt.audience)) && (
+                        <div className="absolute -top-4 right-4 px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1 animate-pulse z-10">
+                          🔞 +18
+                        </div>
                      )}
                      
                      {prompt.image_url && (
@@ -2909,10 +2941,11 @@ const AdminDashboard = ({
   };
 
   // Category Actions
-  const addCategory = async (categoryName?: string, isCensored?: boolean) => {
+  const addCategory = async (categoryName?: string, isCensored?: boolean, audience?: 'normal' | 'plus18') => {
     const name = categoryName || newCategory;
     if (!name) return;
-    const { error } = await supabase.from('categories').insert([{ name, is_censored: isCensored || false }]);
+    const resolvedAudience: 'normal' | 'plus18' = audience || (isCensored ? 'plus18' : 'normal');
+    const { error } = await supabase.from('categories').insert([{ name, is_censored: resolvedAudience === 'plus18', audience: resolvedAudience }]);
     if (error) {
       console.error('Erro ao adicionar categoria:', error);
       alert('Erro ao adicionar categoria: ' + error.message);
@@ -2930,9 +2963,12 @@ const AdminDashboard = ({
   // Subcategory Actions
   const addSubcategory = async () => {
     if (!newSubcategory.name || !newSubcategory.categoryId) return;
+    const category = categories.find(cat => cat.id === newSubcategory.categoryId);
+    const categoryAudience = (category?.audience as 'normal' | 'plus18' | undefined) || (category?.is_censored ? 'plus18' : 'normal');
     const { error } = await supabase.from('subcategories').insert([{ 
       name: newSubcategory.name, 
-      category_id: newSubcategory.categoryId 
+      category_id: newSubcategory.categoryId,
+      audience: categoryAudience
     }]);
     if (error) {
       console.error('Erro ao adicionar subcategoria:', error);
@@ -4598,33 +4634,35 @@ FOR ALL USING (true) WITH CHECK (true);`;
                 categories={categories}
                 subcategories={subcategories}
                  prompts={prompts}
-                 onAddCategory={async (name: string, isCensored?: boolean) => {
-                   await addCategory(name, isCensored);
-                 }}
+                 onAddCategory={async (name: string, isCensored?: boolean, audience?: 'normal' | 'plus18') => {
+                   await addCategory(name, isCensored, audience);
+                  }}
                 onDeleteCategory={async (id: string) => {
                   await deleteCategory(id);
                 }}
-                onAddSubcategory={async (categoryId: string, name: string) => {
-                  const { error } = await supabase.from('subcategories').insert([{ 
-                    name: name, 
-                    category_id: categoryId 
-                  }]);
-                  if (!error) await fetchSubcategories();
-                }}
+                onAddSubcategory={async (categoryId: string, name: string, audience?: 'normal' | 'plus18') => {
+                   const { error } = await supabase.from('subcategories').insert([{ 
+                     name: name, 
+                     category_id: categoryId,
+                     audience: audience || 'normal'
+                   }]);
+                   if (!error) await fetchSubcategories();
+                 }}
                 onDeleteSubcategory={async (id: string) => {
                   await deleteSubcategory(id);
                 }}
-                onAddPrompt={async (promptData: any) => {
-                  const { error } = await supabase.from('prompts').insert([{
+                 onAddPrompt={async (promptData: any) => {
+                   const { error } = await supabase.from('prompts').insert([{
                     title: promptData.title,
                     description: promptData.description,
                     content: promptData.content,
                     category_id: promptData.categoryId,
                     subcategory_id: promptData.subcategoryId,
-                    is_favorite: promptData.isFavorite,
-                    is_special_18: promptData.isSpecial18,
-                    image_url: promptData.imageUrl || null
-                  }]);
+                     is_favorite: promptData.isFavorite,
+                     is_special_18: promptData.isSpecial18,
+                     audience: promptData.isSpecial18 ? 'plus18' : 'normal',
+                     image_url: promptData.imageUrl || null
+                   }]);
                   if (!error) await fetchPrompts();
                 }}
                 onDeletePrompt={async (id: string) => {
@@ -4639,6 +4677,7 @@ FOR ALL USING (true) WITH CHECK (true);`;
                      subcategory_id: promptData.subcategoryId,
                      is_favorite: promptData.isFavorite,
                      is_special_18: promptData.isSpecial18,
+                     audience: promptData.isSpecial18 ? 'plus18' : 'normal',
                      image_url: promptData.imageUrl || null
                    }).eq('id', id);
                    if (!error) await fetchPrompts();

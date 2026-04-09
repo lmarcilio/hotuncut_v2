@@ -5,12 +5,14 @@ interface Category {
   id: string;
   name: string;
   is_censored?: boolean;
+  audience?: 'normal' | 'plus18';
 }
 
 interface Subcategory {
   id: string;
   category_id: string;
   name: string;
+  audience?: 'normal' | 'plus18';
 }
 
 interface Prompt {
@@ -22,6 +24,7 @@ interface Prompt {
   content: string;
   is_favorite: boolean;
   is_special_18: boolean;
+  audience?: 'normal' | 'plus18';
   image_url: string;
   created_at: string;
 }
@@ -30,9 +33,9 @@ interface UnifiedPromptManagerProps {
   categories: Category[];
   subcategories: Subcategory[];
   prompts: Prompt[];
-  onAddCategory: (name: string, isCensored?: boolean) => Promise<void>;
+  onAddCategory: (name: string, isCensored?: boolean, audience?: 'normal' | 'plus18') => Promise<void>;
   onDeleteCategory: (id: string) => Promise<void>;
-  onAddSubcategory: (categoryId: string, name: string) => Promise<void>;
+  onAddSubcategory: (categoryId: string, name: string, audience?: 'normal' | 'plus18') => Promise<void>;
   onDeleteSubcategory: (id: string) => Promise<void>;
   onAddPrompt: (prompt: any) => Promise<void>;
   onDeletePrompt: (id: string) => Promise<void>;
@@ -64,22 +67,32 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [showNewSubcategoryForm, setShowNewSubcategoryForm] = useState(false);
   const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState('');
-  const [activeTab, setActiveTab] = useState<'safe' | 'censored'>('safe');
+  const [activeTab, setActiveTab] = useState<'normal' | 'plus18'>('normal');
   
   // Prompt form state
   const [showPromptForm, setShowPromptForm] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [promptForm, setPromptForm] = useState({
+    audience: 'normal' as 'normal' | 'plus18',
     categoryId: '',
     subcategoryId: '',
     title: '',
     description: '',
     content: '',
     isFavorite: false,
-    isSpecial18: false,
     imageUrl: ''
   });
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  const isCategoryPlus18 = (category: Category) => {
+    if (category.audience) return category.audience === 'plus18';
+    return !!category.is_censored;
+  };
+
+  const getPromptAudience = (prompt: Prompt): 'normal' | 'plus18' => {
+    if (prompt.audience) return prompt.audience;
+    return prompt.is_special_18 ? 'plus18' : 'normal';
+  };
 
   // Toggle expand/collapse
   const toggleCategory = (catId: string) => {
@@ -106,7 +119,8 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
     try {
-      await onAddCategory(newCategoryName, newCategoryIsCensored);
+      const isPlus18 = activeTab === 'plus18';
+      await onAddCategory(newCategoryName, isPlus18, isPlus18 ? 'plus18' : 'normal');
       setNewCategoryName('');
       setNewCategoryIsCensored(false);
     } catch (error) {
@@ -128,7 +142,9 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const handleAddSubcategory = async () => {
     if (!selectedCategoryForSubcategory || !newSubcategoryName.trim()) return;
     try {
-      await onAddSubcategory(selectedCategoryForSubcategory, newSubcategoryName);
+      const selectedCategory = categories.find(cat => cat.id === selectedCategoryForSubcategory);
+      const audience = selectedCategory && isCategoryPlus18(selectedCategory) ? 'plus18' : 'normal';
+      await onAddSubcategory(selectedCategoryForSubcategory, newSubcategoryName, audience);
       setNewSubcategoryName('');
       setSelectedCategoryForSubcategory('');
       setShowNewSubcategoryForm(false);
@@ -149,14 +165,16 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
 
   // Handle prompt operations
   const handleShowPromptForm = (categoryId: string, subcategoryId: string) => {
+    const selectedCategory = categories.find(cat => cat.id === categoryId);
+    const audience = selectedCategory && isCategoryPlus18(selectedCategory) ? 'plus18' : 'normal';
     setPromptForm({
+      audience,
       categoryId,
       subcategoryId,
       title: '',
       description: '',
       content: '',
       isFavorite: false,
-      isSpecial18: false,
       imageUrl: ''
     });
     setSelectedPrompt(null);
@@ -165,13 +183,13 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
 
   const handleEditPrompt = (prompt: Prompt) => {
     setPromptForm({
+      audience: getPromptAudience(prompt),
       categoryId: prompt.category_id,
       subcategoryId: prompt.subcategory_id,
       title: prompt.title,
       description: prompt.description,
       content: prompt.content,
       isFavorite: prompt.is_favorite,
-      isSpecial18: prompt.is_special_18,
       imageUrl: prompt.image_url
     });
     setSelectedPrompt(prompt);
@@ -186,9 +204,15 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
 
     try {
       if (selectedPrompt) {
-        await onUpdatePrompt(selectedPrompt.id, promptForm);
+        await onUpdatePrompt(selectedPrompt.id, {
+          ...promptForm,
+          isSpecial18: promptForm.audience === 'plus18'
+        });
       } else {
-        await onAddPrompt(promptForm);
+        await onAddPrompt({
+          ...promptForm,
+          isSpecial18: promptForm.audience === 'plus18'
+        });
       }
       setShowPromptForm(false);
     } catch (error) {
@@ -245,8 +269,8 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   // Get filtered categories by tab
   const getFilteredCategories = () => {
     return categories.filter(cat => {
-      const isCensored = cat.is_censored || false;
-      return activeTab === 'censored' ? isCensored : !isCensored;
+      const isPlus18 = isCategoryPlus18(cat);
+      return activeTab === 'plus18' ? isPlus18 : !isPlus18;
     });
   };
 
@@ -262,9 +286,9 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
           {/* Tabs for Safe/Censored */}
           <div className="flex gap-2 mb-4 border-b border-zinc-700">
             <button
-              onClick={() => setActiveTab('safe')}
+              onClick={() => setActiveTab('normal')}
               className={`px-4 py-2 font-semibold text-sm transition-all ${
-                activeTab === 'safe'
+                activeTab === 'normal'
                   ? 'text-green-400 border-b-2 border-green-400'
                   : 'text-gray-400 hover:text-white'
               }`}
@@ -272,14 +296,14 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
               🔓 Conteúdo Normal
             </button>
             <button
-              onClick={() => setActiveTab('censored')}
+              onClick={() => setActiveTab('plus18')}
               className={`px-4 py-2 font-semibold text-sm transition-all ${
-                activeTab === 'censored'
+                activeTab === 'plus18'
                   ? 'text-red-400 border-b-2 border-red-400'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              🔒 Conteúdo Censurado
+              🔒 Conteúdo +18
             </button>
           </div>
 
@@ -308,7 +332,7 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                 className="w-4 h-4 rounded"
               />
               <span className={`text-sm ${newCategoryIsCensored ? 'text-red-400' : 'text-gray-400'}`}>
-                Marcar como censurada
+                Compatibilidade legada (is_censored)
               </span>
             </label>
           </div>
@@ -401,11 +425,11 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                                    selectedPrompt?.id === prompt.id
                                      ? 'bg-green-500/20 border border-green-500'
                                      : 'hover:bg-zinc-800'
-                                 } ${prompt.is_special_18 ? 'border border-red-500/30' : ''}`}
-                                 onClick={() => handleEditPrompt(prompt)}
-                               >
+                                 } ${getPromptAudience(prompt) === 'plus18' ? 'border border-red-500/30' : ''}`}
+                                  onClick={() => handleEditPrompt(prompt)}
+                                >
                                 <div className="w-3 h-3 flex items-center justify-center">
-                                  {prompt.is_special_18 ? <span className="text-red-500 text-[10px] font-bold">🔞</span> : ''}
+                                  {getPromptAudience(prompt) === 'plus18' ? <span className="text-red-500 text-[10px] font-bold">🔞</span> : ''}
                                 </div>
                                 <span className="flex-1 text-gray-300 truncate">{prompt.title}</span>
                                 <button
@@ -496,7 +520,7 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                     <h3 className="text-xl font-bold text-white">
                       {selectedPrompt ? 'Editar Prompt' : 'Novo Prompt'}
                     </h3>
-                    {selectedPrompt?.is_special_18 && (
+                    {selectedPrompt && getPromptAudience(selectedPrompt) === 'plus18' && (
                       <span className="px-2 py-1 bg-red-500/20 border border-red-500 rounded text-red-400 text-xs font-bold">
                         🔞 CONTEÚDO +18
                       </span>
@@ -515,14 +539,51 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
               </div>
 
             <div className="space-y-4">
+              <div className="bg-black/40 border border-zinc-700 rounded-xl p-4 space-y-3">
+                <h4 className="text-sm font-bold text-gray-300">Tipo do Prompt (primeiro passo)</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPromptForm({ ...promptForm, audience: 'normal', categoryId: '', subcategoryId: '' })}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                      promptForm.audience === 'normal'
+                        ? 'bg-green-500/20 border border-green-500 text-green-300'
+                        : 'bg-zinc-800 border border-zinc-700 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🔓 Prompt Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPromptForm({ ...promptForm, audience: 'plus18', categoryId: '', subcategoryId: '' })}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                      promptForm.audience === 'plus18'
+                        ? 'bg-red-500/20 border border-red-500 text-red-300'
+                        : 'bg-zinc-800 border border-zinc-700 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🔞 Prompt +18
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <select
                   value={promptForm.categoryId}
-                  onChange={(e) => setPromptForm({ ...promptForm, categoryId: e.target.value, subcategoryId: '' })}
+                  onChange={(e) => {
+                    const selectedCategory = categories.find(cat => cat.id === e.target.value);
+                    const audience = selectedCategory && isCategoryPlus18(selectedCategory) ? 'plus18' : 'normal';
+                    setPromptForm({ ...promptForm, audience, categoryId: e.target.value, subcategoryId: '' });
+                  }}
                   className="bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
                 >
                   <option value="">Categoria</option>
-                  {categories.map(cat => (
+                  {categories
+                    .filter(cat => {
+                      const isPlus18 = isCategoryPlus18(cat);
+                      return promptForm.audience === 'plus18' ? isPlus18 : !isPlus18;
+                    })
+                    .map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
@@ -563,7 +624,12 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {categories.map(cat => (
+                    {categories
+                      .filter(cat => {
+                        const isPlus18 = isCategoryPlus18(cat);
+                        return promptForm.audience === 'plus18' ? isPlus18 : !isPlus18;
+                      })
+                      .map(cat => (
                       <div
                         key={cat.id}
                         className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
@@ -607,7 +673,7 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                       <button
                         onClick={async () => {
                           if (newSubcategoryName.trim() && promptForm.categoryId) {
-                            await onAddSubcategory(promptForm.categoryId, newSubcategoryName);
+                            await onAddSubcategory(promptForm.categoryId, newSubcategoryName, promptForm.audience);
                             setNewSubcategoryName('');
                           }
                         }}
@@ -734,21 +800,13 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                   <span className="text-white text-sm">Favorito</span>
                 </label>
 
-                <label className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border transition-all ${
-                  promptForm.isSpecial18
-                    ? 'bg-red-500/20 border-red-500'
-                    : 'border-zinc-700 hover:border-red-500'
+                <span className={`px-3 py-2 rounded-lg border text-sm font-bold ${
+                  promptForm.audience === 'plus18'
+                    ? 'bg-red-500/20 border-red-500 text-red-300'
+                    : 'bg-green-500/20 border-green-500 text-green-300'
                 }`}>
-                  <input
-                    type="checkbox"
-                    checked={promptForm.isSpecial18}
-                    onChange={(e) => setPromptForm({ ...promptForm, isSpecial18: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                  <span className={`text-sm font-bold ${promptForm.isSpecial18 ? 'text-red-400' : 'text-white'}`}>
-                    🔞 Conteúdo +18
-                  </span>
-                </label>
+                  {promptForm.audience === 'plus18' ? '🔞 Tipo: +18' : '🔓 Tipo: Normal'}
+                </span>
               </div>
 
               <button
