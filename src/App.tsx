@@ -2098,7 +2098,6 @@ const Footer = ({ onAdminClick, branding }: { onAdminClick: () => void, branding
 const LoginModal = ({ onClose }: { onClose: () => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -2114,26 +2113,20 @@ const LoginModal = ({ onClose }: { onClose: () => void }) => {
     }
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        alert('Verifique seu e-mail para confirmar o cadastro!');
-      } else {
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
-        
-        if (signInData.user) {
-          // Verifica se o usuário está bloqueado antes de permitir o acesso
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('blocked')
-            .eq('id', signInData.user.id)
-            .maybeSingle();
-            
-          if (profile?.blocked) {
-            await supabase.auth.signOut();
-            throw new Error('Sua conta está bloqueada. Entre em contato com o suporte.');
-          }
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+
+      if (signInData.user) {
+        // Verifica se o usuário está bloqueado antes de permitir o acesso
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('blocked')
+          .eq('id', signInData.user.id)
+          .maybeSingle();
+
+        if (profile?.blocked) {
+          await supabase.auth.signOut();
+          throw new Error('Sua conta está bloqueada. Entre em contato com o suporte.');
         }
       }
       onClose();
@@ -2153,7 +2146,7 @@ const LoginModal = ({ onClose }: { onClose: () => void }) => {
       >
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Flame className="text-orange-500" /> {isSignUp ? 'Criar Conta' : 'Acessar Conta'}
+            <Flame className="text-orange-500" /> Acessar Conta
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white">
             <X />
@@ -2189,19 +2182,9 @@ const LoginModal = ({ onClose }: { onClose: () => void }) => {
             disabled={loading}
             className="w-full py-4 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all disabled:opacity-50"
           >
-            {loading ? 'Processando...' : isSignUp ? 'Cadastrar' : 'Entrar'}
+            {loading ? 'Processando...' : 'Entrar'}
           </button>
         </form>
-
-        <p className="mt-6 text-center text-gray-500 text-sm">
-          {isSignUp ? 'Já tem uma conta?' : 'Ainda não tem conta?'}
-          <button 
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="ml-2 text-orange-500 font-bold hover:underline"
-          >
-            {isSignUp ? 'Fazer Login' : 'Criar Agora'}
-          </button>
-        </p>
       </motion.div>
     </div>
   );
