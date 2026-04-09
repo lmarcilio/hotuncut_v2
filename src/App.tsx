@@ -3723,52 +3723,52 @@ FOR ALL USING (true) WITH CHECK (true);`;
             </button>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto min-w-0">
-            <div className="hidden md:flex bg-zinc-900 rounded-xl p-1 border border-zinc-800 overflow-x-auto hide-scrollbar w-full min-w-0 max-w-full">
+            <div className="hidden md:flex flex-wrap bg-zinc-900 rounded-xl p-1 border border-zinc-800 w-full min-w-0 max-w-full gap-1">
               <button 
                 onClick={() => setActiveTab('members')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'members' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'members' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Membros
               </button>
               <button 
                 onClick={() => setActiveTab('unified-prompts')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'unified-prompts' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'unified-prompts' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Categorias & Prompts
               </button>
               <button 
                 onClick={() => setActiveTab('lessons')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'lessons' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'lessons' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Aulas
               </button>
               <button 
                 onClick={() => setActiveTab('tools')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'tools' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'tools' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Ferramentas
               </button>
               <button 
                 onClick={() => setActiveTab('digital-collection')}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'digital-collection' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'digital-collection' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
               >
                 Acervo Digital
               </button>
                <button 
                  onClick={() => setActiveTab('branding')}
-                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'branding' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'branding' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
                >
                  Branding
                </button>
                <button 
                  onClick={() => setActiveTab('rateio')}
-                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'rateio' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'rateio' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
                >
                  Rateio
                </button>
                <button 
                  onClick={() => setActiveTab('webhooks')}
-                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'webhooks' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
+                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'webhooks' ? 'bg-orange-500 text-black' : 'text-gray-400 hover:text-white'}`}
                >
                  Webhooks
                </button>
