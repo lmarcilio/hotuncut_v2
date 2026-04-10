@@ -330,7 +330,7 @@ const MemberArea = ({
   ];
 
   const normalizeAudience = (value: any, fallbackPlus18 = false): 'normal' | 'plus18' => {
-    const normalized = String(value || '').toLowerCase().trim();
+    if (fallbackPlus18) return 'plus18'; const normalized = String(value || '').toLowerCase().trim();
     if (['plus18', 'plus_18', 'adult', 'nsfw', '18+', '+18', 'censored'].includes(normalized)) return 'plus18';
     if (['normal', 'safe', 'default', 'all-ages', 'all_ages'].includes(normalized)) return 'normal';
     return fallbackPlus18 ? 'plus18' : 'normal';
