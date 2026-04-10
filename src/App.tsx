@@ -4673,7 +4673,12 @@ FOR ALL USING (true) WITH CHECK (true);`;
                      
                      image_url: promptData.imageUrl || null
                    }]);
-                  if (!error) await fetchPrompts();
+                  if (error) {
+                    alert('Erro detalhado do Supabase: ' + JSON.stringify(error));
+                    console.error(error);
+                  } else {
+                    await fetchPrompts();
+                  }
                 }}
                 onDeletePrompt={async (id: string) => {
                   await deletePrompt(id);

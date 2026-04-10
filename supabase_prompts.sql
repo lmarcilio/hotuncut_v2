@@ -189,4 +189,17 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='prompts' AND column_name='image_url') THEN
         ALTER TABLE prompts ADD COLUMN image_url TEXT;
     END IF;
+
+    -- Add audience columns if they don't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='categories' AND column_name='audience') THEN
+        ALTER TABLE categories ADD COLUMN audience TEXT DEFAULT 'normal';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subcategories' AND column_name='audience') THEN
+        ALTER TABLE subcategories ADD COLUMN audience TEXT DEFAULT 'normal';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='prompts' AND column_name='audience') THEN
+        ALTER TABLE prompts ADD COLUMN audience TEXT DEFAULT 'normal';
+    END IF;
 END $$;
