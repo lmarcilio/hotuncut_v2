@@ -2951,7 +2951,7 @@ const AdminDashboard = ({
     const name = categoryName || newCategory;
     if (!name) return;
     const resolvedAudience: 'normal' | 'plus18' = audience || (isCensored ? 'plus18' : 'normal');
-    const { error } = await supabase.from('categories').insert([{ name, is_censored: resolvedAudience === 'plus18', audience: resolvedAudience }]);
+    const { error } = await supabase.from('categories').insert([{ name, is_censored: resolvedAudience === 'plus18' }]);
     if (error) {
       console.error('Erro ao adicionar categoria:', error);
       alert('Erro ao adicionar categoria: ' + error.message);
@@ -2974,7 +2974,7 @@ const AdminDashboard = ({
     const { error } = await supabase.from('subcategories').insert([{ 
       name: newSubcategory.name, 
       category_id: newSubcategory.categoryId,
-      audience: categoryAudience
+      
     }]);
     if (error) {
       console.error('Erro ao adicionar subcategoria:', error);
@@ -4650,9 +4650,13 @@ FOR ALL USING (true) WITH CHECK (true);`;
                    const { error } = await supabase.from('subcategories').insert([{ 
                      name: name, 
                      category_id: categoryId,
-                     audience: audience || 'normal'
+                     
                    }]);
-                   if (!error) await fetchSubcategories();
+                   if (error) {
+                     alert('Erro ao adicionar subcategoria: ' + error.message);
+                   } else {
+                     await fetchSubcategories();
+                   }
                  }}
                 onDeleteSubcategory={async (id: string) => {
                   await deleteSubcategory(id);
@@ -4666,7 +4670,7 @@ FOR ALL USING (true) WITH CHECK (true);`;
                     subcategory_id: promptData.subcategoryId,
                      is_favorite: promptData.isFavorite,
                      is_special_18: promptData.isSpecial18,
-                     audience: promptData.isSpecial18 ? 'plus18' : 'normal',
+                     
                      image_url: promptData.imageUrl || null
                    }]);
                   if (!error) await fetchPrompts();
@@ -4683,7 +4687,7 @@ FOR ALL USING (true) WITH CHECK (true);`;
                      subcategory_id: promptData.subcategoryId,
                      is_favorite: promptData.isFavorite,
                      is_special_18: promptData.isSpecial18,
-                     audience: promptData.isSpecial18 ? 'plus18' : 'normal',
+                     
                      image_url: promptData.imageUrl || null
                    }).eq('id', id);
                    if (!error) await fetchPrompts();
