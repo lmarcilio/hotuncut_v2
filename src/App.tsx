@@ -2951,7 +2951,7 @@ const AdminDashboard = ({
     const name = categoryName || newCategory;
     if (!name) return;
     const resolvedAudience: 'normal' | 'plus18' = audience || (isCensored ? 'plus18' : 'normal');
-    const { error } = await supabase.from('categories').insert([{ name, is_censored: resolvedAudience === 'plus18' }]);
+    const { error } = await supabase.from('categories').insert([{ name, is_censored: resolvedAudience === 'plus18', audience: resolvedAudience }]);
     if (error) {
       console.error('Erro ao adicionar categoria:', error);
       alert('Erro ao adicionar categoria: ' + error.message);
@@ -4650,6 +4650,7 @@ FOR ALL USING (true) WITH CHECK (true);`;
                    const { error } = await supabase.from('subcategories').insert([{ 
                      name: name, 
                      category_id: categoryId,
+                     audience: audience || 'normal'
                      
                    }]);
                    if (error) {
@@ -4670,6 +4671,7 @@ FOR ALL USING (true) WITH CHECK (true);`;
                     subcategory_id: promptData.subcategoryId,
                      is_favorite: promptData.isFavorite,
                      is_special_18: promptData.isSpecial18,
+                     audience: promptData.isSpecial18 ? 'plus18' : 'normal',
                      
                      image_url: promptData.imageUrl || null
                    }]);
@@ -4692,6 +4694,7 @@ FOR ALL USING (true) WITH CHECK (true);`;
                      subcategory_id: promptData.subcategoryId,
                      is_favorite: promptData.isFavorite,
                      is_special_18: promptData.isSpecial18,
+                     audience: promptData.isSpecial18 ? 'plus18' : 'normal',
                      
                      image_url: promptData.imageUrl || null
                    }).eq('id', id);
