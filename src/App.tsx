@@ -2890,7 +2890,7 @@ const AdminDashboard = ({
       .select('*, categories(name), subcategories(name)')
       .order('created_at', { ascending: false });
     if (error) {
-      console.error('Erro ao buscar prompts:', error);
+      console.error('Erro ao buscar prompts:', error); alert('Erro ao buscar prompts: ' + JSON.stringify(error));
     } else if (data) {
       setPrompts(data);
     }
