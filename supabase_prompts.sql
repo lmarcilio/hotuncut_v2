@@ -72,6 +72,7 @@ ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
 
 -- Create ultra-permissive policies for development
 -- Profiles
+DROP POLICY IF EXISTS "Allow all on profiles" ON profiles;
 CREATE POLICY "Allow all on profiles" ON profiles FOR ALL USING (true) WITH CHECK (true);
 
 -- Categories
@@ -107,7 +108,9 @@ ALTER TABLE modules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lessons ENABLE ROW LEVEL SECURITY;
 
 -- Create ultra-permissive policies for development
+DROP POLICY IF EXISTS "Allow all on modules" ON modules;
 CREATE POLICY "Allow all on modules" ON modules FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all on lessons" ON lessons;
 CREATE POLICY "Allow all on lessons" ON lessons FOR ALL USING (true) WITH CHECK (true);
 
 -- Create tools table
@@ -124,6 +127,7 @@ CREATE TABLE IF NOT EXISTS tools (
 ALTER TABLE tools ENABLE ROW LEVEL SECURITY;
 
 -- Create ultra-permissive policies for development
+DROP POLICY IF EXISTS "Allow all on tools" ON tools;
 CREATE POLICY "Allow all on tools" ON tools FOR ALL USING (true) WITH CHECK (true);
 
 -- Create settings table
@@ -149,7 +153,9 @@ ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhook_events ENABLE ROW LEVEL SECURITY;
 
 -- Create ultra-permissive policies for development
+DROP POLICY IF EXISTS "Allow all on settings" ON settings;
 CREATE POLICY "Allow all on settings" ON settings FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all on webhook_events" ON webhook_events;
 CREATE POLICY "Allow all on webhook_events" ON webhook_events FOR ALL USING (true) WITH CHECK (true);
 
 -- Insert default settings if not exists
@@ -203,3 +209,4 @@ BEGIN
         ALTER TABLE prompts ADD COLUMN audience TEXT DEFAULT 'normal';
     END IF;
 END $$;
+
