@@ -263,12 +263,22 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
 
   // Get prompts for a subcategory
   const getPromptsForSubcategory = (subcategoryId: string) => {
-    return prompts.filter(p => p.subcategory_id === subcategoryId);
+    return prompts
+      .filter(p => p.subcategory_id === subcategoryId)
+      .sort((a, b) => {
+        if (!!a.image_url === !!b.image_url) return 0;
+        return a.image_url ? -1 : 1;
+      });
   };
 
   // Get orphaned prompts (prompts without subcategory_id)
   const getOrphanedPrompts = () => {
-    return prompts.filter(p => !p.subcategory_id || p.subcategory_id === '');
+    return prompts
+      .filter(p => !p.subcategory_id || p.subcategory_id === '')
+      .sort((a, b) => {
+        if (!!a.image_url === !!b.image_url) return 0;
+        return a.image_url ? -1 : 1;
+      });
   };
 
   // Get filtered categories by tab

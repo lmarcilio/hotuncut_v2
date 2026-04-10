@@ -358,6 +358,10 @@ const MemberArea = ({
       const description = String(p.description || '').toLowerCase();
       const content = String(p.content || '').toLowerCase();
       return title.includes(normalizedSearch) || description.includes(normalizedSearch) || content.includes(normalizedSearch);
+    })
+    .sort((a, b) => {
+      if (!!a.image_url === !!b.image_url) return 0;
+      return a.image_url ? -1 : 1;
     });
 
   const filteredCategories = categories.filter(cat => {
