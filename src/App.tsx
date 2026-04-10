@@ -2887,7 +2887,7 @@ const AdminDashboard = ({
   const fetchPrompts = async () => {
     const { data, error } = await supabase
       .from('prompts')
-      .select('*, categories(name), subcategories(name)')
+      .select('*, categories(name), subcategories!prompts_subcategory_id_fkey(name)')
       .order('created_at', { ascending: false });
     if (error) {
       console.error('Erro ao buscar prompts:', error); alert('Erro ao buscar prompts: ' + JSON.stringify(error));
@@ -5580,7 +5580,7 @@ export default function App() {
     if (!supabase) return;
     try {
       const [promptsRes, categoriesRes, subcategoriesRes] = await Promise.all([
-        supabase.from('prompts').select('*, categories(name), subcategories(name)').order('created_at', { ascending: false }),
+        supabase.from('prompts').select('*, categories(name), subcategories!prompts_subcategory_id_fkey(name)').order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('name'),
         supabase.from('subcategories').select('*').order('name')
       ]);
