@@ -1372,9 +1372,13 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
 
   return (
     <nav
-      className={`fixed w-full z-50 bg-transparent border-b border-orange-500/20 backdrop-blur-md transition-transform duration-300 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
+      className={`fixed w-full z-50 transition-all duration-500 ${isNavbarVisible ? 'translate-y-0' : '-translate-y-full'}`}
+      style={{ backdropFilter: 'blur(20px) saturate(180%)' }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex justify-between items-center" style={{ height: `${navHeight}px` }}>
           <div className="flex items-center gap-2 min-w-0">
             <Logo branding={branding} />
@@ -1382,18 +1386,18 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
           
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-gray-300 hover:text-orange-500 transition-colors">Recursos</a>
-            <a href="#gallery" className="text-gray-300 hover:text-orange-500 transition-colors">Exemplos</a>
-            <a href="#pricing" className="text-gray-300 hover:text-orange-500 transition-colors">Preço</a>
+            <a href="#features" className="text-gray-400 hover:text-orange-400 transition-colors duration-300 text-sm font-medium tracking-wide">Recursos</a>
+            <a href="#gallery" className="text-gray-400 hover:text-orange-400 transition-colors duration-300 text-sm font-medium tracking-wide">Exemplos</a>
+            <a href="#pricing" className="text-gray-400 hover:text-orange-400 transition-colors duration-300 text-sm font-medium tracking-wide">Preço</a>
             
             {user ? (
               <div className="flex items-center gap-4">
-                <span className="text-orange-500 text-sm font-medium flex items-center gap-2">
+                <span className="text-orange-400/80 text-sm font-medium flex items-center gap-2">
                   <User className="w-4 h-4" /> {user.email}
                 </span>
                 <button 
                   onClick={onLogout}
-                  className="px-4 py-2 rounded-full border border-zinc-800 text-gray-400 hover:text-white transition-all text-sm flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all text-sm flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4" /> Sair
                 </button>
@@ -1401,7 +1405,7 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
             ) : (
               <button 
                 onClick={onLoginClick}
-                className="px-6 py-2 rounded-full border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-black transition-all font-medium"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-500/10 to-pink-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-black hover:border-orange-500 transition-all duration-300 font-semibold text-sm"
               >
                 Login
               </button>
@@ -1410,8 +1414,11 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button onClick={() => setIsOpen(!isOpen)} className="text-white">
-              {isOpen ? <X /> : <Menu />}
+            <button 
+              onClick={() => setIsOpen(!isOpen)} 
+              className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-white hover:bg-white/[0.1] transition-all"
+            >
+              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -1424,31 +1431,41 @@ const Navbar = ({ user, onLogout, onLoginClick, branding }: { user: any, onLogou
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#1b2834]/95 border-b border-orange-500/20 overflow-hidden"
+            className="md:hidden overflow-hidden relative"
           >
-            <div className="px-4 pt-2 pb-6 space-y-4">
-              <a href="#features" className="block text-gray-300" onClick={() => setIsOpen(false)}>Recursos</a>
-              <a href="#gallery" className="block text-gray-300" onClick={() => setIsOpen(false)}>Exemplos</a>
-              <a href="#pricing" className="block text-gray-300" onClick={() => setIsOpen(false)}>Preço</a>
-              
-              {user ? (
-                <div className="py-2 border-t border-zinc-800">
-                  <p className="text-orange-500 text-sm mb-4">{user.email}</p>
-                  <button 
-                    onClick={() => { onLogout(); setIsOpen(false); }}
-                    className="w-full px-6 py-3 rounded-xl border border-zinc-800 text-white font-bold"
-                  >
-                    Sair
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={() => { onLoginClick(); setIsOpen(false); }}
-                  className="w-full px-6 py-3 rounded-xl bg-orange-500 text-black font-bold"
+            <div className="absolute inset-0 bg-black/80" style={{ backdropFilter: 'blur(20px)' }} />
+            <div className="relative z-10 px-4 pt-2 pb-6 space-y-1">
+              {[{href: '#features', label: 'Recursos'}, {href: '#gallery', label: 'Exemplos'}, {href: '#pricing', label: 'Preço'}].map((link) => (
+                <a 
+                  key={link.href}
+                  href={link.href} 
+                  className="block px-4 py-3 text-gray-300 hover:text-orange-400 hover:bg-white/[0.03] rounded-xl transition-all font-medium" 
+                  onClick={() => setIsOpen(false)}
                 >
-                  Login
-                </button>
-              )}
+                  {link.label}
+                </a>
+              ))}
+              
+              <div className="pt-4 mt-2 border-t border-white/[0.06]">
+                {user ? (
+                  <div className="space-y-3">
+                    <p className="text-orange-400/80 text-sm font-medium px-4">{user.email}</p>
+                    <button 
+                      onClick={() => { onLogout(); setIsOpen(false); }}
+                      className="w-full px-6 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white font-bold hover:bg-white/[0.08] transition-all"
+                    >
+                      Sair
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => { onLoginClick(); setIsOpen(false); }}
+                    className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-black font-bold shadow-[0_10px_30px_rgba(244,114,35,0.25)]"
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
@@ -2106,31 +2123,36 @@ const FAQ = () => {
 
 const Footer = ({ onAdminClick, branding }: { onAdminClick: () => void, branding: any }) => {
   return (
-    <footer className="bg-zinc-950 border-t border-zinc-900 py-12">
+    <footer className="relative bg-black pt-16 pb-8">
+      {/* Top gradient border */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent" />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+        {/* Main footer content */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
           <div className="flex items-center gap-2">
             <Logo branding={branding} className="scale-75" />
           </div>
           
-          <div className="flex gap-8 text-sm text-gray-500">
-            <a href="#" className="hover:text-orange-500 transition-colors">Termos de Uso</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">Privacidade</a>
-            <a href="#" className="hover:text-orange-500 transition-colors">Suporte</a>
+          <div className="flex gap-8 text-sm">
+            <a href="#" className="text-gray-600 hover:text-orange-400 transition-colors duration-300">Termos de Uso</a>
+            <a href="#" className="text-gray-600 hover:text-orange-400 transition-colors duration-300">Privacidade</a>
+            <a href="#" className="text-gray-600 hover:text-orange-400 transition-colors duration-300">Suporte</a>
           </div>
+        </div>
 
-          <div className="flex items-center gap-4">
-            <p className="text-gray-600 text-sm">
-              © 2026 HotUncut. Todos os direitos reservados.
-            </p>
-            <button 
-              onClick={onAdminClick}
-              className="text-zinc-800 hover:text-orange-500 transition-colors p-2"
-              title="Painel Administrativo"
-            >
-              <Lock className="w-4 h-4" />
-            </button>
-          </div>
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-gray-700 text-xs tracking-wide">
+            © 2026 HotUncut. Todos os direitos reservados.
+          </p>
+          <button 
+            onClick={onAdminClick}
+            className="text-zinc-900 hover:text-orange-500/50 transition-colors duration-300 p-2"
+            title="Painel Administrativo"
+          >
+            <Lock className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </footer>
@@ -2180,51 +2202,71 @@ const LoginModal = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80" style={{ backdropFilter: 'blur(16px)' }}>
       <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full bg-zinc-900 border border-orange-500/30 p-8 rounded-[2.5rem] shadow-2xl"
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="relative max-w-md w-full bg-zinc-950 border border-white/[0.08] p-10 rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)]"
       >
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Flame className="text-orange-500" /> Acessar Conta
-          </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white">
-            <X />
+        {/* Gradient accent */}
+        <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
+        
+        <div className="flex justify-between items-center mb-10">
+          <div>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+                <Flame className="text-white w-5 h-5" />
+              </div>
+              Acessar Conta
+            </h2>
+            <p className="text-gray-600 text-sm mt-2 ml-[46px]">Entre com suas credenciais</p>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/[0.08] transition-all"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-6">
+        <form onSubmit={handleAuth} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">E-mail</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">E-mail</label>
             <input 
               type="email" 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none transition-all"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3.5 text-white focus:border-orange-500/50 focus:bg-white/[0.05] outline-none transition-all placeholder:text-gray-700"
               placeholder="seu@email.com"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Senha</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Senha</label>
             <input 
               type="password" 
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none transition-all"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3.5 text-white focus:border-orange-500/50 focus:bg-white/[0.05] outline-none transition-all placeholder:text-gray-700"
               placeholder="••••••••"
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
           <button 
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all disabled:opacity-50"
+            className="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-black font-bold rounded-xl hover:brightness-110 transition-all disabled:opacity-50 shadow-[0_15px_40px_rgba(244,114,35,0.25)] flex items-center justify-center gap-2 group overflow-hidden relative"
           >
-            {loading ? 'Processando...' : 'Entrar'}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <span className="relative z-10">{loading ? 'Processando...' : 'Entrar'}</span>
+            {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />}
           </button>
         </form>
       </motion.div>
