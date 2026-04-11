@@ -222,14 +222,19 @@ const SectionHeader = ({ badge, title, highlight, description }: { badge: string
 /* ─────────────────── Main Component ─────────────────── */
 const PremiumLandingPage = ({ 
   onBuy, 
+  onLoginClick,
+  onAdminClick,
   branding 
 }: { 
   onBuy: () => void, 
+  onLoginClick?: () => void,
+  onAdminClick?: () => void,
   branding: any 
 }) => {
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const headerHeight = Math.min(420, Math.max(80, Math.round((branding?.logo_width || 150) * 0.9)));
   const landingVideoUrl = branding?.landing_images?.generated_video_url || '';
@@ -257,10 +262,24 @@ const PremiumLandingPage = ({
 
   // Scroll detection for sticky nav
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
+    let lastY = window.scrollY;
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setIsScrolled(currentY > 50);
+      
+      const isGoingDown = currentY > lastY;
+      if (currentY < 40) {
+        setIsNavbarVisible(true);
+      } else if (isGoingDown && !mobileMenuOpen) {
+        setIsNavbarVisible(false);
+      } else {
+        setIsNavbarVisible(true);
+      }
+      lastY = currentY;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [mobileMenuOpen]);
 
   // Auto-rotate testimonials
   useEffect(() => {
@@ -325,6 +344,8 @@ const PremiumLandingPage = ({
       {/* ═══════════════ STICKY NAVIGATION ═══════════════ */}
       <motion.nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          isNavbarVisible ? 'translate-y-0' : '-translate-y-full'
+        } ${
           isScrolled 
             ? 'bg-black/80 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.5)]' 
             : 'bg-transparent'
@@ -365,6 +386,14 @@ const PremiumLandingPage = ({
                   {item.label}
                 </button>
               ))}
+              {onLoginClick && (
+                <button
+                  onClick={onLoginClick}
+                  className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium rounded-lg hover:bg-white/[0.04]"
+                >
+                  Login
+                </button>
+              )}
               <button
                 onClick={onBuy}
                 className="ml-4 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-pink-500 text-black font-bold text-sm rounded-xl hover:brightness-110 transition-all shadow-lg shadow-orange-500/25"
@@ -402,6 +431,14 @@ const PremiumLandingPage = ({
                     {item.label}
                   </button>
                 ))}
+                {onLoginClick && (
+                  <button
+                    onClick={() => { onLoginClick(); setMobileMenuOpen(false); }}
+                    className="block w-full text-left px-4 py-3 text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all font-medium"
+                  >
+                    Login
+                  </button>
+                )}
                 <button
                   onClick={() => { onBuy(); setMobileMenuOpen(false); }}
                   className="w-full mt-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-black font-bold rounded-xl"
@@ -1458,21 +1495,26 @@ const PremiumLandingPage = ({
 
             {/* Footer Links */}
             <div className="flex items-center gap-6 text-sm text-gray-600">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => scrollToSection(item.id)}
-                  className="hover:text-gray-400 transition-colors"
-                >
-                  {item.label}
-                </button>
-              ))}
+              <a href="#" className="hover:text-gray-400 transition-colors">Termos de Uso</a>
+              <a href="#" className="hover:text-gray-400 transition-colors">Privacidade</a>
+              <a href="#" className="hover:text-gray-400 transition-colors">Suporte</a>
             </div>
 
-            {/* Copyright */}
-            <p className="text-xs text-gray-700">
-              © {new Date().getFullYear()} HotUncut. Todos os direitos reservados.
-            </p>
+            {/* Copyright & Admin Log */}
+            <div className="flex items-center gap-4">
+              <p className="text-xs text-gray-700">
+                © {new Date().getFullYear()} HotUncut. Todos os direitos reservados.
+              </p>
+              {onAdminClick && (
+                <button 
+                  onClick={onAdminClick}
+                  className="text-zinc-900 hover:text-orange-500/50 transition-colors p-1"
+                  title="Painel Administrativo"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </footer>

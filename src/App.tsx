@@ -5470,20 +5470,14 @@ const LandingPage = ({
 }) => {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-black">
-      <Navbar 
-        user={user} 
-        onLogout={onLogout} 
-        onLoginClick={onLoginClick}
-        branding={branding}
-      />
-      
       <main>
         <PremiumLandingPage 
           onBuy={onBuy}
+          onLoginClick={onLoginClick}
+          onAdminClick={onAdminClick}
           branding={branding}
         />
       </main>
-      <Footer onAdminClick={onAdminClick} branding={branding} />
     </div>
   );
 };
