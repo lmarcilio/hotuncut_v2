@@ -513,33 +513,7 @@ const PremiumLandingPage = ({
               <span className="font-bold text-white">Prompts prontos</span> &nbsp;•&nbsp; <span className="font-bold text-white">Ferramentas</span> &nbsp;•&nbsp; <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Bônus</span>
             </motion.p>
 
-            {/* Stats Row */}
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center gap-6 md:gap-10 mb-10"
-            >
-              {[
-                { value: 500, suffix: '+', label: 'Prompts Prontos', icon: Sparkles },
-                { value: 1200, suffix: '+', label: 'Membros Ativos', icon: Users },
-                { value: 97, suffix: '%', label: 'Satisfação', icon: Heart },
-              ].map((stat, idx) => (
-                <motion.div 
-                  key={idx} 
-                  className="text-center group"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <stat.icon className="w-4 h-4 text-orange-500/60 group-hover:text-orange-400 transition-colors" />
-                    <p className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
-                      <AnimatedCounter target={stat.value} suffix={stat.suffix} />
-                    </p>
-                  </div>
-                  <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-[0.15em] mt-1">{stat.label}</p>
-                </motion.div>
-              ))}
-            </motion.div>
+
 
             {/* Main CTA */}
             <motion.div 
