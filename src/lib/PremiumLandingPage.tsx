@@ -495,11 +495,11 @@ const PremiumLandingPage = ({
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-[-0.04em] mb-6 leading-[0.95]"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-[-0.04em] mb-6 leading-[1.05]"
             >
-              <span className="block text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.1)]">Crie Conteúdo</span>
+              <span className="block text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.1)]">Sistemas completos para</span>
               <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-pink-500 hero-shimmer">
-                que VENDE
+                ajudar a sua criatividade
               </span>
             </motion.h1>
 
@@ -510,7 +510,7 @@ const PremiumLandingPage = ({
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-lg md:text-xl lg:text-2xl text-gray-400 mb-8 font-light leading-relaxed max-w-3xl mx-auto"
             >
-              Prompts prontos + Estratégia comprovada = <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Renda diária</span>
+              <span className="font-bold text-white">Prompts prontos</span> &nbsp;•&nbsp; <span className="font-bold text-white">Ferramentas</span> &nbsp;•&nbsp; <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Bônus</span>
             </motion.p>
 
             {/* Stats Row */}
@@ -927,7 +927,7 @@ const PremiumLandingPage = ({
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                 className="group relative"
               >
-                <div className={`relative ${idx === 0 || idx === 3 ? 'aspect-square' : 'aspect-[3/4]'} rounded-2xl overflow-hidden border border-white/[0.06] shadow-xl group-hover:shadow-orange-500/20 transition-all duration-700`}>
+                <div className={`relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/[0.06] shadow-xl group-hover:shadow-orange-500/20 transition-all duration-700`}>
                   <img 
                     src={item.img} 
                     alt={item.title}
@@ -1408,64 +1408,7 @@ const PremiumLandingPage = ({
         </div>
       </section>
 
-      {/* ═══════════════ FINAL CTA ═══════════════ */}
-      <section className="py-24 lg:py-36 relative overflow-hidden">
-        <GlowingOrb className="w-[600px] h-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" color="orange" />
-        <FloatingParticles />
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="inline-flex items-center gap-2 px-5 py-2 mb-8 bg-orange-500/10 rounded-full border border-orange-500/20">
-              <Flame className="w-4 h-4 text-orange-400" />
-              <span className="text-orange-400 text-sm font-bold uppercase tracking-wider">Última Chamada</span>
-            </div>
 
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-black mb-8 tracking-tight leading-[1.05]">
-              Pronto para{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-pink-500">
-                Faturar?
-              </span>
-            </h2>
-            
-            <p className="text-lg text-gray-400 mb-12 leading-relaxed max-w-2xl mx-auto">
-              Não deixe essa oportunidade passar. Junte-se aos criadores que já estão ganhando{' '}
-              <span className="font-bold text-orange-400">consistentemente</span> todos os dias.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <MagneticButton 
-                onClick={onBuy}
-                className="relative px-14 py-6 bg-gradient-to-r from-orange-500 via-amber-400 to-pink-500 text-black font-bold text-lg rounded-2xl transition-all shadow-[0_30px_100px_rgba(244,114,35,0.35)] hover:shadow-[0_40px_140px_rgba(244,114,35,0.5)] flex items-center justify-center gap-3 group overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                <Rocket className="w-7 h-7 relative z-10 group-hover:rotate-12 transition-transform" />
-                <span className="relative z-10">Começar Agora</span>
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform relative z-10" />
-              </MagneticButton>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-              <span className="flex items-center gap-1.5">
-                <BadgeCheck className="w-4 h-4 text-emerald-500" />
-                Garantia 100% de Satisfação
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-emerald-500" />
-                Reembolso em 7 dias
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-emerald-500" />
-                Suporte 24/7
-              </span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
       <footer className="py-12 border-t border-white/[0.04] bg-black/50 relative">
