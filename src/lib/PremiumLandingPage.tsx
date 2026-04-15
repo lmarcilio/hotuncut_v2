@@ -236,7 +236,7 @@ const PremiumLandingPage = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navLogoWidth = Math.min(Math.max(branding?.logo_width || 220, 140), 420);
+  const navLogoWidth = 300;
   const heroTopPadding = Math.min(380, Math.max(160, Math.round(navLogoWidth * 0.85)));
   const landingVideoUrl = branding?.landing_images?.generated_video_url || '';
   const { scrollYProgress } = useScroll();
@@ -363,7 +363,7 @@ const PremiumLandingPage = ({
                   style={{
                     width: `${navLogoWidth}px`,
                   }}
-                  className="object-contain max-h-20 md:max-h-24 w-auto"
+                  className="object-contain w-auto"
                   referrerPolicy="no-referrer"
                 />
               ) : (
