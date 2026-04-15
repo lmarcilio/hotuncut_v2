@@ -13,6 +13,7 @@ interface Subcategory {
   category_id: string;
   name: string;
   audience?: 'normal' | 'plus18';
+  image_url?: string;
 }
 
 interface Prompt {
@@ -35,7 +36,7 @@ interface UnifiedPromptManagerProps {
   prompts: Prompt[];
   onAddCategory: (name: string, isCensored?: boolean, audience?: 'normal' | 'plus18') => Promise<void>;
   onDeleteCategory: (id: string) => Promise<void>;
-  onAddSubcategory: (categoryId: string, name: string, audience?: 'normal' | 'plus18') => Promise<void>;
+  onAddSubcategory: (categoryId: string, name: string, audience?: 'normal' | 'plus18', imageUrl?: string) => Promise<void>;
   onDeleteSubcategory: (id: string) => Promise<void>;
   onAddPrompt: (prompt: any) => Promise<void>;
   onDeletePrompt: (id: string) => Promise<void>;
@@ -65,6 +66,7 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIsCensored, setNewCategoryIsCensored] = useState(false);
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
+  const [newSubcategoryImageUrl, setNewSubcategoryImageUrl] = useState('');
   const [showNewSubcategoryForm, setShowNewSubcategoryForm] = useState(false);
   const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState('');
   const [activeTab, setActiveTab] = useState<'normal' | 'plus18'>('normal');
@@ -149,8 +151,9 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
     try {
       const selectedCategory = categories.find(cat => cat.id === selectedCategoryForSubcategory);
       const audience = selectedCategory && isCategoryPlus18(selectedCategory) ? 'plus18' : 'normal';
-      await onAddSubcategory(selectedCategoryForSubcategory, newSubcategoryName, audience);
+      await onAddSubcategory(selectedCategoryForSubcategory, newSubcategoryName, audience, newSubcategoryImageUrl.trim() || undefined);
       setNewSubcategoryName('');
+      setNewSubcategoryImageUrl('');
       setSelectedCategoryForSubcategory('');
       setShowNewSubcategoryForm(false);
     } catch (error) {
@@ -418,7 +421,19 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                           ) : (
                             <div className="w-4 h-4" />
                           )}
-                          <span className="flex-1 text-white font-medium text-sm">{subcategory.name}</span>
+                          <span className="flex-1 text-white font-medium text-sm flex items-center gap-2">
+                            {subcategory.image_url ? (
+                              <img
+                                src={subcategory.image_url}
+                                alt={subcategory.name}
+                                className="w-6 h-6 rounded-md object-cover border border-zinc-700"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <span className="w-6 h-6 rounded-md bg-zinc-800 border border-zinc-700" />
+                            )}
+                            {subcategory.name}
+                          </span>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -685,11 +700,19 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                         onChange={(e) => setNewSubcategoryName(e.target.value)}
                         className="flex-1 bg-black border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-orange-500"
                       />
+                      <input
+                        type="text"
+                        placeholder="URL da imagem da subcategoria"
+                        value={newSubcategoryImageUrl}
+                        onChange={(e) => setNewSubcategoryImageUrl(e.target.value)}
+                        className="flex-1 bg-black border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-orange-500"
+                      />
                       <button
                         onClick={async () => {
                           if (newSubcategoryName.trim() && promptForm.categoryId) {
-                            await onAddSubcategory(promptForm.categoryId, newSubcategoryName, promptForm.audience);
+                            await onAddSubcategory(promptForm.categoryId, newSubcategoryName, promptForm.audience, newSubcategoryImageUrl.trim() || undefined);
                             setNewSubcategoryName('');
+                            setNewSubcategoryImageUrl('');
                           }
                         }}
                         className="px-3 py-2 bg-blue-500 text-black font-bold rounded-lg hover:bg-blue-600 transition-all text-xs"
@@ -845,6 +868,23 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                 onChange={(e) => setNewSubcategoryName(e.target.value)}
                 className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
               />
+              <input
+                type="text"
+                placeholder="URL da Imagem da Subcategoria (opcional)"
+                value={newSubcategoryImageUrl}
+                onChange={(e) => setNewSubcategoryImageUrl(e.target.value)}
+                className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+              />
+              {newSubcategoryImageUrl && (
+                <div className="w-full h-44 rounded-xl border border-zinc-800 overflow-hidden bg-black">
+                  <img
+                    src={newSubcategoryImageUrl}
+                    alt="Preview da subcategoria"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              )}
               <div className="flex gap-3">
                 <button
                   onClick={handleAddSubcategory}

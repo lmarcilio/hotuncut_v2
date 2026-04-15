@@ -347,10 +347,9 @@ const MemberArea = ({
 
   const normalizedSearch = promptSearch.trim().toLowerCase();
 
-  const filteredPromptList = prompts
+  const baseFilteredPromptList = prompts
     .filter(matchesPromptAudience)
     .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
-    .filter(p => selectedSubcategory === 'all' || p.subcategory_id === selectedSubcategory)
     .filter(p => !showFavoritesOnly || p.is_favorite)
     .filter(p => {
       if (!normalizedSearch) return true;
@@ -364,15 +363,36 @@ const MemberArea = ({
       return a.image_url ? -1 : 1;
     });
 
+  const filteredPromptList = baseFilteredPromptList
+    .filter(p => selectedSubcategory === 'all' || p.subcategory_id === selectedSubcategory);
+
   const filteredCategories = categories.filter(cat => {
     const isCorrectAudience = getCategoryAudience(cat) === (isAdultMode ? 'plus18' : 'normal');
     if (!isCorrectAudience) return false;
     return prompts.some(p => p.category_id === cat.id && matchesPromptAudience(p));
   });
 
-  const filteredSubcategories = subcategories
-    .filter(sub => sub.category_id === selectedCategory)
-    .filter(sub => prompts.some(p => p.subcategory_id === sub.id && matchesPromptAudience(p)));
+  const promptSubcategoryCards = subcategories
+    .filter((sub) => selectedCategory === 'all' || sub.category_id === selectedCategory)
+    .map((sub) => {
+      const promptCount = baseFilteredPromptList.filter((p) => p.subcategory_id === sub.id).length;
+      const category = categories.find((cat) => cat.id === sub.category_id);
+      return {
+        ...sub,
+        promptCount,
+        categoryName: category?.name || 'Sem categoria'
+      };
+    })
+    .filter((sub) => sub.promptCount > 0)
+    .sort((a, b) => b.promptCount - a.promptCount || a.name.localeCompare(b.name));
+
+  useEffect(() => {
+    if (selectedSubcategory === 'all') return;
+    const stillExists = baseFilteredPromptList.some((p) => p.subcategory_id === selectedSubcategory);
+    if (!stillExists) {
+      setSelectedSubcategory('all');
+    }
+  }, [baseFilteredPromptList, selectedSubcategory]);
 
   return (
     <div className="min-h-screen bg-black flex">
@@ -784,35 +804,59 @@ const MemberArea = ({
                    </button>
                  </div>
 
-                 {/* Subcategories Filter Row */}
-                 {selectedCategory !== 'all' && (
-                   <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-zinc-800">
-                     <button 
-                       onClick={() => setSelectedSubcategory('all')}
-                       className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === 'all' ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
-                     >
-                       Todas as Subcategorias
-                     </button>
-                      {filteredSubcategories.map(sub => (
-                        <button 
-                          key={sub.id}
-                          onClick={() => setSelectedSubcategory(sub.id)}
-                         className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${selectedSubcategory === sub.id ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-gray-500 hover:text-gray-300 border border-zinc-800'}`}
-                       >
-                         {sub.name}
-                       </button>
-                     ))}
-                   </div>
-                 )}
-               </div>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredPromptList.map(prompt => (
-                    <motion.div 
-                     layout
-                     initial={{ opacity: 0, y: 20 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     key={prompt.id} 
+                {selectedSubcategory === 'all' ? (
+                  <div className="space-y-6">
+                    <p className="text-sm text-gray-400">Clique em uma subcategoria para abrir todos os prompts dela.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {promptSubcategoryCards.map((sub) => (
+                        <motion.button
+                          key={sub.id}
+                          layout
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          onClick={() => setSelectedSubcategory(sub.id)}
+                          className="text-left relative bg-zinc-900 rounded-[2.5rem] border border-zinc-800 transition-all hover:scale-[1.02] hover:border-orange-500/40 overflow-hidden"
+                        >
+                          <div className="w-full aspect-[4/3] relative border-b border-zinc-800 bg-zinc-950">
+                            {sub.image_url ? (
+                              <img
+                                src={sub.image_url}
+                                alt={sub.name}
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-800" />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                          </div>
+                          <div className="p-6 space-y-2">
+                            <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{sub.categoryName}</span>
+                            <h4 className="text-white font-bold text-xl">{sub.name}</h4>
+                            <p className="text-sm text-gray-400">{sub.promptCount} prompt{sub.promptCount > 1 ? 's' : ''}</p>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <button
+                      onClick={() => setSelectedSubcategory('all')}
+                      className="px-5 py-2.5 bg-zinc-900 text-white font-bold rounded-xl border border-zinc-800 hover:bg-zinc-800 transition-all inline-flex items-center gap-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" /> Voltar para subcategorias
+                    </button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {filteredPromptList.map(prompt => (
+                     <motion.div 
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      key={prompt.id} 
                       className={`relative bg-zinc-900 p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] ${normalizeAudience(prompt.audience, !!prompt.is_special_18) === 'plus18' ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-zinc-800 hover:border-orange-500/30'}`}
                     >
                       {normalizeAudience(prompt.audience, !!prompt.is_special_18) === 'plus18' && (
@@ -821,17 +865,6 @@ const MemberArea = ({
                         </div>
                      )}
                      
-                     {prompt.image_url && (
-                       <div className="w-full aspect-square mb-6 rounded-3xl overflow-hidden border border-zinc-800 relative group">
-                         <img 
-                           src={prompt.image_url} 
-                           alt={prompt.subcategories?.name || "Prompt image"} 
-                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                         />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                       </div>
-                     )}
-
                      <div className="flex justify-between items-start mb-4">
                        <div className="space-y-1 flex-1">
                          <span className="text-[10px] text-orange-500 font-black uppercase tracking-widest">{prompt.categories?.name} &bull; {prompt.subcategories?.name}</span>
@@ -874,11 +907,13 @@ const MemberArea = ({
                          </button>
                        </div>
                      </div>
-                   </motion.div>
-                 ))}
-               </div>
-            </div>
-          )}
+                    </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+             </div>
+           )}
 
           {activeTab === 'lessons' && (
             selectedLesson ? (
@@ -4692,19 +4727,24 @@ FOR ALL USING (true) WITH CHECK (true);`;
                 onDeleteCategory={async (id: string) => {
                   await deleteCategory(id);
                 }}
-                onAddSubcategory={async (categoryId: string, name: string, audience?: 'normal' | 'plus18') => {
+                onAddSubcategory={async (categoryId: string, name: string, audience?: 'normal' | 'plus18', imageUrl?: string) => {
                    const { error } = await supabase.from('subcategories').insert([{ 
                      name: name, 
                      category_id: categoryId,
-                     audience: audience || 'normal'
-                     
-                   }]);
-                   if (error) {
-                     alert('Erro ao adicionar subcategoria: ' + error.message);
-                   } else {
-                     await fetchSubcategories();
-                   }
-                 }}
+                      audience: audience || 'normal',
+                      image_url: imageUrl || null
+                      
+                    }]);
+                    if (error) {
+                      if (error.message?.toLowerCase().includes('image_url')) {
+                        alert('Erro: coluna "image_url" não existe em "subcategories". Execute no SQL Editor do Supabase:\n\nALTER TABLE subcategories ADD COLUMN IF NOT EXISTS image_url TEXT;');
+                      } else {
+                        alert('Erro ao adicionar subcategoria: ' + error.message);
+                      }
+                    } else {
+                      await fetchSubcategories();
+                    }
+                  }}
                 onDeleteSubcategory={async (id: string) => {
                   await deleteSubcategory(id);
                 }}
