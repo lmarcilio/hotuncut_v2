@@ -343,12 +343,12 @@ const PremiumLandingPage = ({
       
       {/* ═══════════════ STICKY NAVIGATION ═══════════════ */}
       <motion.nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 transition-all duration-500 ${
           isNavbarVisible ? 'translate-y-0' : '-translate-y-full'
         } ${
           isScrolled 
-            ? 'bg-black/80 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.5)]' 
-            : 'bg-transparent'
+            ? 'z-50 bg-black/80 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.5)]' 
+            : 'z-40 bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -454,7 +454,7 @@ const PremiumLandingPage = ({
       </motion.nav>
 
       {/* ═══════════════ HERO SECTION ═══════════════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-20 lg:pb-32">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-20 lg:pb-32">
         {/* Layered Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgba(251,146,60,0.2),transparent_50%)]" />
