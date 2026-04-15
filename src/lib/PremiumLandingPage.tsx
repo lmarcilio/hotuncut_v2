@@ -236,7 +236,6 @@ const PremiumLandingPage = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const headerHeight = Math.min(420, Math.max(80, Math.round((branding?.logo_width || 150) * 0.9)));
   const landingVideoUrl = branding?.landing_images?.generated_video_url || '';
   const { scrollYProgress } = useScroll();
   const headerOpacity = useTransform(scrollYProgress, [0, 0.05], [0, 1]);
@@ -356,13 +355,13 @@ const PremiumLandingPage = ({
             {/* Logo */}
             <div className="flex items-center gap-3 mt-1">
               {branding?.logo_url ? (
-                <img 
+                <img
                   src={branding.logo_url}
                   alt="Logo"
-                  style={{ 
-                    width: branding.logo_width ? `${Math.max(branding.logo_width * 1.5, 220)}px` : '220px',
+                  style={{
+                    width: branding.logo_width ? `${Math.min(Math.max(branding.logo_width * 1.2, 150), 260)}px` : '220px',
                   }}
-                  className="object-contain"
+                  className="object-contain max-h-14 md:max-h-16 w-auto"
                   referrerPolicy="no-referrer"
                 />
               ) : (
@@ -454,7 +453,7 @@ const PremiumLandingPage = ({
       </motion.nav>
 
       {/* ═══════════════ HERO SECTION ═══════════════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-20 lg:pb-32">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-40 md:pt-44 pb-20 lg:pb-32">
         {/* Layered Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgba(251,146,60,0.2),transparent_50%)]" />
