@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS subcategories (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     category_id UUID REFERENCES categories(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
+    image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     UNIQUE(category_id, name)
 );
@@ -203,6 +204,10 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subcategories' AND column_name='audience') THEN
         ALTER TABLE subcategories ADD COLUMN audience TEXT DEFAULT 'normal';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subcategories' AND column_name='image_url') THEN
+        ALTER TABLE subcategories ADD COLUMN image_url TEXT;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='prompts' AND column_name='audience') THEN

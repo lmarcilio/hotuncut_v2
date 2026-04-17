@@ -324,22 +324,80 @@ async function startServer() {
     });
   });
 
-  // Webhook Test Endpoint
-  app.get("/api/webhook-test", async (req, res) => {
-    try {
-      const testId = `test_${Date.now()}`;
-      const { error } = await supabase.from('webhook_events').insert({
-        id: testId,
-        type: 'test.manual',
-        payload: { message: 'Teste manual via browser', time: new Date().toISOString() }
+// Webhook Test Endpoint
+app.get("/api/webhook-test", async (req, res) => {
+  try {
+    const testId = `test_${Date.now()}`;
+    const { error } = await supabase.from('webhook_events').insert({
+      id: testId,
+      type: 'test.manual',
+      payload: { message: 'Teste manual via browser', time: new Date().toISOString() }
+    });
+    
+    if (error) throw error;
+    res.json({ status: "success", message: "Log de teste criado!", id: testId });
+  } catch (e: any) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Migration Endpoint for Subcategories Image URL
+app.get("/api/migration/subcategories-image", async (req, res) => {
+  try {
+    console.log("[Migration] Verificando necessidade de migração para image_url em subcategories...");
+    
+    // Check if column exists
+    const { data: columns, error: checkError } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_name', 'subcategories')
+      .eq('column_name', 'image_url');
+    
+    if (checkError) throw checkError;
+    
+    if (columns && columns.length > 0) {
+      console.log("[Migration] Coluna image_url já existe em subcategories");
+      return res.json({ 
+        status: "already_exists", 
+        message: "A coluna image_url já existe na tabela subcategories" 
       });
-      
-      if (error) throw error;
-      res.json({ status: "success", message: "Log de teste criado!", id: testId });
-    } catch (e: any) {
-      res.status(500).json({ status: "error", message: e.message });
     }
-  });
+    
+    // Add the column
+    const { error: alterError } = await supabase
+      .from('subcategories')
+      .select('1')
+      .limit(1);
+    
+    // Use raw SQL to add the column
+    const { error: sqlError } = await supabase
+      .rpc('exec_sql', { 
+        sql: "ALTER TABLE subcategories ADD COLUMN image_url TEXT;"
+      });
+    
+    if (sqlError) {
+      console.error("[Migration] Erro ao adicionar coluna image_url:", sqlError);
+      return res.status(500).json({ 
+        status: "error", 
+        message: "Erro ao adicionar coluna image_url", 
+        error: sqlError.message 
+      });
+    }
+    
+    console.log("[Migration] Coluna image_url adicionada com sucesso em subcategories");
+    res.json({ 
+      status: "success", 
+      message: "Coluna image_url adicionada com sucesso à tabela subcategories" 
+    });
+    
+  } catch (e: any) {
+    console.error("[Migration] Erro na migração:", e);
+    res.status(500).json({ 
+      status: "error", 
+      message: e.message 
+    });
+  }
+});
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
