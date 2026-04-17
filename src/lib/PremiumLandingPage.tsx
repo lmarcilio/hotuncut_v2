@@ -454,149 +454,157 @@ const PremiumLandingPage = ({
         </AnimatePresence>
       </motion.nav>
 
-      {/* ═══════════════ HERO SECTION ═══════════════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-20 lg:pb-32" style={{ paddingTop: `${heroTopPadding}px` }}>
-        {/* Layered Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgba(251,146,60,0.2),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(236,72,153,0.12),transparent_45%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_100%,rgba(250,204,21,0.08),transparent_50%)]" />
-        </div>
-        
-        <GlowingOrb className="w-[700px] h-[500px] top-0 left-1/2 -translate-x-1/2" color="orange" />
-        <GlowingOrb className="w-[400px] h-[400px] top-40 right-0" color="pink" />
-        <GlowingOrb className="w-[300px] h-[300px] bottom-20 left-0" color="purple" />
-        <FloatingParticles />
+       {/* ═══════════════ HERO SECTION ═══════════════ */}
+       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-20 lg:pb-32" style={{ paddingTop: `${heroTopPadding}px` }}>
+         {/* Layered Background Effects */}
+         <div className="absolute inset-0">
+           {/* Enhanced gradient orbs */}
+           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgba(251,146,60,0.25),transparent_50%)]" />
+           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(236,72,153,0.15),transparent_45%)]" />
+           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_100%,rgba(250,204,21,0.12),transparent_50%)]" />
+           {/* Additional subtle gradient for depth */}
+           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(255,79,0,0.08),transparent_70%)]" />
+         </div>
+         
+         <GlowingOrb className="w-[700px] h-[500px] top-0 left-1/2 -translate-x-1/2" color="orange" />
+         <GlowingOrb className="w-[400px] h-[400px] top-40 right-0" color="pink" />
+         <GlowingOrb className="w-[300px] h-[300px] bottom-20 left-0" color="purple" />
+         <GlowingOrb className="w-[200px] h-[200px] top-1/2 right-1/4" color="amber" />
+         <FloatingParticles />
 
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
-        }} />
+         {/* Subtle Grid Pattern */}
+         <div className="absolute inset-0 opacity-[0.02]" style={{
+           backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+           backgroundSize: '60px 60px'
+         }} />
 
-        {/* Animated gradient line at top */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
+         {/* Animated gradient line at top */}
+         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
+         
+         {/* Additional glowing border effects */}
+         <div className="absolute top-1/3 left-1/4 w-96 h-96 rounded-full blur-3xl bg-orange-500/5 pointer-events-none animate-pulse" />
+         <div className="absolute bottom-1/4 right-1/3 w-72 h-72 rounded-full blur-2xl bg-pink-500/5 pointer-events-none" style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center">
-            {/* Announcement Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-3 px-5 py-2.5 mb-8 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-pink-500/10 rounded-full border border-orange-500/20 backdrop-blur-xl"
-            >
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
-              </span>
-              <span className="text-orange-300/90 text-sm font-semibold tracking-wider uppercase">🔥 Vagas Limitadas — Oferta Especial</span>
-            </motion.div>
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+           <div className="text-center">
+             {/* Announcement Badge */}
+             <motion.div
+               initial={{ opacity: 0, y: -20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.6 }}
+               className="inline-flex items-center gap-3 px-5 py-2.5 mb-8 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-pink-500/10 rounded-full border border-orange-500/20 backdrop-blur-xl hover:border-orange-500/40 hover:shadow-[0_0_30px_rgba(255,79,0,0.2)] transition-all duration-300"
+             >
+               <span className="relative flex h-2.5 w-2.5">
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+               </span>
+               <span className="text-orange-300/90 text-sm font-semibold tracking-wider uppercase">🔥 Vagas Limitadas — Oferta Especial</span>
+             </motion.div>
 
-            {/* Hero Headline */}
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-[-0.04em] mb-6 leading-[1.05]"
-            >
-              <span className="block text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.1)]">Sistemas completos para</span>
-              <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-pink-500 hero-shimmer">
-                ajudar a sua criatividade
-              </span>
-            </motion.h1>
+             {/* Hero Headline */}
+             <motion.h1 
+               initial={{ opacity: 0, y: 30 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.8, delay: 0.1 }}
+               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-[-0.04em] mb-6 leading-[1.05]"
+             >
+               <span className="block text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.1)]">Sistemas completos para</span>
+               <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-pink-500 hero-shimmer">
+                 ajudar a sua criatividade
+               </span>
+             </motion.h1>
 
-            {/* Subheadline */}
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-lg md:text-xl lg:text-2xl text-gray-400 mb-8 font-light leading-relaxed max-w-3xl mx-auto"
-            >
-              <span className="font-bold text-white">Prompts prontos</span> &nbsp;•&nbsp; <span className="font-bold text-white">Ferramentas</span> &nbsp;•&nbsp; <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Bônus</span>
-            </motion.p>
+             {/* Subheadline */}
+             <motion.p 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ duration: 0.6, delay: 0.3 }}
+               className="text-lg md:text-xl lg:text-2xl text-gray-400 mb-8 font-light leading-relaxed max-w-3xl mx-auto"
+             >
+               <span className="font-bold text-white">Prompts prontos</span> &nbsp;•&nbsp; <span className="font-bold text-white">Ferramentas</span> &nbsp;•&nbsp; <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Bônus</span>
+             </motion.p>
 
 
 
-            {/* Main CTA */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="flex flex-col items-center gap-6 mb-16"
-            >
-              <MagneticButton
-                onClick={onBuy}
-                className="relative px-12 py-5 bg-gradient-to-r from-orange-500 via-amber-400 to-pink-500 text-black font-bold text-lg rounded-2xl transition-all flex items-center justify-center gap-3 group shadow-[0_25px_80px_rgba(244,114,35,0.35)] hover:shadow-[0_35px_120px_rgba(244,114,35,0.5)] overflow-hidden cta-pulse"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                <Rocket className="w-6 h-6 relative z-10 group-hover:rotate-12 transition-transform" />
-                <span className="relative z-10">Liberar Acesso Agora</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
-              </MagneticButton>
+             {/* Main CTA */}
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ duration: 0.6, delay: 0.5 }}
+               className="flex flex-col items-center gap-6 mb-16"
+             >
+               <MagneticButton
+                 onClick={onBuy}
+                 className="relative px-12 py-5 bg-gradient-to-r from-orange-500 via-amber-400 to-pink-500 text-black font-bold text-lg rounded-2xl transition-all flex items-center justify-center gap-3 group shadow-[0_25px_80px_rgba(244,114,35,0.35)] hover:shadow-[0_35px_120px_rgba(244,114,35,0.5)] overflow-hidden cta-pulse"
+               >
+                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                 <Rocket className="w-6 h-6 relative z-10 group-hover:rotate-12 transition-transform" />
+                 <span className="relative z-10">Liberar Acesso Agora</span>
+                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+               </MagneticButton>
 
-              {/* Trust indicators */}
-              <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-                {[
-                  { icon: Shield, text: 'Garantia 7 dias', color: 'text-emerald-500' },
-                  { icon: Lock, text: 'Pagamento seguro', color: 'text-emerald-500' },
-                  { icon: Zap, text: 'Acesso imediato', color: 'text-emerald-500' },
-                ].map((item, idx) => (
-                  <span key={idx} className="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
-                    <item.icon className={`w-4 h-4 ${item.color}`} />
-                    {item.text}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
+               {/* Trust indicators */}
+               <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
+                 {[
+                   { icon: Shield, text: 'Garantia 7 dias', color: 'text-emerald-500' },
+                   { icon: Lock, text: 'Pagamento seguro', color: 'text-emerald-500' },
+                   { icon: Zap, text: 'Acesso imediato', color: 'text-emerald-500' },
+                 ].map((item, idx) => (
+                   <span key={idx} className="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
+                     <item.icon className={`w-4 h-4 ${item.color}`} />
+                     {item.text}
+                   </span>
+                 ))}
+               </div>
+             </motion.div>
 
-            {/* Hero Image */}
-            {branding?.landing_images?.hero && (
-              <motion.div
-                initial={{ opacity: 0, y: 60 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.7 }}
-                className="mt-4 relative max-w-5xl mx-auto group"
-              >
-                <div className="absolute -inset-6 bg-gradient-to-r from-orange-500/15 via-pink-500/10 to-amber-500/15 blur-3xl rounded-3xl pointer-events-none opacity-60 group-hover:opacity-80 transition-all duration-700" />
-                <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-orange-500/15 group-hover:shadow-orange-500/25 transition-all duration-700">
-                  <img 
-                    src={branding.landing_images.hero} 
-                    alt="Plataforma Preview" 
-                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  {/* Glowing border effect */}
-                  <div className="absolute inset-0 rounded-3xl border border-orange-500/10 group-hover:border-orange-500/30 transition-colors duration-700" />
-                  {/* Play hint overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="w-20 h-20 rounded-full bg-orange-500/20 backdrop-blur-sm flex items-center justify-center border border-orange-500/30">
-                      <Eye className="w-8 h-8 text-orange-400" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+             {/* Hero Image */}
+             {branding?.landing_images?.hero && (
+               <motion.div
+                 initial={{ opacity: 0, y: 60 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ duration: 1, delay: 0.7 }}
+                 className="mt-4 relative max-w-5xl mx-auto group"
+               >
+                 <div className="absolute -inset-6 bg-gradient-to-r from-orange-500/15 via-pink-500/10 to-amber-500/15 blur-3xl rounded-3xl pointer-events-none opacity-60 group-hover:opacity-80 transition-all duration-700" />
+                 <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-orange-500/15 group-hover:shadow-orange-500/25 transition-all duration-700 backdrop-blur-sm">
+                   <img 
+                     src={branding.landing_images.hero} 
+                     alt="Plataforma Preview" 
+                     className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000"
+                     referrerPolicy="no-referrer"
+                   />
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                   {/* Glowing border effect */}
+                   <div className="absolute inset-0 rounded-3xl border border-orange-500/10 group-hover:border-orange-500/30 transition-colors duration-700" />
+                   {/* Play hint overlay */}
+                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                     <div className="w-20 h-20 rounded-full bg-orange-500/20 backdrop-blur-sm flex items-center justify-center border border-orange-500/30 shadow-lg shadow-orange-500/20">
+                       <Eye className="w-8 h-8 text-orange-400" />
+                     </div>
+                   </div>
+                 </div>
+               </motion.div>
+             )}
 
-            {/* Scroll indicator */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.5, duration: 0.8 }}
-              className="mt-16 flex flex-col items-center gap-2"
-            >
-              <span className="text-xs text-gray-600 uppercase tracking-widest">Saiba mais</span>
-              <motion.div
-                animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <ArrowDown className="w-5 h-5 text-gray-600" />
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+             {/* Scroll indicator */}
+             <motion.div 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ delay: 1.5, duration: 0.8 }}
+               className="mt-16 flex flex-col items-center gap-2"
+             >
+               <span className="text-xs text-gray-600 uppercase tracking-widest">Saiba mais</span>
+               <motion.div
+                 animate={{ y: [0, 8, 0] }}
+                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+               >
+                 <ArrowDown className="w-5 h-5 text-gray-600" />
+               </motion.div>
+             </motion.div>
+           </div>
+         </div>
+       </section>
 
       {/* ═══════════════ SOCIAL PROOF BAR ═══════════════ */}
       <section className="py-5 bg-white/[0.02] border-y border-white/[0.04] relative overflow-hidden">

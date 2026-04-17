@@ -70,6 +70,7 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const [showNewSubcategoryForm, setShowNewSubcategoryForm] = useState(false);
   const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState('');
   const [activeTab, setActiveTab] = useState<'normal' | 'plus18'>('normal');
+  const [uploadingSubcategoryImage, setUploadingSubcategoryImage] = useState(false);
   
   // Prompt form state
   const [showPromptForm, setShowPromptForm] = useState(false);
@@ -256,6 +257,27 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
       alert('Erro ao fazer upload da imagem. Por favor, tente novamente.');
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleSubcategoryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      alert('A imagem é muito grande. Por favor, escolha uma imagem com menos de 2MB.');
+      return;
+    }
+
+    setUploadingSubcategoryImage(true);
+    try {
+      const publicUrl = await onUploadImage(file);
+      setNewSubcategoryImageUrl(publicUrl);
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem da subcategoria:', error);
+      alert('Erro ao fazer upload da imagem. Por favor, tente novamente.');
+    } finally {
+      setUploadingSubcategoryImage(false);
     }
   };
 
@@ -857,50 +879,87 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
             </div>
           </div>
         ) : showNewSubcategoryForm ? (
-          // New Subcategory Form
-          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
-            <h3 className="text-xl font-bold text-white mb-6">Nova Subcategoria</h3>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Nome da Subcategoria"
-                value={newSubcategoryName}
-                onChange={(e) => setNewSubcategoryName(e.target.value)}
-                className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-              />
-              <input
-                type="text"
-                placeholder="URL da Imagem da Subcategoria (opcional)"
-                value={newSubcategoryImageUrl}
-                onChange={(e) => setNewSubcategoryImageUrl(e.target.value)}
-                className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
-              />
-              {newSubcategoryImageUrl && (
-                <div className="w-full h-44 rounded-xl border border-zinc-800 overflow-hidden bg-black">
-                  <img
-                    src={newSubcategoryImageUrl}
-                    alt="Preview da subcategoria"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              )}
-              <div className="flex gap-3">
-                <button
-                  onClick={handleAddSubcategory}
-                  className="flex-1 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all"
-                >
-                  Criar Subcategoria
-                </button>
-                <button
-                  onClick={() => setShowNewSubcategoryForm(false)}
-                  className="flex-1 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
+           // New Subcategory Form
+           <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
+             <h3 className="text-xl font-bold text-white mb-6">Nova Subcategoria</h3>
+             <div className="space-y-4">
+               <input
+                 type="text"
+                 placeholder="Nome da Subcategoria"
+                 value={newSubcategoryName}
+                 onChange={(e) => setNewSubcategoryName(e.target.value)}
+                 className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+               />
+               <div className="space-y-2">
+                 <label className="text-sm text-gray-400">Imagem da Subcategoria (opcional) - Proporção 4:3</label>
+                 <input
+                   type="text"
+                   placeholder="URL da Imagem da Subcategoria (opcional)"
+                   value={newSubcategoryImageUrl}
+                   onChange={(e) => setNewSubcategoryImageUrl(e.target.value)}
+                   className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                 />
+                 {newSubcategoryImageUrl && (
+                   <div className="w-full aspect-video rounded-xl border border-zinc-800 overflow-hidden bg-black">
+                     <img
+                       src={newSubcategoryImageUrl}
+                       alt="Preview da subcategoria"
+                       className="w-full h-full object-cover"
+                       referrerPolicy="no-referrer"
+                     />
+                   </div>
+                 )}
+                 <div className="flex gap-2">
+                   <input
+                     type="file"
+                     accept="image/*"
+                     onChange={handleSubcategoryImageUpload}
+                     disabled={uploadingSubcategoryImage}
+                     className="hidden"
+                     id="subcategory-image-upload"
+                   />
+                   <label
+                     htmlFor="subcategory-image-upload"
+                     className="flex-1 px-4 py-2 bg-zinc-800 text-white rounded-xl border border-zinc-700 cursor-pointer hover:border-orange-500 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     {uploadingSubcategoryImage ? (
+                       <>
+                         <Loader2 className="w-4 h-4 animate-spin" />
+                         Enviando...
+                       </>
+                     ) : (
+                       <>
+                         <Upload className="w-4 h-4" />
+                         Escolher Imagem
+                       </>
+                     )}
+                   </label>
+                   {newSubcategoryImageUrl && (
+                     <button
+                       onClick={() => setNewSubcategoryImageUrl('')}
+                       className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all"
+                     >
+                       <X className="w-4 h-4" />
+                     </button>
+                   )}
+                 </div>
+               </div>
+               <div className="flex gap-3">
+                 <button
+                   onClick={handleAddSubcategory}
+                   className="flex-1 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all"
+                 >
+                   Criar Subcategoria
+                 </button>
+                 <button
+                   onClick={() => setShowNewSubcategoryForm(false)}
+                   className="flex-1 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all"
+                 >
+                   Cancelar
+                 </button>
+               </div>
+             </div>
+           </div>
         ) : (
           // Empty State
           <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-12 flex items-center justify-center h-96">
