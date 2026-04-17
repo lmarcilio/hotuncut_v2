@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronRight, ChevronDown, Plus, Trash2, Edit2, Save, X, Upload, Loader2 } from 'lucide-react';
+import { supabase } from './supabase';
 
 interface Category {
   id: string;
@@ -71,6 +72,9 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
   const [selectedCategoryForSubcategory, setSelectedCategoryForSubcategory] = useState('');
   const [activeTab, setActiveTab] = useState<'normal' | 'plus18'>('normal');
   const [uploadingSubcategoryImage, setUploadingSubcategoryImage] = useState(false);
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState<string | null>(null);
+  const [editingSubcategoryName, setEditingSubcategoryName] = useState('');
+  const [editingSubcategoryImage, setEditingSubcategoryImage] = useState('');
   
   // Prompt form state
   const [showPromptForm, setShowPromptForm] = useState(false);
@@ -169,6 +173,69 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
       } catch (error) {
         console.error('Erro ao deletar subcategoria:', error);
       }
+    }
+  };
+
+  const handleEditSubcategory = (subcategory: Subcategory) => {
+    setEditingSubcategoryId(subcategory.id);
+    setEditingSubcategoryName(subcategory.name);
+    setEditingSubcategoryImage(subcategory.image_url || '');
+  };
+
+  const handleSaveSubcategory = async () => {
+    if (!editingSubcategoryId || !editingSubcategoryName.trim()) return;
+    try {
+      // Update the subcategory in the database
+      const { error } = await supabase
+        .from('subcategories')
+        .update({
+          name: editingSubcategoryName.trim(),
+          image_url: editingSubcategoryImage.trim() || null
+        })
+        .eq('id', editingSubcategoryId);
+
+      if (error) {
+        console.error('Erro ao atualizar subcategoria:', error);
+        alert('Erro ao atualizar subcategoria: ' + error.message);
+      } else {
+        setEditingSubcategoryId(null);
+        setEditingSubcategoryName('');
+        setEditingSubcategoryImage('');
+        // Trigger refresh
+        if (onAddSubcategory) {
+          // Call any callback to refresh if available
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao salvar subcategoria:', error);
+      alert('Erro ao salvar subcategoria');
+    }
+  };
+
+  const handleCancelEditSubcategory = () => {
+    setEditingSubcategoryId(null);
+    setEditingSubcategoryName('');
+    setEditingSubcategoryImage('');
+  };
+
+  const handleSubcategoryImageEditUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      alert('A imagem é muito grande. Por favor, escolha uma imagem com menos de 2MB.');
+      return;
+    }
+
+    setUploadingSubcategoryImage(true);
+    try {
+      const publicUrl = await onUploadImage(file);
+      setEditingSubcategoryImage(publicUrl);
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      alert('Erro ao fazer upload da imagem. Por favor, tente novamente.');
+    } finally {
+      setUploadingSubcategoryImage(false);
     }
   };
 
@@ -443,28 +510,41 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                           ) : (
                             <div className="w-4 h-4" />
                           )}
-                          <span className="flex-1 text-white font-medium text-sm flex items-center gap-2">
-                            {subcategory.image_url ? (
-                              <img
-                                src={subcategory.image_url}
-                                alt={subcategory.name}
-                                className="w-6 h-6 rounded-md object-cover border border-zinc-700"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <span className="w-6 h-6 rounded-md bg-zinc-800 border border-zinc-700" />
-                            )}
-                            {subcategory.name}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteSubcategory(subcategory.id);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-red-500"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                           <span className="flex-1 text-white font-medium text-sm flex items-center gap-2">
+                             {subcategory.image_url ? (
+                               <img
+                                 src={subcategory.image_url}
+                                 alt={subcategory.name}
+                                 className="w-6 h-6 rounded-md object-cover border border-zinc-700"
+                                 referrerPolicy="no-referrer"
+                               />
+                             ) : (
+                               <span className="w-6 h-6 rounded-md bg-zinc-800 border border-zinc-700" />
+                             )}
+                             {subcategory.name}
+                           </span>
+                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleEditSubcategory(subcategory);
+                               }}
+                               className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-500/10 rounded transition-all"
+                               title="Editar subcategoria"
+                             >
+                               <Edit2 className="w-3.5 h-3.5" />
+                             </button>
+                             <button
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleDeleteSubcategory(subcategory.id);
+                               }}
+                               className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
+                               title="Deletar subcategoria"
+                             >
+                               <Trash2 className="w-3.5 h-3.5" />
+                             </button>
+                           </div>
                         </div>
 
                         {/* Prompts in Subcategory */}
@@ -869,16 +949,111 @@ const UnifiedPromptManager: React.FC<UnifiedPromptManagerProps> = ({
                 </span>
               </div>
 
-              <button
-                onClick={handleSavePrompt}
-                className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
-              >
-                <Save className="w-5 h-5" />
-                {selectedPrompt ? 'Atualizar' : 'Criar'} Prompt
-              </button>
-            </div>
-          </div>
-        ) : showNewSubcategoryForm ? (
+               <button
+                 onClick={handleSavePrompt}
+                 className="w-full py-4 bg-orange-500 text-black font-bold rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+               >
+                 <Save className="w-5 h-5" />
+                 {selectedPrompt ? 'Atualizar' : 'Criar'} Prompt
+               </button>
+             </div>
+           </div>
+         ) : editingSubcategoryId ? (
+           // Edit Subcategory Form
+           <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
+             <div className="flex justify-between items-center mb-6">
+               <h3 className="text-xl font-bold text-white">Editar Subcategoria</h3>
+               <button
+                 onClick={handleCancelEditSubcategory}
+                 className="text-gray-500 hover:text-white"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+             </div>
+             <div className="space-y-4">
+               <div>
+                 <label className="text-sm text-gray-400 block mb-2">Nome da Subcategoria</label>
+                 <input
+                   type="text"
+                   value={editingSubcategoryName}
+                   onChange={(e) => setEditingSubcategoryName(e.target.value)}
+                   className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                 />
+               </div>
+
+               <div className="space-y-2">
+                 <label className="text-sm text-gray-400">Imagem da Subcategoria (opcional) - Proporção 4:3</label>
+                 <input
+                   type="text"
+                   placeholder="URL da Imagem"
+                   value={editingSubcategoryImage}
+                   onChange={(e) => setEditingSubcategoryImage(e.target.value)}
+                   className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-2 text-white outline-none focus:border-orange-500"
+                 />
+                 {editingSubcategoryImage && (
+                   <div className="w-full aspect-video rounded-xl border border-zinc-800 overflow-hidden bg-black">
+                     <img
+                       src={editingSubcategoryImage}
+                       alt="Preview"
+                       className="w-full h-full object-cover"
+                       referrerPolicy="no-referrer"
+                     />
+                   </div>
+                 )}
+                 <div className="flex gap-2">
+                   <input
+                     type="file"
+                     accept="image/*"
+                     onChange={handleSubcategoryImageEditUpload}
+                     disabled={uploadingSubcategoryImage}
+                     className="hidden"
+                     id="subcategory-edit-image-upload"
+                   />
+                   <label
+                     htmlFor="subcategory-edit-image-upload"
+                     className="flex-1 px-4 py-2 bg-zinc-800 text-white rounded-xl border border-zinc-700 cursor-pointer hover:border-orange-500 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     {uploadingSubcategoryImage ? (
+                       <>
+                         <Loader2 className="w-4 h-4 animate-spin" />
+                         Enviando...
+                       </>
+                     ) : (
+                       <>
+                         <Upload className="w-4 h-4" />
+                         Escolher Imagem
+                       </>
+                     )}
+                   </label>
+                   {editingSubcategoryImage && (
+                     <button
+                       onClick={() => setEditingSubcategoryImage('')}
+                       className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all"
+                     >
+                       <X className="w-4 h-4" />
+                     </button>
+                   )}
+                 </div>
+               </div>
+
+               <div className="flex gap-3 pt-4">
+                 <button
+                   onClick={handleSaveSubcategory}
+                   className="flex-1 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+                 >
+                   <Save className="w-4 h-4" />
+                   Salvar Subcategoria
+                 </button>
+                 <button
+                   onClick={handleCancelEditSubcategory}
+                   className="flex-1 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-all"
+                 >
+                   Cancelar
+                 </button>
+               </div>
+             </div>
+           </div>
+         ) : showNewSubcategoryForm ? (
            // New Subcategory Form
            <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8">
              <h3 className="text-xl font-bold text-white mb-6">Nova Subcategoria</h3>
